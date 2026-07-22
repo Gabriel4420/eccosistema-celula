@@ -1,0 +1,24 @@
+node_modules/
+.turbo/
+
+# Builds
+.next/
+dist/
+*.tsbuildinfo
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+
+# Environment files (examples remain versioned)
+.env
+.env.*
+!.env.example
+
+# Logs and local tooling
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

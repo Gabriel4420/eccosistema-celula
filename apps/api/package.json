@@ -1,0 +1,26 @@
+{
+  "name": "@mission-atos/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "lint": "eslint . --max-warnings=0",
+    "start": "node dist/main.js",
+    "test": "jest --runInBand",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mission-atos/config": "*",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@mission-atos/eslint-config": "*",
+    "@mission-atos/typescript-config": "*",
+    "@nestjs/cli": "^11.0.0"
+  }
+}

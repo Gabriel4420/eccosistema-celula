@@ -1,0 +1,31 @@
+{
+  "name": "@mission-atos/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "exports": {
+    "./public": {
+      "types": "./dist/public.d.ts",
+      "default": "./dist/public.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --max-warnings=0",
+    "test": "jest --runInBand",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@mission-atos/eslint-config": "*",
+    "@mission-atos/typescript-config": "*"
+  }
+}
