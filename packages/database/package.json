@@ -1,0 +1,42 @@
+{
+  "name": "@mission-atos/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "npm run db:generate && tsc -p tsconfig.json",
+    "db:format": "prisma format",
+    "db:generate": "prisma generate",
+    "db:migrate:create": "tsx src/cli/run-prisma.ts migrate dev --create-only",
+    "db:migrate:deploy": "tsx src/cli/run-prisma.ts migrate deploy",
+    "db:migrate:status": "tsx src/cli/run-prisma.ts migrate status",
+    "db:seed": "prisma db seed",
+    "db:validate": "prisma validate",
+    "lint": "eslint . --max-warnings=0",
+    "test": "npm run db:generate && jest --runInBand --config jest.config.cjs",
+    "test:integration": "tsx src/testing/run-integration.ts",
+    "typecheck": "npm run db:generate && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mission-atos/config": "*",
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "pg": "^8.0.0"
+  },
+  "devDependencies": {
+    "@mission-atos/eslint-config": "*",
+    "@mission-atos/typescript-config": "*",
+    "@types/pg": "^8.0.0",
+    "dotenv": "^17.0.0",
+    "prisma": "^7.0.0",
+    "tsx": "^4.0.0"
+  }
+}

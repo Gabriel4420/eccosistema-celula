@@ -1,0 +1,318 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum CellStatus {
+  FORMING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+  TRANSFERRED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum ReportStatus {
+  NOT_STARTED
+  DRAFT
+  SUBMITTED
+  RETURNED
+  CANCELED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model Church {
+  id                    String                 @id @default(uuid()) @db.Uuid
+  name                  String                 @db.VarChar(160)
+  slug                  String                 @unique(map: "churches_slug_key") @db.VarChar(100)
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt             DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  users                 User[]
+  roles                 Role[]
+  userRoles             UserRole[]
+  supervisorAssignments SupervisorAssignment[]
+  cells                 Cell[]
+  people                Person[]
+  cellMemberships       CellMembership[]
+  meetings              Meeting[]
+  meetingAttendances    MeetingAttendance[]
+  meetingReports        MeetingReport[]
+  auditLogs             AuditLog[]
+
+  @@index([deletedAt], map: "churches_deleted_at_idx")
+  @@map("churches")
+}
+
+model User {
+  id                    String                 @id @default(uuid()) @db.Uuid
+  churchId              String                 @map("church_id") @db.Uuid
+  firstName             String                 @map("first_name") @db.VarChar(100)
+  lastName              String                 @map("last_name") @db.VarChar(100)
+  email                 String                 @db.VarChar(320)
+  passwordHash          String                 @map("password_hash") @db.VarChar(255)
+  status                UserStatus
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt             DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  church                Church                 @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  userRoles             UserRole[]
+  supervisedAssignments SupervisorAssignment[] @relation("AssignmentSupervisor")
+  leaderAssignments     SupervisorAssignment[] @relation("AssignmentLeader")
+  ledCells              Cell[]                 @relation("CellLeader")
+  traineeCells          Cell[]                 @relation("CellTraineeLeader")
+  submittedReports      MeetingReport[]
+  auditLogs             AuditLog[]
+
+  @@unique([id, churchId], map: "users_id_church_id_key")
+  @@unique([churchId, email], map: "users_church_id_email_key")
+  @@index([churchId, status], map: "users_church_id_status_idx")
+  @@index([churchId, deletedAt], map: "users_church_id_deleted_at_idx")
+  @@map("users")
+}
+
+model Role {
+  id        String     @id @default(uuid()) @db.Uuid
+  churchId  String     @map("church_id") @db.Uuid
+  name      String     @db.VarChar(100)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime?  @map("deleted_at") @db.Timestamptz(3)
+  church    Church     @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  userRoles UserRole[]
+
+  @@unique([id, churchId], map: "roles_id_church_id_key")
+  @@unique([churchId, name], map: "roles_church_id_name_key")
+  @@index([churchId, deletedAt], map: "roles_church_id_deleted_at_idx")
+  @@map("roles")
+}
+
+model UserRole {
+  id        String    @id @default(uuid()) @db.Uuid
+  churchId  String    @map("church_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  roleId    String    @map("role_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+  church    Church    @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  user      User      @relation(fields: [userId, churchId], references: [id, churchId], onDelete: Restrict)
+  role      Role      @relation(fields: [roleId, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@unique([churchId, userId, roleId], map: "user_roles_church_user_role_key")
+  @@index([userId], map: "user_roles_user_id_idx")
+  @@index([roleId], map: "user_roles_role_id_idx")
+  @@index([churchId, deletedAt], map: "user_roles_church_id_deleted_at_idx")
+  @@map("user_roles")
+}
+
+model SupervisorAssignment {
+  id           String    @id @default(uuid()) @db.Uuid
+  churchId     String    @map("church_id") @db.Uuid
+  supervisorId String    @map("supervisor_id") @db.Uuid
+  leaderId     String    @map("leader_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+  church       Church    @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  supervisor   User      @relation("AssignmentSupervisor", fields: [supervisorId, churchId], references: [id, churchId], onDelete: Restrict)
+  leader       User      @relation("AssignmentLeader", fields: [leaderId, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@unique([churchId, supervisorId, leaderId], map: "supervisor_assignments_church_supervisor_leader_key")
+  @@index([supervisorId], map: "supervisor_assignments_supervisor_id_idx")
+  @@index([leaderId], map: "supervisor_assignments_leader_id_idx")
+  @@index([churchId, deletedAt], map: "supervisor_assignments_church_deleted_at_idx")
+  @@map("supervisor_assignments")
+}
+
+model Cell {
+  id              String           @id @default(uuid()) @db.Uuid
+  churchId        String           @map("church_id") @db.Uuid
+  code            String           @db.VarChar(50)
+  name            String           @db.VarChar(160)
+  status          CellStatus
+  leaderId        String?          @map("leader_id") @db.Uuid
+  traineeLeaderId String?          @map("trainee_leader_id") @db.Uuid
+  meetingDay      DayOfWeek        @map("meeting_day")
+  meetingTime     DateTime         @map("meeting_time") @db.Time(0)
+  address         String           @db.VarChar(500)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz(3)
+  church          Church           @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  leader          User?            @relation("CellLeader", fields: [leaderId, churchId], references: [id, churchId], onDelete: Restrict)
+  traineeLeader   User?            @relation("CellTraineeLeader", fields: [traineeLeaderId, churchId], references: [id, churchId], onDelete: Restrict)
+  memberships     CellMembership[]
+  meetings        Meeting[]
+
+  @@unique([id, churchId], map: "cells_id_church_id_key")
+  @@unique([churchId, code], map: "cells_church_id_code_key")
+  @@index([churchId, status], map: "cells_church_id_status_idx")
+  @@index([leaderId], map: "cells_leader_id_idx")
+  @@index([traineeLeaderId], map: "cells_trainee_leader_id_idx")
+  @@index([churchId, deletedAt], map: "cells_church_id_deleted_at_idx")
+  @@map("cells")
+}
+
+model Person {
+  id                 String              @id @default(uuid()) @db.Uuid
+  churchId           String              @map("church_id") @db.Uuid
+  fullName           String              @map("full_name") @db.VarChar(200)
+  phone              String?             @db.VarChar(32)
+  email              String?             @db.VarChar(320)
+  birthDate          DateTime?           @map("birth_date") @db.Date
+  gender             String?             @db.VarChar(50)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt          DateTime?           @map("deleted_at") @db.Timestamptz(3)
+  church             Church              @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  memberships        CellMembership[]
+  meetingAttendances MeetingAttendance[]
+
+  @@unique([id, churchId], map: "people_id_church_id_key")
+  @@index([churchId, phone], map: "people_church_id_phone_idx")
+  @@index([churchId, email], map: "people_church_id_email_idx")
+  @@index([churchId, fullName, birthDate], map: "people_church_name_birth_date_idx")
+  @@index([churchId, deletedAt], map: "people_church_id_deleted_at_idx")
+  @@map("people")
+}
+
+model CellMembership {
+  id        String           @id @default(uuid()) @db.Uuid
+  churchId  String           @map("church_id") @db.Uuid
+  personId  String           @map("person_id") @db.Uuid
+  cellId    String           @map("cell_id") @db.Uuid
+  status    MembershipStatus
+  joinedAt  DateTime         @map("joined_at") @db.Timestamptz(3)
+  leftAt    DateTime?        @map("left_at") @db.Timestamptz(3)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime?        @map("deleted_at") @db.Timestamptz(3)
+  church    Church           @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  person    Person           @relation(fields: [personId, churchId], references: [id, churchId], onDelete: Restrict)
+  cell      Cell             @relation(fields: [cellId, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@index([churchId, cellId, status], map: "cell_memberships_church_cell_status_idx")
+  @@index([churchId, personId, status], map: "cell_memberships_church_person_status_idx")
+  @@index([cellId], map: "cell_memberships_cell_id_idx")
+  @@index([personId], map: "cell_memberships_person_id_idx")
+  @@index([churchId, deletedAt], map: "cell_memberships_church_deleted_at_idx")
+  @@map("cell_memberships")
+}
+
+model Meeting {
+  id          String              @id @default(uuid()) @db.Uuid
+  churchId    String              @map("church_id") @db.Uuid
+  cellId      String              @map("cell_id") @db.Uuid
+  meetingDate DateTime            @map("meeting_date") @db.Date
+  status      MeetingStatus
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt   DateTime?           @map("deleted_at") @db.Timestamptz(3)
+  church      Church              @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  cell        Cell                @relation(fields: [cellId, churchId], references: [id, churchId], onDelete: Restrict)
+  attendances MeetingAttendance[]
+  report      MeetingReport?
+
+  @@unique([id, churchId], map: "meetings_id_church_id_key")
+  @@unique([churchId, cellId, meetingDate], map: "meetings_church_cell_date_key")
+  @@index([churchId, status, meetingDate], map: "meetings_church_status_date_idx")
+  @@index([churchId, deletedAt], map: "meetings_church_deleted_at_idx")
+  @@map("meetings")
+}
+
+model MeetingAttendance {
+  id               String           @id @default(uuid()) @db.Uuid
+  churchId         String           @map("church_id") @db.Uuid
+  meetingId        String           @map("meeting_id") @db.Uuid
+  personId         String           @map("person_id") @db.Uuid
+  attendanceStatus AttendanceStatus @map("attendance_status")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt        DateTime?        @map("deleted_at") @db.Timestamptz(3)
+  church           Church           @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  meeting          Meeting          @relation(fields: [meetingId, churchId], references: [id, churchId], onDelete: Restrict)
+  person           Person           @relation(fields: [personId, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@unique([churchId, meetingId, personId], map: "meeting_attendances_church_meeting_person_key")
+  @@index([churchId, meetingId, attendanceStatus], map: "meeting_attendances_church_meeting_status_idx")
+  @@index([personId], map: "meeting_attendances_person_id_idx")
+  @@index([churchId, deletedAt], map: "meeting_attendances_church_deleted_at_idx")
+  @@map("meeting_attendances")
+}
+
+model MeetingReport {
+  id           String       @id @default(uuid()) @db.Uuid
+  churchId     String       @map("church_id") @db.Uuid
+  meetingId    String       @map("meeting_id") @db.Uuid
+  observations String?      @db.Text
+  submittedBy  String?      @map("submitted_by") @db.Uuid
+  submittedAt  DateTime?    @map("submitted_at") @db.Timestamptz(3)
+  status       ReportStatus
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  church       Church       @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  meeting      Meeting      @relation(fields: [meetingId, churchId], references: [id, churchId], onDelete: Restrict)
+  submitter    User?        @relation(fields: [submittedBy, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@unique([meetingId, churchId], map: "meeting_reports_meeting_church_key")
+  @@index([churchId, status, submittedAt], map: "meeting_reports_church_status_submitted_idx")
+  @@index([submittedBy], map: "meeting_reports_submitted_by_idx")
+  @@index([churchId, deletedAt], map: "meeting_reports_church_deleted_at_idx")
+  @@map("meeting_reports")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  churchId  String   @map("church_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  entity    String   @db.VarChar(100)
+  entityId  String   @map("entity_id") @db.Uuid
+  action    String   @db.VarChar(100)
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  user      User?    @relation(fields: [userId, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@index([churchId, createdAt], map: "audit_logs_church_created_at_idx")
+  @@index([churchId, entity, entityId], map: "audit_logs_church_entity_entity_id_idx")
+  @@index([churchId, userId, createdAt], map: "audit_logs_church_user_created_at_idx")
+  @@map("audit_logs")
+}

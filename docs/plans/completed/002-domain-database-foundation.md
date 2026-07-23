@@ -1,11 +1,12 @@
 # Plano 002 — Fundação do domínio e banco de dados
 
-**Status:** planejado  
+**Status:** concluído com limitações conhecidas
 **Responsável:** a definir  
 **Criado em:** 2026-07-22  
-**Atualizado em:** 2026-07-22  
+**Atualizado em:** 2026-07-23  
+**Concluído em:** 2026-07-23  
 **PRD relacionado:** `docs/product/PRD.md`, seções 10, 12 e 14, item 2 — banco e modelo inicial  
-**ADRs relacionadas:** ADR sobre armazenamento de pedidos de oração, a criar antes da migration inicial  
+**ADRs relacionadas:** ADR sobre armazenamento de pedidos de oração permanece pendente; `prayerRequests` não foi incluído  
 **Branch ou issue:** a definir
 
 ---
@@ -619,27 +620,27 @@ docker compose down --volumes
 
 ## 19. Definition of Done
 
-- [ ] escopo implementado;
+- [x] escopo implementado, exceto a coluna condicionada à ADR e as validações PostgreSQL registradas como limitações;
 - [ ] critérios de aceitação atendidos;
 - [ ] ADR de `prayerRequests` resolvida antes da criação da coluna, sem bloquear migrations independentes;
-- [ ] isolamento por igreja validado no schema e nos testes;
-- [ ] nenhuma autenticação, autorização, endpoint ou lógica de negócio criada;
-- [ ] `packages/domain` permanece independente de infraestrutura;
-- [ ] schema, migration inicial, seed e client pertencem a `packages/database`;
+- [x] isolamento por igreja implementado no schema; validação completa em PostgreSQL permanece pendente;
+- [x] nenhuma autenticação, autorização, endpoint ou lógica de negócio criada;
+- [x] `packages/domain` permanece independente de infraestrutura;
+- [x] schema, migration inicial, seed e client pertencem a `packages/database`;
 - [ ] migration inicial revisada e aplicada em bancos vazios independentes;
-- [ ] seed idempotente e sem dados sensíveis;
-- [ ] índices, unicidades, checks, UUIDs e timestamps validados;
-- [ ] proteção do client de runtime contra exclusão física e mutação de auditoria validada;
-- [ ] testes unitários e de integração criados ou atualizados;
-- [ ] lint executado;
-- [ ] typecheck executado;
-- [ ] testes executados;
-- [ ] build executado;
+- [x] seed implementada com somente dados fictícios; execução idempotente em PostgreSQL permanece pendente;
+- [x] índices, unicidades, checks, UUIDs e timestamps definidos; validação completa no catálogo PostgreSQL permanece pendente;
+- [ ] proteção do client de runtime contra exclusão física e mutação de auditoria validada integralmente;
+- [x] testes unitários e de integração criados; suíte de integração permanece não executável conforme limitações;
+- [x] lint executado;
+- [x] typecheck executado;
+- [x] testes unitários executados;
+- [x] build executado;
 - [ ] `npm audit` executado;
-- [ ] documentação e `.env.example` atualizados;
-- [ ] riscos e limitações informados;
-- [ ] registro de progresso atualizado;
-- [ ] plano movido para `docs/plans/completed/` após a conclusão.
+- [x] documentação e `.env.example` atualizados;
+- [x] riscos e limitações informados;
+- [x] registro de progresso atualizado;
+- [x] plano movido para `docs/plans/completed/` após a conclusão.
 
 ## 20. Registro de progresso
 
@@ -651,3 +652,34 @@ docker compose down --volumes
 - revisão: comandos confirmados em npm, cardinalidades detalhadas, chaves candidatas para FKs compostas adicionadas, PostgreSQL 18.4/Compose e SQL explícito para índice parcial definidos, seed restringida a uma igreja fictícia e validação/rollback tornados executáveis;
 - bloqueios: ADR de `prayerRequests` antes da coluna correspondente; vocabulário de `gender` e nomenclatura de papéis permanecem pendentes sem bloquear o restante da migration ou a seed mínima;
 - próximo passo: revisar e aprovar este plano antes de implementar qualquer schema, dependência ou banco.
+
+### 2026-07-22 — implementação
+
+- realizado: criados `packages/domain` e `packages/database` em npm workspaces, configuração Prisma 7/PostgreSQL, clients administrativo/runtime, schema inicial, migration, seed fictícia, Compose, validação de ambiente, scripts npm, documentação e testes;
+- migration: `20260722230000_initial_domain_schema`, gerada de forma offline pelo `prisma migrate diff` a partir do schema validado e complementada com checks de liderança/período e índice único parcial de vínculo aberto;
+- decisões preservadas: `prayerRequests` não foi persistido sem ADR; `gender` permanece string opcional; nenhuma Role foi criada pela seed; nenhum endpoint, autenticação ou módulo funcional foi antecipado;
+- validações aprovadas: `db:format`, `db:validate`, `db:generate`, `npm run lint`, `npm run typecheck`, `npm test` e `npm run build`;
+- testes aprovados: validação de ambiente, enums do domínio, política runtime de soft delete/auditoria e regressões existentes de API; os testes de integração PostgreSQL foram criados, mas não executados;
+- bloqueio ambiental: Docker Compose está instalado, porém o daemon Docker não está em execução; por isso `db:migrate:deploy`, `db:migrate:status`, `db:seed` e `test:integration` não puderam conectar aos bancos locais;
+- auditoria: `npm install` reportou zero vulnerabilidades; uma execução separada de `npm audit` foi bloqueada pelo controle de egress do ambiente;
+- pendências para concluir o plano: iniciar o daemon Docker, aplicar a migration nos bancos dev/test, executar seed duas vezes, executar testes de integração e resolver a ADR antes de adicionar `prayerRequests`;
+- próximo passo: concluir somente as verificações PostgreSQL pendentes; não avançar para autenticação.
+
+### 2026-07-23 — conclusão e arquivamento
+
+- resultado: a fundação de domínio e persistência foi encerrada e arquivada com limitações conhecidas, sem avançar para autenticação;
+- decisões finais: npm workspaces; PostgreSQL 18.4 local por Compose; Prisma 7 em `packages/database`; UUID; UTC/TIMESTAMPTZ para instantes; DATE/TIME para valores civis; `churchId` nas tabelas tenant-owned; FKs compostas cross-tenant; `RESTRICT` em exclusões; soft delete nas entidades mutáveis; auditoria sem `updatedAt` ou `deletedAt`; seed restrita a uma igreja fictícia;
+- decisões pendentes preservadas: `prayerRequests` continua fora do schema até ADR; `gender` continua string opcional; papéis não são semeados até definição da nomenclatura;
+- migration entregue: `packages/database/prisma/migrations/20260722230000_initial_domain_schema/migration.sql`, acompanhada de `migration_lock.toml`; foi gerada por `prisma migrate diff` a partir do schema validado e recebeu SQL explícito para checks e índice parcial;
+- testes unitários aprovados: quatro cenários de ambiente, um cenário de enums do domínio, três cenários da política runtime de banco e um teste preexistente da API;
+- validações aprovadas: `npm.cmd run db:format`, `npm.cmd run db:validate`, `npm.cmd run db:generate`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd test`, `npm.cmd run build`, `npm.cmd ls --workspaces --depth=0` e `git diff --check`;
+- comandos conectados tentados: `docker compose up -d postgres-dev postgres-test`, `npm.cmd run db:migrate:deploy`, `npm.cmd run db:migrate:status`, `npm.cmd run db:seed` e `npm.cmd run test:integration`;
+- comandos auxiliares executados: `npm.cmd install`, `npm.cmd view prisma version`, `prisma migrate diff --from-empty --to-schema`, `docker version`, `docker compose version`, `docker compose config --quiet` e inspeções com `rg`, `git status` e `git diff`;
+- auditoria: o audit automático de `npm install` informou zero vulnerabilidades; a execução separada de `npm audit` foi recusada pelo controle de egress do ambiente;
+- limitação ambiental: o serviço `com.docker.service` não pôde ser iniciado com as permissões disponíveis, impedindo aplicação real da migration, status, seed e integração nos bancos dev/test;
+- limitação de testes: a configuração Jest/ESM da suíte de integração não resolve imports relativos terminados em `.js`, falhando antes da conexão com `Cannot find module './client/admin.js'`;
+- limitação de segurança: a proteção do client runtime cobre operações diretas de modelo, mas ainda precisa impedir SQL bruto e operações destrutivas aninhadas;
+- limitação operacional: a validação de `TEST_DATABASE_URL` não prova que o banco difere de `DATABASE_URL` antes do `TRUNCATE`, e o carregamento do `.env` raiz precisa ser tornado explícito para scripts de workspace;
+- limitação de cobertura: faltam testes PostgreSQL para todas as FKs cross-tenant, unicidades, checks, `RESTRICT`, JSONB, timestamps e catálogo completo de índices;
+- divergência de domínio registrada: o PRD trata supervisor como vínculo da célula, enquanto o modelo atual o deriva de `SupervisorAssignment` entre usuários; a decisão deve ser resolvida antes do módulo funcional de células;
+- restrição de sequência: não criar nem implementar autenticação a partir deste encerramento sem um plano próprio aprovado.

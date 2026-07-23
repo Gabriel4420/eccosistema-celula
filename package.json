@@ -24,10 +24,17 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "db:format": "npm run db:format --workspace @mission-atos/database",
+    "db:generate": "npm run db:generate --workspace @mission-atos/database",
+    "db:migrate:deploy": "npm run db:migrate:deploy --workspace @mission-atos/database",
+    "db:migrate:status": "npm run db:migrate:status --workspace @mission-atos/database",
+    "db:seed": "npm run db:seed --workspace @mission-atos/database",
+    "db:validate": "npm run db:validate --workspace @mission-atos/database",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
+    "test:integration": "npm run test:integration --workspace @mission-atos/database",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
