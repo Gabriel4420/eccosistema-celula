@@ -1,7 +1,7 @@
 generator client {
   provider     = "prisma-client"
   output       = "../src/generated/prisma"
-  moduleFormat = "esm"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -56,6 +56,14 @@ enum DayOfWeek {
   SUNDAY
 }
 
+enum SessionRevokedReason {
+  ROTATED
+  LOGOUT
+  PASSWORD_CHANGED
+  TOKEN_REUSE
+  USER_INACTIVE
+}
+
 model Church {
   id                    String                 @id @default(uuid()) @db.Uuid
   name                  String                 @db.VarChar(160)
@@ -74,6 +82,7 @@ model Church {
   meetingAttendances    MeetingAttendance[]
   meetingReports        MeetingReport[]
   auditLogs             AuditLog[]
+  sessions              Session[]
 
   @@index([deletedAt], map: "churches_deleted_at_idx")
   @@map("churches")
@@ -98,6 +107,7 @@ model User {
   traineeCells          Cell[]                 @relation("CellTraineeLeader")
   submittedReports      MeetingReport[]
   auditLogs             AuditLog[]
+  sessions              Session[]
 
   @@unique([id, churchId], map: "users_id_church_id_key")
   @@unique([churchId, email], map: "users_church_id_email_key")
@@ -315,4 +325,32 @@ model AuditLog {
   @@index([churchId, entity, entityId], map: "audit_logs_church_entity_entity_id_idx")
   @@index([churchId, userId, createdAt], map: "audit_logs_church_user_created_at_idx")
   @@map("audit_logs")
+}
+
+model Session {
+  id                  String                @id @default(uuid()) @db.Uuid
+  churchId            String                @map("church_id") @db.Uuid
+  userId              String                @map("user_id") @db.Uuid
+  tokenHash           String                @unique(map: "sessions_token_hash_key") @map("token_hash") @db.VarChar(64)
+  familyId            String                @map("family_id") @db.Uuid
+  expiresAt           DateTime              @map("expires_at") @db.Timestamptz(3)
+  lastUsedAt          DateTime?             @map("last_used_at") @db.Timestamptz(3)
+  revokedAt           DateTime?             @map("revoked_at") @db.Timestamptz(3)
+  revokedReason       SessionRevokedReason? @map("revoked_reason")
+  replacedBySessionId String?               @unique(map: "sessions_replaced_by_session_id_key") @map("replaced_by_session_id") @db.Uuid
+  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  church              Church                @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  user                User                  @relation(fields: [userId, churchId], references: [id, churchId], onDelete: Restrict)
+  replacedBy          Session?              @relation("SessionRotation", fields: [replacedBySessionId], references: [id], onDelete: SetNull)
+  replaces            Session?              @relation("SessionRotation")
+
+  @@unique([id, churchId], map: "sessions_id_church_id_key")
+  @@index([churchId], map: "sessions_church_id_idx")
+  @@index([userId], map: "sessions_user_id_idx")
+  @@index([familyId], map: "sessions_family_id_idx")
+  @@index([expiresAt], map: "sessions_expires_at_idx")
+  @@index([userId, revokedAt], map: "sessions_user_id_revoked_at_idx")
+  @@index([churchId, userId], map: "sessions_church_id_user_id_idx")
+  @@map("sessions")
 }

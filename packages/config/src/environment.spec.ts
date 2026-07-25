@@ -1,5 +1,6 @@
 import { parseWebPublicEnvironment } from "./public";
 import {
+  parseAuthenticationEnvironment,
   parseDatabaseEnvironment,
   parseServerEnvironment,
   parseTestDatabaseEnvironment
@@ -9,7 +10,13 @@ describe("environment configuration", () => {
   it("provides safe local defaults", () => {
     expect(parseServerEnvironment({})).toEqual({
       NODE_ENV: "development",
-      PORT: 3001
+      PORT: 3001,
+      JWT_ISSUER: "mission-atos-api",
+      JWT_AUDIENCE: "mission-atos-clients",
+      JWT_ACCESS_TTL_SECONDS: 600,
+      REFRESH_TOKEN_TTL_SECONDS: 2_592_000,
+      AUTH_COOKIE_SECURE: false,
+      CORS_ORIGINS: "http://localhost:3000"
     });
     expect(parseWebPublicEnvironment({})).toEqual({
       NEXT_PUBLIC_API_URL: "http://localhost:3001"
@@ -50,5 +57,16 @@ describe("environment configuration", () => {
         TEST_DATABASE_URL: "postgresql://user:password@localhost:5432/app"
       })
     ).toThrow();
+  });
+
+  it("requires distinct authentication secrets", () => {
+    expect(() =>
+      parseAuthenticationEnvironment({
+        DATABASE_URL: "postgresql://localhost/example",
+        AUTH_CHURCH_ID: "00000000-0000-4000-8000-000000000001",
+        JWT_ACCESS_SECRET: "a".repeat(32),
+        REFRESH_TOKEN_PEPPER: "a".repeat(32)
+      })
+    ).toThrow("Authentication secrets must be distinct");
   });
 });

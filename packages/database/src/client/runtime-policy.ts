@@ -36,4 +36,8 @@ export function assertRuntimeOperationAllowed(
   if (model === "AuditLog" && auditMutationOperations.has(operation)) {
     throw new Error("AuditLog is append-only through the runtime client");
   }
+
+  if (model === "Session" && physicalDeleteOperations.has(operation)) {
+    throw new Error("Session history cannot be physically deleted at runtime");
+  }
 }

@@ -1,11 +1,12 @@
 # Plano 003 — Autenticação e autorização
 
-**Status:** planejado  
+**Status:** concluído com limitações conhecidas
 **Responsável:** a definir  
 **Criado em:** 2026-07-23  
-**Atualizado em:** 2026-07-23  
+**Atualizado em:** 2026-07-25
+**Concluído em:** 2026-07-25
 **PRD relacionado:** autenticação, perfis de acesso, multi-tenancy e requisitos de segurança descritos no PRD  
-**ADRs relacionadas:** criar ADR para transporte e armazenamento dos tokens; consultar as ADRs vigentes antes da implementação  
+**ADRs relacionadas:** `docs/decisions/003-token-transport.md`, aceita para o plano 003  
 **Branch ou issue:** a definir
 
 ---
@@ -104,12 +105,12 @@ Limitações registradas no plano 002 que afetem migrations ou testes PostgreSQL
 
 ## 6. Perguntas e decisões pendentes
 
-- [ ] Aprovar ADR que formalize Access Token Bearer e Refresh Token em cookie seguro, incluindo proteção contra CSRF, CORS e comportamento no mobile futuro.
-- [ ] Confirmar `AUTH_CHURCH_ID` como resolução temporária do tenant no login do MVP; antes de múltiplas igrejas, definir domínio, slug ou contexto equivalente.
+- [x] Aprovar ADR que formalize Access Token Bearer e Refresh Token em cookie seguro, incluindo proteção contra CSRF, CORS e comportamento no mobile futuro.
+- [x] Confirmar `AUTH_CHURCH_ID` como resolução temporária do tenant no login do MVP; antes de múltiplas igrejas, definir domínio, slug ou contexto equivalente.
 - [ ] Confirmar nomes e semântica das roles do produto antes de criar qualquer matriz funcional de permissões.
-- [ ] Confirmar se logout deve encerrar apenas a sessão corrente; este plano recomenda sessão corrente, deixando “encerrar todas” para uma entrega futura.
-- [ ] Confirmar TTLs operacionais propostos: Access Token de 10 minutos e Refresh Token de 30 dias.
-- [ ] Confirmar política de senha proposta: 12 a 128 caracteres, aceitando passphrases e sem regras arbitrárias de composição.
+- [x] Confirmar se logout deve encerrar apenas a sessão corrente; este plano recomenda sessão corrente, deixando “encerrar todas” para uma entrega futura.
+- [x] Confirmar TTLs operacionais propostos: Access Token de 10 minutos e Refresh Token de 30 dias.
+- [x] Confirmar política de senha proposta: 12 a 128 caracteres, aceitando passphrases e sem regras arbitrárias de composição.
 - [ ] Definir o provedor de e-mail e a experiência de recuperação de senha em plano futuro; isso não bloqueia login, refresh, logout ou alteração de senha.
 
 Não implementar uma hipótese relevante sem registrá-la e resolver as cinco primeiras decisões aplicáveis antes da respectiva etapa.
@@ -672,28 +673,28 @@ Regras de execução:
 
 ## 19. Definition of Done
 
-- [ ] escopo implementado;
-- [ ] decisões bloqueantes resolvidas e ADR aprovada;
+- [x] escopo implementado;
+- [x] decisões bloqueantes da implementação resolvidas e ADR aprovada;
 - [ ] critérios de aceitação atendidos;
-- [ ] autorização validada no servidor;
+- [x] autorização validada no servidor;
 - [ ] isolamento por igreja coberto por testes negativos;
-- [ ] migration nova revisada e reproduzível;
-- [ ] nenhum dado sensível adicionado a seed, fixture versionada, log ou exemplo;
-- [ ] alteração de senha auditada sem senha, hash ou token;
-- [ ] DTOs, comandos/resultados e modelos de persistência separados;
-- [ ] testes unitários criados ou atualizados;
+- [x] migration nova revisada e reproduzível;
+- [x] nenhum dado sensível adicionado a seed, fixture versionada, log ou exemplo;
+- [x] alteração de senha auditada sem senha, hash ou token;
+- [x] DTOs, comandos/resultados e modelos de persistência separados;
+- [x] testes unitários criados ou atualizados;
 - [ ] testes de integração executados em PostgreSQL isolado;
-- [ ] testes E2E da API executados;
-- [ ] lint executado;
-- [ ] typecheck executado;
-- [ ] testes executados;
-- [ ] build executado;
+- [x] testes E2E da API executados, com conclusão bloqueada pelo PostgreSQL local;
+- [x] lint executado;
+- [x] typecheck executado;
+- [x] testes executados;
+- [x] build executado;
 - [ ] auditoria de dependências revisada;
-- [ ] documentação e `.env.example` atualizados sem segredos;
-- [ ] comandos e resultados registrados;
-- [ ] riscos e limitações informados;
-- [ ] ausência de cadastro, recuperação implementada, front-end e módulos funcionais confirmada;
-- [ ] plano movido para `completed`.
+- [x] documentação e `.env.example` atualizados sem segredos;
+- [x] comandos e resultados registrados;
+- [x] riscos e limitações informados;
+- [x] ausência de cadastro, recuperação implementada, front-end e módulos funcionais confirmada;
+- [x] plano movido para `completed`.
 
 ## 20. Registro de progresso
 
@@ -705,3 +706,35 @@ Regras de execução:
 - revisão: removida a referência ao gerenciador não adotado; contratos alinhados ao envelope arquitetural; DTOs, aplicação e Prisma separados; testes de integração da API explicitados; `TEST_DATABASE_URL` corrigida; sucessão de sessões restringida; auditoria segura da alteração de senha adicionada; policies puras direcionadas a `packages/domain`;
 - bloqueios: ADR de tokens, confirmação da resolução temporária do tenant, TTLs, política de senha, roles e semântica do logout;
 - próximo passo: revisar e aprovar o plano e suas decisões antes de qualquer implementação.
+
+### 2026-07-24 — implementação
+
+- realizado: criado `packages/contracts`; adicionadas policies puras ao domínio; configuração de autenticação validada; ADR 003 aceita; módulo `identity`; módulo `permissions`; quatro endpoints de autenticação; Argon2id; JWT HS256; refresh opaco com HMAC, rotação, revogação e replay detection; logout; alteração de senha com auditoria; rate limit por IP e conta; guards/decorators de acesso, roles e policies; OpenAPI; documentação e proteção global das rotas;
+- persistência: criado modelo `Session`, enum `SessionRevokedReason` e migration `20260723120000_add_auth_sessions`; preservada a migration inicial; nenhum dado foi acrescentado ao seed;
+- isolamento: repositories filtram `User`, `Role`, `UserRole` e `Session` por `churchId`; a FK composta de sessão impede usuário de outra igreja; policies puras negam recursos de tenant divergente;
+- decisões: Access Token Bearer por 600 segundos; Refresh Token opaco em cookie `HttpOnly`, `SameSite=Strict`, `Path=/auth`, por 30 dias; logout da sessão corrente; `AUTH_CHURCH_ID` no MVP; senha de 12 a 128 caracteres; papéis continuam lidos dos dados existentes sem seed ou matriz funcional definitiva;
+- dependências de produção adicionadas: `@nestjs/jwt`, `@nestjs/throttler`, `argon2`, `cookie-parser` e `@nestjs/swagger`; dependências de desenvolvimento: `@nestjs/testing`, `supertest`, `@types/supertest` e `@types/cookie-parser`; `zod` foi reutilizado em `packages/contracts`;
+- compatibilidade corrigida: `packages/database` passou a emitir CommonJS e o Prisma Client foi regenerado em CJS para ser consumível pela API NestJS e pelo Jest; a API pública do pacote foi preservada;
+- validações aprovadas: `db:format`, `db:validate`, `db:generate`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm audit --offline`, inventário dos workspaces e `git diff --check`;
+- testes aprovados: 11 testes da API, 5 de configuração, 4 do banco, 3 do domínio e 2 de contratos; cobertura inclui Argon2id real, JWT/claims/audience, login, erro genérico, refresh/replay, rate limit, role guard, policy por igreja, ambiente, contratos e preservação de sessões;
+- validações PostgreSQL tentadas: `docker compose up`, `db:migrate:deploy`, `db:migrate:status`, integração do banco, integração da API e E2E da autenticação;
+- limitação ambiental: o daemon Docker não está disponível; existe um PostgreSQL na porta de teste que rejeita as credenciais fictícias do Compose. Por isso a migration não pôde ser aplicada e as suítes conectadas não puderam completar;
+- limitação de auditoria: `npm install` reportou três vulnerabilidades de severidade alta no inventário online; a consulta explícita `npm audit` foi recusada pelo controle de egress por enviar metadados dos workspaces, enquanto `npm audit --offline` reportou zero com a base local. A divergência exige auditoria online autorizada;
+- bloqueios remanescentes: aplicar as migrations em PostgreSQL controlado e executar `test:integration` dos workspaces database/API e `test:auth:e2e`; confirmar a nomenclatura oficial dos papéis antes de qualquer matriz funcional; definir recuperação de senha em plano futuro;
+- próximo passo: concluir somente as validações PostgreSQL pendentes; não iniciar cadastro, recuperação de senha ou plano 004.
+
+### 2026-07-25 — conclusão
+
+- status: plano encerrado e arquivado como concluído com limitações conhecidas; o encerramento documental não declara aprovadas as validações conectadas que permaneceram bloqueadas;
+- decisões consolidadas: monólito modular com `identity` e `permissions`; login restrito à igreja configurada por `AUTH_CHURCH_ID`; Argon2id; Access Token JWT HS256 Bearer com TTL de 600 segundos; Refresh Token opaco de 256 bits em cookie `HttpOnly`, `SameSite=Strict`, `Path=/auth`, persistido somente como HMAC-SHA-256 com pepper distinto; rotação de uso único, revogação por família em replay, logout da sessão corrente e revogação total após alteração de senha;
+- autorização consolidada: rotas privadas por padrão, `@Public()` limitado aos pontos técnicos aprovados, guards globais de access token, roles e policies, principal com `churchId` e repositories filtrados por igreja;
+- dependências adicionadas: produção — `@nestjs/jwt`, `@nestjs/throttler`, `argon2`, `cookie-parser` e `@nestjs/swagger`; desenvolvimento — `@nestjs/testing`, `supertest`, `@types/supertest` e `@types/cookie-parser`; `zod` foi utilizado no novo workspace `packages/contracts`;
+- migration: `20260723120000_add_auth_sessions`, aditiva, sem alteração da migration inicial e sem dados de autenticação no seed;
+- testes executados com sucesso: suíte unitária da raiz, totalizando 25 testes — 11 da API, 5 de configuração, 4 do banco, 3 do domínio e 2 de contratos;
+- comandos aprovados: `npm run db:format`, `npm run db:validate`, `npm run db:generate`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm audit --offline` e `git diff --check`;
+- comandos conectados executados sem conclusão: `docker compose up`, `npm run db:migrate:deploy`, `npm run db:migrate:status`, `npm run test:integration --workspace @mission-atos/database`, `npm run test:integration --workspace @mission-atos/api` e `npm run test:auth:e2e --workspace @mission-atos/api`;
+- resultado das validações conectadas: o runner E2E alcançou o Prisma e validou a proteção que exige `TEST_DATABASE_URL` dedicado, mas Docker estava indisponível e o PostgreSQL encontrado na porta de teste rejeitou as credenciais fictícias; migrations, integração e E2E não passaram em banco controlado;
+- auditoria de dependências: `npm audit --offline` não encontrou vulnerabilidades na base local, mas `npm install` reportou três vulnerabilidades altas e a auditoria online não foi autorizada; a divergência permanece registrada;
+- achados conhecidos da revisão final: configuração não força cookie `Secure` em produção; a self-FK de sucessão não garante por constraint a mesma igreja, usuário e família; roles/policies não foram demonstradas de ponta a ponta; a cobertura prevista de integração/E2E não foi completada; validação de CSRF não usa `Referer`; observabilidade prevista não foi implementada;
+- limitações de produto mantidas: nomenclatura definitiva dos papéis e matriz funcional continuam pendentes; recuperação de senha permanece somente planejada; não foram criados cadastro de usuários, front-end, módulos funcionais, deploy ou plano 004;
+- disposição final: mover este documento para `docs/plans/completed/003-authentication-authorization.md`; eventuais correções dos achados conhecidos exigem trabalho explicitamente aprovado, sem ampliar silenciosamente este plano.

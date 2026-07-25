@@ -17,4 +17,10 @@ describe("runtime database safety", () => {
     expect(() => assertRuntimeOperationAllowed("Church", "findMany")).not.toThrow();
     expect(() => assertRuntimeOperationAllowed("AuditLog", "create")).not.toThrow();
   });
+
+  it("preserves session history", () => {
+    expect(() => assertRuntimeOperationAllowed("Session", "deleteMany")).toThrow(
+      "Session history cannot be physically deleted at runtime"
+    );
+  });
 });

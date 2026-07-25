@@ -26,6 +26,10 @@
       "cache": false,
       "outputs": ["playwright-report/**", "test-results/**"]
     },
+    "test:auth:e2e": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "test:integration": {
       "dependsOn": ["db:generate"],
       "cache": false

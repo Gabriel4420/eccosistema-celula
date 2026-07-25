@@ -1,6 +1,6 @@
 # Ecossistema de Células
 
-Fundação técnica do ecossistema de gestão de células. O repositório contém o monorepo, a aplicação web mínima, a API com health check e a fundação de domínio e persistência PostgreSQL/Prisma. Ainda não há autenticação, endpoints de negócio, módulos funcionais ou aplicativo mobile.
+Fundação técnica do ecossistema de gestão de células. O repositório contém o monorepo, a aplicação web mínima, a API, a persistência PostgreSQL/Prisma e a infraestrutura de autenticação e autorização. Ainda não há cadastro administrativo, recuperação de senha, telas de autenticação, módulos funcionais ou aplicativo mobile.
 
 ## Requisitos
 
@@ -71,6 +71,32 @@ npm.cmd run dev
 - API: <http://localhost:3001>
 - health check: <http://localhost:3001/health>
 
+## Autenticação
+
+A API oferece somente:
+
+- `POST /auth/login`;
+- `POST /auth/refresh`;
+- `POST /auth/logout`;
+- `POST /auth/change-password`.
+
+O login usa `AUTH_CHURCH_ID` para resolver a igreja do MVP. Usuários e papéis devem existir previamente; nenhuma seed cria credenciais.
+
+Configure valores reais apenas em ambiente local ou em um provedor seguro:
+
+- `AUTH_CHURCH_ID`: UUID da igreja do MVP;
+- `JWT_ACCESS_SECRET`: segredo exclusivo com ao menos 32 caracteres;
+- `JWT_ISSUER` e `JWT_AUDIENCE`: emissor e audiência esperados;
+- `JWT_ACCESS_TTL_SECONDS`: padrão de 600 segundos, máximo de 900;
+- `REFRESH_TOKEN_PEPPER`: segredo distinto usado no HMAC do refresh;
+- `REFRESH_TOKEN_TTL_SECONDS`: padrão de 30 dias;
+- `AUTH_COOKIE_SECURE`: `true` sob HTTPS;
+- `CORS_ORIGINS`: origens permitidas separadas por vírgula.
+
+O Access Token é enviado como Bearer e tem duração curta. O Refresh Token é opaco, rotativo, armazenado somente como HMAC e entregue em cookie `HttpOnly`, `SameSite=Strict`, com caminho `/auth`. Logout revoga a sessão corrente; troca de senha revoga todas as sessões e cria auditoria sem hashes ou tokens.
+
+Em suspeita de comprometimento, revogue as sessões afetadas no banco e rotacione os segredos por procedimento controlado. Rotacionar `JWT_ACCESS_SECRET` invalida todos os Access Tokens; rotacionar `REFRESH_TOKEN_PEPPER` invalida todos os Refresh Tokens.
+
 ## Validação
 
 ```powershell
@@ -81,6 +107,8 @@ npm.cmd run build
 npm.cmd exec playwright install chromium
 npm.cmd run test:e2e
 npm.cmd run test:integration
+npm.cmd run test:auth:integration
+npm.cmd run test:auth:e2e
 ```
 
 `npm test` executa somente testes unitários. O smoke test web fica separado em `npm run test:e2e`.
@@ -92,6 +120,7 @@ apps/
   api/                 API NestJS mínima
   web/                 aplicação Next.js com App Router
 packages/
+  contracts/           schemas Zod e contratos HTTP de autenticação
   database/            Prisma Client, schema, migrations, seed e testes PostgreSQL
   domain/              tipos e enums puros, sem dependência de infraestrutura
   config/              validação de ambiente com Zod
