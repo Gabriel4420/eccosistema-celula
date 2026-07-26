@@ -86,5 +86,5 @@ export class RefreshSessionUseCase {
 }
 
 function invalidRefresh(): AuthError {
-  return new AuthError("AUTH_REFRESH_INVALID", 401, "Invalid refresh token");
+  return new AuthError("AUTH_REFRESH_INVALID", "Invalid refresh token");
 }

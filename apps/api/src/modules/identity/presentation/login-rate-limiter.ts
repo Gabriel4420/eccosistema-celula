@@ -31,7 +31,6 @@ export class LoginRateLimiter {
     if (counter.count > limit) {
       throw new AuthError(
         "AUTH_RATE_LIMITED",
-        429,
         "Too many login attempts"
       );
     }

@@ -35,6 +35,7 @@
     "test": "turbo run test",
     "test:auth:e2e": "npm run test:auth:e2e --workspace @mission-atos/api",
     "test:auth:integration": "npm run test:integration --workspace @mission-atos/api",
+    "test:users:e2e": "npm run test:users:e2e --workspace @mission-atos/api",
     "test:e2e": "turbo run test:e2e",
     "test:integration": "npm run test:integration --workspace @mission-atos/database",
     "typecheck": "turbo run typecheck"

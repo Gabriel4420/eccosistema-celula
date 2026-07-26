@@ -5,14 +5,14 @@ import {
 import type { ArgumentsHost, ExceptionFilter } from "@nestjs/common";
 import type { Response } from "express";
 import { ZodError } from "zod";
-import { AuthError } from "../domain/auth-error";
+import { PublicApplicationError } from "@mission-atos/domain";
 
 @Catch()
 export class AuthExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
-    if (exception instanceof AuthError) {
-      response.status(exception.status).json({
+    if (exception instanceof PublicApplicationError) {
+      response.status(applicationErrorStatus(exception.code)).json({
         error: { code: exception.code, message: exception.message, details: {} }
       });
       return;
@@ -39,4 +39,21 @@ export class AuthExceptionFilter implements ExceptionFilter {
       }
     });
   }
+}
+
+function applicationErrorStatus(code: string): number {
+  const statuses: Readonly<Record<string, number>> = {
+    AUTH_INVALID_CREDENTIALS: 401,
+    AUTH_REFRESH_INVALID: 401,
+    AUTH_UNAUTHENTICATED: 401,
+    AUTH_FORBIDDEN: 403,
+    AUTH_RATE_LIMITED: 429,
+    VALIDATION_ERROR: 400,
+    USER_NOT_FOUND: 404,
+    ROLE_NOT_FOUND: 404,
+    USER_EMAIL_CONFLICT: 409,
+    LAST_ACTIVE_ADMIN: 409,
+    USER_ROLE_CONFLICT: 409
+  };
+  return statuses[code] ?? 500;
 }

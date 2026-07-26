@@ -37,7 +37,7 @@ export class RefreshCookieService {
       value.trim()
     );
     if (!allowed.includes(origin)) {
-      throw new AuthError("AUTH_FORBIDDEN", 403, "Origin is not allowed");
+      throw new AuthError("AUTH_FORBIDDEN", "Origin is not allowed");
     }
   }
 

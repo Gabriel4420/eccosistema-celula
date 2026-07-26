@@ -6,6 +6,7 @@ import type {
   SessionRepository,
   UserCredentialsRepository
 } from "../ports";
+import type { AuthenticatedUser } from "../auth.types";
 import { LoginUseCase } from "./login.use-case";
 
 describe("LoginUseCase", () => {
@@ -68,13 +69,13 @@ describe("LoginUseCase", () => {
         password: "wrong-password",
         refreshTtlSeconds: 3600
       })
-    ).rejects.toMatchObject({ code: "AUTH_INVALID_CREDENTIALS", status: 401 });
+    ).rejects.toMatchObject({ code: "AUTH_INVALID_CREDENTIALS" });
     expect(passwords.dummyVerify).toHaveBeenCalledWith("wrong-password");
   });
 });
 
 function userRepository(
-  found: typeof user | null
+  found: AuthenticatedUser | null
 ): jest.Mocked<UserCredentialsRepository> {
   return {
     findForLogin: jest.fn().mockResolvedValue(found),
@@ -99,7 +100,7 @@ function passwordHasher(valid: boolean): jest.Mocked<PasswordHasher> {
     hash: jest.fn().mockResolvedValue("new-hash"),
     verify: jest.fn().mockResolvedValue(valid),
     needsRehash: jest.fn().mockReturnValue(false),
-    dummyVerify: jest.fn().mockResolvedValue()
+    dummyVerify: jest.fn().mockResolvedValue(undefined)
   };
 }
 

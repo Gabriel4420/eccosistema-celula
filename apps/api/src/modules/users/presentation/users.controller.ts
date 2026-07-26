@@ -1,0 +1,327 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query
+} from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags
+} from "@nestjs/swagger";
+import {
+  createUserRequestSchema,
+  listUsersQuerySchema,
+  replaceUserRolesRequestSchema,
+  resetUserPasswordRequestSchema,
+  updateOwnProfileRequestSchema,
+  updateUserRequestSchema,
+  updateUserStatusRequestSchema,
+  userIdParamsSchema
+} from "@mission-atos/contracts";
+import type { AuthenticatedPrincipal } from "@mission-atos/domain";
+import { CurrentPrincipal } from "../../permissions/presentation/decorators/current-principal.decorator";
+import { Roles } from "../../permissions/presentation/decorators/roles.decorator";
+import { UserManagementCommands } from "../application/user-management.commands";
+import { UserManagementQueries } from "../application/user-management.queries";
+import { presentUser, presentUserPage } from "./user.presenter";
+
+@ApiTags("users")
+@ApiBearerAuth()
+@Controller("users")
+export class UsersController {
+  constructor(
+    @Inject(UserManagementQueries)
+    private readonly queries: UserManagementQueries,
+    @Inject(UserManagementCommands)
+    private readonly commands: UserManagementCommands
+  ) {}
+
+  @Get("me")
+  @ApiOperation({ summary: "Get the authenticated user profile" })
+  @ApiResponse({ status: 200, description: "Profile returned without security fields", schema: userEnvelopeSchema() })
+  async getOwn(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
+    return { data: presentUser(await this.queries.getOwn(principal)), meta: {} };
+  }
+
+  @Patch("me")
+  @ApiOperation({ summary: "Update the authenticated user profile" })
+  @ApiBody({ schema: profileBodySchema() })
+  @ApiResponse({ status: 200, description: "Profile updated", schema: userEnvelopeSchema() })
+  async updateOwn(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Body() body: unknown
+  ) {
+    const input = updateOwnProfileRequestSchema.parse(body);
+    return {
+      data: presentUser(await this.commands.updateOwn(principal, input)),
+      meta: {}
+    };
+  }
+
+  @Roles("ADMIN")
+  @Get()
+  @ApiOperation({ summary: "List users from the authenticated church" })
+  @ApiQuery({ name: "page", required: false, type: Number, minimum: 1 })
+  @ApiQuery({ name: "pageSize", required: false, type: Number, minimum: 1, maximum: 100 })
+  @ApiQuery({ name: "search", required: false, type: String })
+  @ApiQuery({ name: "status", required: false, enum: ["ACTIVE", "BLOCKED"] })
+  @ApiQuery({ name: "roleId", required: false, type: String, format: "uuid" })
+  @ApiResponse({ status: 200, description: "Paginated users", schema: userPageSchema() })
+  async list(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Query() query: unknown
+  ) {
+    const input = listUsersQuerySchema.parse(query);
+    return presentUserPage(await this.queries.list(principal, input), input.page, input.pageSize);
+  }
+
+  @Roles("ADMIN")
+  @Get(":id")
+  @ApiOperation({ summary: "Get a user from the authenticated church" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiResponse({ status: 200, description: "User returned", schema: userEnvelopeSchema() })
+  @ApiResponse({ status: 404, description: "User not found", schema: errorEnvelopeSchema() })
+  async get(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown
+  ) {
+    const { id } = userIdParamsSchema.parse(params);
+    return { data: presentUser(await this.queries.get(principal, id)), meta: {} };
+  }
+
+  @Roles("ADMIN")
+  @Post()
+  @ApiOperation({ summary: "Create a user in the authenticated church" })
+  @ApiBody({ schema: createUserBodySchema() })
+  @ApiResponse({ status: 201, description: "User created", schema: userEnvelopeSchema() })
+  @ApiResponse({ status: 409, description: "Normalized email already exists", schema: errorEnvelopeSchema() })
+  async create(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Body() body: unknown
+  ) {
+    const input = createUserRequestSchema.parse(body);
+    return { data: presentUser(await this.commands.create(principal, input)), meta: {} };
+  }
+
+  @Roles("ADMIN")
+  @Patch(":id")
+  @ApiOperation({ summary: "Update a user" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiBody({ schema: updateUserBodySchema() })
+  @ApiResponse({ status: 200, description: "User updated", schema: userEnvelopeSchema() })
+  async update(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown,
+    @Body() body: unknown
+  ) {
+    const { id } = userIdParamsSchema.parse(params);
+    const input = updateUserRequestSchema.parse(body);
+    return { data: presentUser(await this.commands.update(principal, id, input)), meta: {} };
+  }
+
+  @Roles("ADMIN")
+  @Patch(":id/status")
+  @ApiOperation({ summary: "Activate or deactivate a user" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      required: ["status"],
+      additionalProperties: false,
+      properties: { status: { type: "string", enum: ["ACTIVE", "BLOCKED"] } }
+    }
+  })
+  @ApiResponse({ status: 200, description: "Status updated", schema: userEnvelopeSchema() })
+  @ApiResponse({ status: 409, description: "Last active administrator protected", schema: errorEnvelopeSchema() })
+  async updateStatus(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown,
+    @Body() body: unknown
+  ) {
+    const { id } = userIdParamsSchema.parse(params);
+    const input = updateUserStatusRequestSchema.parse(body);
+    return {
+      data: presentUser(await this.commands.updateStatus(principal, id, input.status)),
+      meta: {}
+    };
+  }
+
+  @Roles("ADMIN")
+  @Put(":id/roles")
+  @ApiOperation({ summary: "Replace a user's managed roles" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiBody({ schema: roleIdsBodySchema() })
+  @ApiResponse({ status: 200, description: "Roles replaced", schema: userEnvelopeSchema() })
+  async replaceRoles(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown,
+    @Body() body: unknown
+  ) {
+    const { id } = userIdParamsSchema.parse(params);
+    const input = replaceUserRolesRequestSchema.parse(body);
+    return {
+      data: presentUser(await this.commands.replaceRoles(principal, id, input.roleIds)),
+      meta: {}
+    };
+  }
+
+  @Roles("ADMIN")
+  @Post(":id/reset-password")
+  @ApiOperation({ summary: "Reset a user password and revoke sessions" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      required: ["newPassword"],
+      additionalProperties: false,
+      properties: {
+        newPassword: { type: "string", minLength: 12, maxLength: 128 }
+      }
+    }
+  })
+  @ApiResponse({ status: 204, description: "Password reset and sessions revoked" })
+  @HttpCode(204)
+  async resetPassword(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown,
+    @Body() body: unknown
+  ): Promise<void> {
+    const { id } = userIdParamsSchema.parse(params);
+    const input = resetUserPasswordRequestSchema.parse(body);
+    await this.commands.resetPassword(principal, id, input.newPassword);
+  }
+}
+
+function profileBodySchema() {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      firstName: { type: "string", minLength: 1, maxLength: 100 },
+      lastName: { type: "string", minLength: 1, maxLength: 100 }
+    }
+  };
+}
+
+function updateUserBodySchema() {
+  return {
+    ...profileBodySchema(),
+    properties: {
+      ...profileBodySchema().properties,
+      email: { type: "string", format: "email", maxLength: 320 }
+    }
+  };
+}
+
+function roleIdsBodySchema() {
+  return {
+    type: "object",
+    required: ["roleIds"],
+    additionalProperties: false,
+    properties: {
+      roleIds: {
+        type: "array",
+        maxItems: 4,
+        uniqueItems: true,
+        items: { type: "string", format: "uuid" }
+      }
+    }
+  };
+}
+
+function createUserBodySchema() {
+  return {
+    type: "object",
+    required: ["firstName", "lastName", "email", "initialPassword", "roleIds"],
+    additionalProperties: false,
+    properties: {
+      ...updateUserBodySchema().properties,
+      initialPassword: { type: "string", minLength: 12, maxLength: 128 },
+      roleIds: roleIdsBodySchema().properties.roleIds
+    }
+  };
+}
+
+function userSchema() {
+  return {
+    type: "object",
+    required: ["id", "firstName", "lastName", "email", "status", "roles", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string", format: "uuid" },
+      firstName: { type: "string" },
+      lastName: { type: "string" },
+      email: { type: "string", format: "email" },
+      status: { type: "string", enum: ["ACTIVE", "BLOCKED"] },
+      roles: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["id", "name"],
+          properties: {
+            id: { type: "string", format: "uuid" },
+            name: { type: "string" }
+          }
+        }
+      },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" }
+    }
+  };
+}
+
+function userEnvelopeSchema() {
+  return {
+    type: "object",
+    required: ["data", "meta"],
+    properties: { data: userSchema(), meta: { type: "object" } }
+  };
+}
+
+function userPageSchema() {
+  return {
+    type: "object",
+    required: ["data", "meta"],
+    properties: {
+      data: { type: "array", items: userSchema() },
+      meta: {
+        type: "object",
+        required: ["page", "pageSize", "totalItems", "totalPages"],
+        properties: {
+          page: { type: "integer", minimum: 1 },
+          pageSize: { type: "integer", minimum: 1 },
+          totalItems: { type: "integer", minimum: 0 },
+          totalPages: { type: "integer", minimum: 0 }
+        }
+      }
+    }
+  };
+}
+
+function errorEnvelopeSchema() {
+  return {
+    type: "object",
+    required: ["error"],
+    properties: {
+      error: {
+        type: "object",
+        required: ["code", "message", "details"],
+        properties: {
+          code: { type: "string" },
+          message: { type: "string" },
+          details: { type: "object" }
+        }
+      }
+    }
+  };
+}

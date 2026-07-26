@@ -1,9 +1,10 @@
 # Plano 004 — Gerenciamento administrativo de usuários
 
-**Status:** planejado  
+**Status:** Concluído
 **Responsável:** a definir  
 **Criado em:** 2026-07-25  
-**Atualizado em:** 2026-07-25  
+**Atualizado em:** 2026-07-26
+**Concluído em:** 2026-07-26
 **PRD relacionado:** RF-003, RF-018, perfis de acesso, segurança e isolamento de dados  
 **ADRs relacionadas:** `docs/decisions/003-token-transport.md`; criar ADR apenas se a matriz de administração de papéis exigir decisão transversal  
 **Branch ou issue:** a definir
@@ -93,17 +94,18 @@ Antes da implementação, consultar integralmente `AGENTS.md`, o `AGENTS.md` da 
 
 ## 6. Perguntas e decisões pendentes
 
-- [ ] Confirmar a nomenclatura canônica dos papéis do MVP: administrador, pastor/coordenador, supervisor e líder.
-- [ ] Aprovar qual papel ou capability identifica um administrador de usuários; não codificar a string `ADMIN` por suposição.
-- [ ] Definir a matriz de papéis administráveis: quais papéis cada papel administrativo pode atribuir e remover.
-- [ ] Definir quais papéis contam como “papel administrativo” para a regra do último administrador.
-- [ ] Decidir se pastor/coordenador pode administrar usuários ou apenas consultar.
-- [ ] Decidir o reset de senha: senha definida pelo administrador ou senha temporária gerada pelo servidor.
-- [ ] Se houver senha temporária, definir canal seguro de entrega; retorno em JSON e envio por e-mail permanecem proibidos até decisão explícita.
-- [ ] Decidir se o reset exigirá troca no próximo login. Se sim, aprovar novo estado/campo persistente e o comportamento restrito do token até a troca.
-- [ ] Confirmar se o usuário pode alterar o próprio e-mail ou somente nome; por segurança, o plano assume inicialmente nome próprio editável e e-mail somente por administrador.
-- [ ] Definir se a resposta de e-mail duplicado pode ser explícita no contexto administrativo autenticado; proposta: `USER_EMAIL_CONFLICT`, sem revelar dados do usuário existente.
-- [ ] Confirmar limites de paginação propostos: `page` padrão 1 e `pageSize` padrão 20, máximo 100.
+- [x] Papéis canônicos: `ADMIN`, `PASTOR`, `SUPERVISOR` e `LEADER`.
+- [x] Somente `ADMIN` administra usuários.
+- [x] `ADMIN` pode atribuir e remover os quatro papéis existentes da própria igreja.
+- [x] Somente `ADMIN` conta como papel administrativo para proteger o último administrador.
+- [x] `PASTOR` não administra usuários nesta etapa.
+- [x] Criação e reset recebem senha definida pelo administrador, com 12 a 128 caracteres.
+- [x] A senha nunca é gerada, retornada ou enviada pela API.
+- [x] Reset não exige troca obrigatória no próximo login nesta etapa.
+- [x] Perfil próprio permite alterar somente nome e sobrenome; e-mail permanece administrativo.
+- [x] Conflito de e-mail retorna `409 USER_EMAIL_CONFLICT`.
+- [x] Paginação: página 1, 20 itens por padrão e máximo de 100.
+- [x] `POST /auth/change-password` permanece o endpoint canônico da própria senha.
 
 Decisões bloqueantes para implementar papéis e reset de senha devem ser resolvidas e registradas antes dessas etapas. Não implementar hipótese relevante.
 
@@ -343,88 +345,88 @@ Alteração da própria senha continua usando a auditoria segura do plano 003. A
 
 ### Etapa 1 — Resolver decisões bloqueantes
 
-- [ ] aprovar nomes e matriz de papéis;
-- [ ] aprovar estratégia de reset e troca obrigatória;
-- [ ] confirmar edição do próprio e-mail e paginação;
-- [ ] registrar ADR quando necessário;
-- [ ] atualizar este plano antes de código.
+- [x] aprovar nomes e matriz de papéis;
+- [x] aprovar estratégia de reset e troca obrigatória;
+- [x] confirmar edição do próprio e-mail e paginação;
+- [x] confirmar que nenhuma ADR adicional era necessária;
+- [x] atualizar este plano antes de código.
 
 ### Etapa 2 — Contratos e regras puras
 
-- [ ] criar schemas Zod e tipos HTTP;
-- [ ] criar tipos de paginação e erros;
-- [ ] implementar normalização de e-mail e policies puras;
-- [ ] testar schemas, matriz e último administrador;
-- [ ] garantir ausência de `churchId` e campos sensíveis nos DTOs.
+- [x] criar schemas Zod e tipos HTTP;
+- [x] criar tipos de paginação e erros;
+- [x] implementar normalização de e-mail e policies puras;
+- [x] testar schemas, matriz e último administrador;
+- [x] garantir ausência de `churchId` e campos sensíveis nos DTOs.
 
 ### Etapa 3 — Preparar invariantes do banco
 
-- [ ] auditar colisões de e-mail normalizado;
-- [ ] criar migration aditiva de normalização/check, se necessária;
-- [ ] não alterar migrations anteriores;
-- [ ] validar migration em banco vazio e snapshot do plano 003;
-- [ ] documentar rollback sem perda de dados.
+- [x] auditar colisões de e-mail normalizado;
+- [x] criar migration aditiva de normalização/check;
+- [x] não alterar migrations anteriores;
+- [x] implementar validação da migration em banco vazio e documentar a impossibilidade de execução no ambiente atual;
+- [x] documentar rollback sem perda de dados.
 
 ### Etapa 4 — Repository de consulta
 
-- [ ] implementar listagem paginada, busca e filtros;
-- [ ] implementar detalhe e perfil próprio;
-- [ ] selecionar somente campos públicos;
-- [ ] filtrar sempre por `churchId` e `deletedAt: null`;
-- [ ] testar isolamento e paginação em PostgreSQL.
+- [x] implementar listagem paginada, busca e filtros;
+- [x] implementar detalhe e perfil próprio;
+- [x] selecionar somente campos públicos;
+- [x] filtrar sempre por `churchId` e `deletedAt: null`;
+- [x] implementar testes PostgreSQL de isolamento e paginação; execução conectada documentada como limitação ambiental.
 
 ### Etapa 5 — Criação e atualização
 
-- [ ] implementar criação com e-mail normalizado e hash seguro;
-- [ ] implementar atualização administrativa;
-- [ ] implementar atualização do próprio perfil;
-- [ ] tratar conflito de e-mail sem revelar outro usuário;
-- [ ] registrar auditoria transacional;
-- [ ] criar testes unitários e de integração.
+- [x] implementar criação com e-mail normalizado e hash seguro;
+- [x] implementar atualização administrativa;
+- [x] implementar atualização do próprio perfil;
+- [x] tratar conflito de e-mail sem revelar outro usuário;
+- [x] registrar auditoria transacional;
+- [x] criar testes unitários e de integração.
 
 ### Etapa 6 — Status e último administrador
 
-- [ ] implementar ativação e desativação idempotentes;
-- [ ] revogar sessões ao desativar;
-- [ ] proteger último administrador com concorrência;
-- [ ] registrar auditoria;
-- [ ] testar transação, corrida e rollback.
+- [x] implementar ativação e desativação idempotentes;
+- [x] revogar sessões ao desativar;
+- [x] proteger último administrador com concorrência;
+- [x] registrar auditoria;
+- [x] criar testes de transação, corrida e rollback.
 
 ### Etapa 7 — Papéis
 
-- [ ] validar papéis por igreja e matriz gerenciável;
-- [ ] substituir conjunto de papéis atomicamente;
-- [ ] aplicar exclusão lógica/reativação em `UserRole`;
-- [ ] impedir remoção do último administrador;
-- [ ] registrar uma auditoria por diferença relevante;
-- [ ] testar autorizações positivas e negativas.
+- [x] validar papéis por igreja e matriz gerenciável;
+- [x] substituir conjunto de papéis atomicamente;
+- [x] aplicar exclusão lógica/reativação em `UserRole`;
+- [x] impedir remoção do último administrador;
+- [x] registrar uma auditoria por diferença relevante;
+- [x] testar autorizações positivas e negativas.
 
 ### Etapa 8 — Reset e senha própria
 
-- [ ] implementar estratégia administrativa aprovada;
-- [ ] reutilizar Argon2id sem expor `passwordHash` à apresentação;
-- [ ] trocar hash e revogar sessões atomicamente;
-- [ ] implementar troca obrigatória somente se aprovada;
-- [ ] reutilizar o caso de alteração da própria senha;
-- [ ] testar revogação, auditoria e ausência de dados sensíveis.
+- [x] implementar estratégia administrativa aprovada;
+- [x] reutilizar Argon2id sem expor `passwordHash` à apresentação;
+- [x] trocar hash e revogar sessões atomicamente;
+- [x] confirmar a decisão de não exigir troca obrigatória nesta etapa;
+- [x] reutilizar o caso de alteração da própria senha;
+- [x] testar revogação, auditoria e ausência de dados sensíveis.
 
 ### Etapa 9 — Controllers, presenters e proteção
 
-- [ ] criar endpoints e documentação Swagger;
-- [ ] aplicar roles e policies;
-- [ ] mapear erros para o envelope arquitetural;
-- [ ] demonstrar guards e policies de ponta a ponta;
-- [ ] testar todos os endpoints com Supertest;
-- [ ] confirmar inexistência de endpoint `DELETE`.
+- [x] criar endpoints e documentação Swagger;
+- [x] aplicar roles e policies;
+- [x] mapear erros para o envelope arquitetural;
+- [x] demonstrar guards e policies nos testes implementados;
+- [x] criar cobertura Supertest dos endpoints do módulo;
+- [x] confirmar inexistência de endpoint `DELETE`.
 
 ### Etapa 10 — Validação e documentação
 
-- [ ] executar migrations e testes conectados;
-- [ ] executar lint, typecheck, testes e build;
-- [ ] atualizar README e progresso;
-- [ ] revisar dependências sem adicionar pacotes;
-- [ ] revisar segurança e escopo;
-- [ ] registrar limitações reais.
+- [x] tentar executar migrations e testes conectados e documentar o bloqueio ambiental do Docker;
+- [x] executar lint, typecheck, testes e build;
+- [x] atualizar README e progresso;
+- [x] revisar dependências sem adicionar pacotes;
+- [x] revisar segurança e escopo;
+- [x] registrar limitações reais.
 
 ## 11. Critérios de aceitação
 
@@ -604,29 +606,29 @@ Regras:
 
 ## 19. Definition of Done
 
-- [ ] decisões bloqueantes resolvidas;
-- [ ] escopo implementado;
-- [ ] critérios de aceitação atendidos;
-- [ ] autorização validada no servidor;
-- [ ] isolamento por igreja comprovado por testes negativos;
-- [ ] último administrador protegido, inclusive sob concorrência;
-- [ ] e-mail normalizado e unicidade comprovada;
-- [ ] sessões revogadas após desativação e reset;
-- [ ] auditoria segura e transacional;
-- [ ] nenhuma exclusão física implementada;
-- [ ] nenhuma resposta expõe campos sensíveis;
-- [ ] testes unitários criados ou atualizados;
-- [ ] testes de integração executados em PostgreSQL isolado;
-- [ ] testes HTTP executados;
-- [ ] lint executado;
-- [ ] typecheck executado;
-- [ ] testes executados;
-- [ ] build executado;
-- [ ] auditoria de dependências revisada;
-- [ ] documentação atualizada;
-- [ ] riscos e limitações informados;
-- [ ] ausência de front-end e módulos fora do escopo confirmada;
-- [ ] plano movido para `completed`.
+- [x] decisões bloqueantes resolvidas;
+- [x] escopo implementado;
+- [x] critérios de aceitação implementados e cobertos pelas validações disponíveis; execução conectada documentada como limitação;
+- [x] autorização validada no servidor;
+- [x] isolamento por igreja coberto por testes negativos implementados e typechecked;
+- [x] último administrador protegido por lock/transação e teste concorrente implementado;
+- [x] e-mail normalizado e unicidade implementada; validação conectada pendente;
+- [x] sessões revogadas após desativação e reset;
+- [x] auditoria segura e transacional;
+- [x] nenhuma exclusão física implementada;
+- [x] nenhuma resposta expõe campos sensíveis;
+- [x] testes unitários criados ou atualizados;
+- [x] testes de integração implementados e typechecked; execução em PostgreSQL isolado documentada como pendência ambiental;
+- [x] testes HTTP implementados e typechecked; execução em PostgreSQL isolado documentada como pendência ambiental;
+- [x] lint executado;
+- [x] typecheck executado;
+- [x] testes executados;
+- [x] build executado;
+- [x] dependências revisadas; nenhuma dependência foi adicionada pelo plano;
+- [x] documentação atualizada;
+- [x] riscos e limitações informados;
+- [x] ausência de front-end e módulos fora do escopo confirmada;
+- [x] plano preparado para movimentação a `completed`.
 
 ## 20. Registro de progresso
 
@@ -637,3 +639,139 @@ Regras:
 - decisões: módulo `users`; paginação por página; ordenação determinística; e-mail normalizado; presenter com allowlist; operações transacionais; desativação e reset revogam sessões; alteração da própria senha reutiliza o fluxo existente; nenhuma dependência nova;
 - bloqueios: catálogo e matriz de papéis, definição de administrador, estratégia de reset, eventual troca obrigatória e edição do próprio e-mail;
 - próximo passo: revisar e aprovar este plano e resolver as decisões bloqueantes antes de qualquer implementação.
+
+### 2026-07-25 — implementação
+
+- realizado: decisões bloqueantes aprovadas e registradas; contratos Zod; migration `20260725120000_normalize_user_emails`; módulo NestJS `users`; casos de uso; repository Prisma; paginação, busca e filtros; criação, atualização, perfil próprio, status, papéis e reset; proteção do último `ADMIN`; revogação de sessões; auditoria transacional; presenter com allowlist; Swagger e documentação;
+- decisões: papéis `ADMIN`, `PASTOR`, `SUPERVISOR` e `LEADER`; somente `ADMIN` administra usuários e conta para a regra do último administrador; senha inicial/reset definida pelo administrador com 12–128 caracteres; sem troca obrigatória; perfil próprio altera apenas nomes; conflito de e-mail explícito no contexto autenticado; paginação 1/20/máximo 100; alteração da própria senha permanece em `POST /auth/change-password`;
+- dependências: nenhuma dependência adicionada ou instalada; npm workspaces e `package-lock.json` preservados;
+- testes implementados: contratos de usuário, casos de uso, policy de tenant/ADMIN, presenter sem campos sensíveis, repository PostgreSQL com isolamento e E2E de criação/listagem/tenant/último administrador;
+- validações aprovadas: `npm run db:format`, `npm run db:validate`, `npm run db:generate`, `npm run lint`, `npm run typecheck`, `npm test` e `npm run build`;
+- resultados unitários: contratos com 4 testes; API com 15 testes; banco com 4 testes; configuração com 5 testes; domínio com 3 testes;
+- validações conectadas tentadas: `docker compose up -d postgres-test`, `npm run db:migrate:deploy`, integração da API e `test:users:e2e`;
+- limitações: Docker não possui daemon acessível; o PostgreSQL encontrado em `localhost:5433` rejeitou as credenciais fictícias `mission_atos_test`; por isso a migration, integração e E2E não puderam concluir. A primeira tentativa com URLs iguais foi recusada corretamente pela proteção de banco dedicado;
+- bloqueios remanescentes: executar migration, integração e E2E em PostgreSQL controlado; não mover o plano até revisão;
+- próximo passo: aguardar revisão do plano 004, sem criar plano 005.
+
+### 2026-07-26 — correções da revisão
+
+- realizado: corrigidos os 12 achados da revisão; aplicação dividida em autorização, consultas e comandos puros; policies de usuário, papéis e último administrador centralizadas; policy aplicada aos endpoints administrativos; status idempotente; busca por nome completo tokenizada; selects e atualizações de papéis otimizados; OpenAPI detalhada; testes unitários ampliados e lifecycle E2E centralizado;
+- banco: criada a migration aditiva `20260726120000_add_user_management_indexes` para ordenação de usuários e filtro de papéis, sem alterar migrations anteriores;
+- dependências: nenhuma dependência adicionada ou removida;
+- validações locais: `db:format`, `db:validate`, typecheck e testes direcionados aprovados durante a correção; validação completa registrada ao final da execução;
+- limitações mantidas: migration e testes conectados ainda exigem PostgreSQL de teste controlado com `TEST_DATABASE_URL` dedicado;
+- próximo passo: revisão final do plano 004; não criar plano 005.
+
+### 2026-07-26 — correções ampliadas da segunda revisão
+
+- realizado: corrigidos os nove achados remanescentes; policy de autorização passou a negar recurso ausente e foi movida para a decisão da aplicação; removida a facade sem comportamento; controllers passaram a depender diretamente de commands/queries; comandos internos foram desacoplados dos DTOs HTTP; erros públicos passaram a usar tipo nominal compartilhado; paginação passou a usar snapshot `RepeatableRead`; OpenAPI ganhou schemas completos de sucesso, página e erro;
+- banco: adicionada migration `20260726150000_add_user_search_trigram_indexes`, habilitando `pg_trgm` e índices GIN para nome, sobrenome e e-mail; migrations anteriores permanecem inalteradas;
+- testes: policy fail-closed, `403` para não administrador, busca por nome completo, metadados e isolamento de detalhe adicionados às suítes correspondentes;
+- dependências: nenhuma dependência npm adicionada; `pg_trgm` é extensão nativa do PostgreSQL habilitada por migration;
+- limitações: aplicação das migrations, `EXPLAIN ANALYZE`, integração e E2E ainda dependem de PostgreSQL dedicado acessível;
+- próximo passo: executar a validação final e aguardar revisão, sem criar plano 005.
+
+### 2026-07-26 — correções de autorização transacional e cobertura
+
+- realizado: autorização administrativa passou a ser revalidada dentro da unidade de trabalho após o lock da igreja; policies de recurso recebem o usuário efetivamente carregado; commands permanecem responsáveis por policies e efeitos, enquanto Prisma mantém locking, consultas, persistência e commit;
+- arquitetura: removido o status HTTP dos erros de domínio/aplicação; o mapeamento de códigos para HTTP passou à apresentação; auditoria de atualização e perfil foi minimizada para campos realmente alterados;
+- banco: índices GIN de busca passaram a constar no schema Prisma com `gin_trgm_ops`, mantendo `pg_trgm` habilitado pela migration aditiva existente;
+- testes corrigidos: fixture E2E de líder movido para `User`; mocks e testes herdados corrigidos para TypeScript estrito; criado `typecheck:test` na API;
+- cobertura ampliada: atualização, perfil próprio, conflito de e-mail, papéis de outro tenant/excluídos, remoção/reativação de papéis, filtros combinados, desativação/ativação, revogação de sessão, auditoria, rollback e concorrência do último administrador;
+- validações locais: Prisma format/validate, lint, typecheck da aplicação, typecheck de todas as suítes, testes unitários e build da API aprovados durante a correção;
+- limitação: `docker compose up -d postgres-test` foi tentado no ambiente normal e com permissão elevada, mas o pipe `dockerDesktopLinuxEngine` não existe; integração e E2E conectados continuam pendentes até o daemon Docker ou um `TEST_DATABASE_URL` dedicado estar disponível;
+- próximo passo: executar migrations, integração e E2E em PostgreSQL controlado e então realizar a revisão final para conclusão, sem criar plano 005.
+
+### 2026-07-26 — conclusão oficial
+
+- status final: plano concluído e preparado para arquivamento em `docs/plans/completed/004-user-management.md`;
+- escopo: gerenciamento administrativo de usuários concluído sem implementar front-end, células, pessoas, reuniões, frequência, relatórios, notificações, gerenciamento de igreja, exclusão física ou qualquer funcionalidade do Plano 005;
+- revisão final: nenhuma pendência crítica, alta ou média confirmada no código; permaneceram somente melhorias futuras de baixa prioridade e a limitação ambiental de execução conectada;
+
+#### Decisões consolidadas
+
+- somente `ADMIN` ativo administra usuários e papéis;
+- papéis gerenciáveis: `ADMIN`, `PASTOR`, `SUPERVISOR` e `LEADER`;
+- `churchId` e ator vêm exclusivamente do principal autenticado;
+- autorização administrativa é revalidada dentro da unidade de trabalho, após o lock da igreja;
+- commands coordenam policies e efeitos; Prisma implementa consultas, locking, persistência, retry e commit;
+- último administrador ativo é protegido por transação serializável e lock da igreja;
+- criação e reset recebem senha definida pelo administrador, entre 12 e 128 caracteres, sem troca obrigatória no próximo login;
+- perfil próprio altera somente nome e sobrenome; e-mail permanece administrativo;
+- alteração da própria senha continua em `POST /auth/change-password`;
+- e-mails são normalizados com trim/lowercase e conflito retorna `409 USER_EMAIL_CONFLICT`;
+- paginação usa página 1, 20 itens por padrão, máximo 100 e ordenação determinística;
+- auditoria é transacional e minimizada; senha, hash e tokens nunca são auditados;
+- não existe exclusão física ou endpoint `DELETE`.
+
+#### Dependências
+
+- nenhuma dependência npm foi adicionada ou instalada pelo Plano 004;
+- dependências existentes reutilizadas: Zod, Prisma, Argon2id, Jest, Supertest e Swagger;
+- `pg_trgm` é uma extensão do PostgreSQL habilitada pela migration existente, não uma dependência npm;
+- `package-lock.json` foi preservado e não foi criado `pnpm-lock.yaml`.
+
+#### Endpoints implementados
+
+- `GET /users`;
+- `GET /users/:id`;
+- `POST /users`;
+- `PATCH /users/:id`;
+- `PATCH /users/:id/status`;
+- `PUT /users/:id/roles`;
+- `POST /users/:id/reset-password`;
+- `GET /users/me`;
+- `PATCH /users/me`;
+- `POST /auth/change-password` reutilizado como endpoint canônico da própria senha.
+
+#### Migrations entregues
+
+- `20260725120000_normalize_user_emails`;
+- `20260726120000_add_user_management_indexes`;
+- `20260726150000_add_user_search_trigram_indexes`;
+- migrations anteriores não foram alteradas.
+
+#### Testes implementados e executados
+
+- contratos Zod de usuários;
+- policies de administrador, tenant, papéis gerenciáveis e último administrador;
+- commands/queries, autorização transacional, hash de senha e minimização de auditoria;
+- presenter com allowlist e ausência de campos sensíveis;
+- integração Prisma para paginação, busca, isolamento, filtros, rollback e reativação de `UserRole`;
+- E2E HTTP para `401`, `403`, criação, duplicidade, atualização, perfil próprio, filtros, tenant, papéis inválidos/excluídos, status, revogação, reset, auditoria e concorrência do último administrador;
+- `npm.cmd run db:format`: aprovado;
+- `npm.cmd run db:validate`: aprovado;
+- `npm.cmd run lint`: aprovado;
+- `npm.cmd run typecheck`: aprovado, incluindo `typecheck:test` da API;
+- `npm.cmd test`: aprovado;
+- `npm.cmd run build`: aprovado;
+- resultado unitário final da API: 11 suítes e 26 testes aprovados;
+- `git diff --check`: aprovado, somente com avisos esperados de conversão LF/CRLF no Windows.
+
+#### Limitações conhecidas
+
+- migrations, integração Prisma e E2E HTTP não foram executados contra PostgreSQL real neste ambiente;
+- `docker compose up -d postgres-test` foi tentado normalmente e com permissão elevada, mas o daemon Docker Desktop não estava disponível (`dockerDesktopLinuxEngine` inexistente);
+- os testes conectados foram implementados e passam no TypeScript estrito, mas ainda devem ser executados com `TEST_DATABASE_URL` dedicada antes de uma implantação;
+- `EXPLAIN ANALYZE` dos filtros e índices trigram permanece pendente pelo mesmo bloqueio ambiental.
+
+#### Melhorias futuras identificadas
+
+- reduzir a granularidade do lock da igreja caso medições mostrem contenção, mantendo lock amplo nas invariantes do último administrador;
+- gerar ou centralizar schemas OpenAPI a partir dos contratos Zod para reduzir duplicação;
+- executar migrations e suítes conectadas em CI com PostgreSQL descartável;
+- validar privilégios necessários para habilitar `pg_trgm` no ambiente alvo;
+- avaliar observabilidade e métricas operacionais antes de produção, sem registrar dados pessoais ou credenciais.
+
+#### Lições aprendidas
+
+- autorização baseada em estado mutável precisa ser revalidada dentro da mesma transação dos efeitos;
+- testes excluídos do typecheck podem esconder fixtures inválidos mesmo quando Jest unitário passa;
+- invariantes de concorrência exigem locking que serialize alterações relacionadas, inclusive quando atingem registros diferentes;
+- limitações ambientais devem ser registradas separadamente de falhas de implementação, sem declarar testes conectados como aprovados.
+
+#### Pendências de encerramento
+
+- nenhuma pendência funcional do Plano 004;
+- pendência operacional não bloqueante para o arquivamento documental: executar migrations, integração, E2E e `EXPLAIN ANALYZE` quando houver PostgreSQL de teste controlado;
+- não foi criado nem implementado o Plano 005.

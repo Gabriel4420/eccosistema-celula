@@ -61,6 +61,6 @@ import { LoginRateLimiter } from "./presentation/login-rate-limiter";
     { provide: CLOCK, useClass: SystemClock },
     { provide: APP_FILTER, useClass: AuthExceptionFilter }
   ],
-  exports: [ACCESS_TOKEN_SERVICE]
+  exports: [ACCESS_TOKEN_SERVICE, PASSWORD_HASHER, DATABASE_CLIENT]
 })
 export class IdentityModule {}

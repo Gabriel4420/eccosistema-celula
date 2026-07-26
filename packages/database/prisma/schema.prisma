@@ -113,6 +113,10 @@ model User {
   @@unique([churchId, email], map: "users_church_id_email_key")
   @@index([churchId, status], map: "users_church_id_status_idx")
   @@index([churchId, deletedAt], map: "users_church_id_deleted_at_idx")
+  @@index([churchId, lastName, firstName, id], map: "users_church_name_id_idx")
+  @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "users_first_name_trgm_idx")
+  @@index([lastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "users_last_name_trgm_idx")
+  @@index([email(ops: raw("gin_trgm_ops"))], type: Gin, map: "users_email_trgm_idx")
   @@map("users")
 }
 
@@ -148,6 +152,7 @@ model UserRole {
   @@index([userId], map: "user_roles_user_id_idx")
   @@index([roleId], map: "user_roles_role_id_idx")
   @@index([churchId, deletedAt], map: "user_roles_church_id_deleted_at_idx")
+  @@index([churchId, roleId, deletedAt], map: "user_roles_church_role_deleted_idx")
   @@map("user_roles")
 }
 

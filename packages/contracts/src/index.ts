@@ -8,3 +8,22 @@ export type {
   ChangePasswordRequest,
   LoginRequest
 } from "./auth";
+export {
+  createUserRequestSchema,
+  listUsersQuerySchema,
+  managedRoleNames,
+  replaceUserRolesRequestSchema,
+  resetUserPasswordRequestSchema,
+  updateOwnProfileRequestSchema,
+  updateUserRequestSchema,
+  updateUserStatusRequestSchema,
+  userIdParamsSchema
+} from "./users";
+export type {
+  CreateUserRequest,
+  ListUsersQuery,
+  ReplaceUserRolesRequest,
+  UpdateOwnProfileRequest,
+  UpdateUserRequest,
+  UserStatusRequest
+} from "./users";

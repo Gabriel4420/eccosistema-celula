@@ -80,6 +80,28 @@ A API oferece somente:
 - `POST /auth/logout`;
 - `POST /auth/change-password`.
 
+### Gerenciamento de usuários
+
+Os endpoints administrativos exigem Access Token com papel `ADMIN` ativo na
+mesma igreja:
+
+- `GET /users` — paginação (`page`, `pageSize`), busca (`search`) e filtros
+  (`status`, `roleId`);
+- `GET /users/:id`;
+- `POST /users`;
+- `PATCH /users/:id`;
+- `PATCH /users/:id/status`;
+- `PUT /users/:id/roles`;
+- `POST /users/:id/reset-password`;
+- `GET /users/me`;
+- `PATCH /users/me`.
+
+O `churchId` é sempre obtido do Access Token e não é aceito nos DTOs. E-mails
+são normalizados em minúsculas, respostas usam uma lista explícita de campos e
+nunca incluem hashes, senhas ou tokens. Desativação e reset administrativo
+revogam sessões; operações administrativas produzem auditoria. A alteração da
+própria senha permanece em `POST /auth/change-password`.
+
 O login usa `AUTH_CHURCH_ID` para resolver a igreja do MVP. Usuários e papéis devem existir previamente; nenhuma seed cria credenciais.
 
 Configure valores reais apenas em ambiente local ou em um provedor seguro:

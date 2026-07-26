@@ -84,7 +84,6 @@ export class LoginUseCase {
 function invalidCredentials(): AuthError {
   return new AuthError(
     "AUTH_INVALID_CREDENTIALS",
-    401,
     "Invalid email or password"
   );
 }

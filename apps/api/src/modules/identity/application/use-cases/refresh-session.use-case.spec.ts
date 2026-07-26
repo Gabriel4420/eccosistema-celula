@@ -5,6 +5,7 @@ import type {
   SessionRepository,
   UserCredentialsRepository
 } from "../ports";
+import type { SessionRecord } from "../auth.types";
 import { RefreshSessionUseCase } from "./refresh-session.use-case";
 
 describe("RefreshSessionUseCase", () => {
@@ -61,7 +62,7 @@ describe("RefreshSessionUseCase", () => {
 });
 
 function sessionRepository(
-  found: typeof session
+  found: SessionRecord
 ): jest.Mocked<SessionRepository> {
   return {
     create: jest.fn(),

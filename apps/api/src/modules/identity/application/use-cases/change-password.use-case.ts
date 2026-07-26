@@ -32,12 +32,11 @@ export class ChangePasswordUseCase {
     ) {
       throw new AuthError(
         "AUTH_INVALID_CREDENTIALS",
-        401,
         "Invalid current password"
       );
     }
     if (input.currentPassword === input.newPassword) {
-      throw new AuthError("VALIDATION_ERROR", 400, "Password must change");
+      throw new AuthError("VALIDATION_ERROR", "Password must change");
     }
     const passwordHash = await this.passwords.hash(input.newPassword);
     await this.users.changePasswordAndRevokeSessions({

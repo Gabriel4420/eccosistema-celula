@@ -1,3 +1,5 @@
+import { PublicApplicationError } from "@mission-atos/domain";
+
 export type AuthErrorCode =
   | "AUTH_INVALID_CREDENTIALS"
   | "AUTH_REFRESH_INVALID"
@@ -6,13 +8,12 @@ export type AuthErrorCode =
   | "AUTH_RATE_LIMITED"
   | "VALIDATION_ERROR";
 
-export class AuthError extends Error {
+export class AuthError extends PublicApplicationError<AuthErrorCode> {
   constructor(
-    public readonly code: AuthErrorCode,
-    public readonly status: number,
+    code: AuthErrorCode,
     message: string
   ) {
-    super(message);
+    super(code, message);
     this.name = "AuthError";
   }
 }

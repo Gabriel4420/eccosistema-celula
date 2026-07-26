@@ -5,6 +5,7 @@ import { HealthController } from "./health.controller";
 import { HealthService } from "./health.service";
 import { IdentityModule } from "./modules/identity/identity.module";
 import { PermissionsModule } from "./modules/permissions/permissions.module";
+import { UsersModule } from "./modules/users/users.module";
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { PermissionsModule } from "./modules/permissions/permissions.module";
       { name: "default", ttl: 60_000, limit: 1_000 }
     ]),
     IdentityModule,
-    PermissionsModule
+    PermissionsModule,
+    UsersModule
   ],
   controllers: [HealthController],
   providers: [
