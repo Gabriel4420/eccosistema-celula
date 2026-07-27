@@ -104,6 +104,27 @@ própria senha permanece em `POST /auth/change-password`.
 
 O login usa `AUTH_CHURCH_ID` para resolver a igreja do MVP. Usuários e papéis devem existir previamente; nenhuma seed cria credenciais.
 
+### Gerenciamento da igreja
+
+Os endpoints operam exclusivamente sobre o `churchId` do Access Token e não
+aceitam identificador de igreja na rota, query ou body:
+
+- `GET /church`;
+- `PATCH /church`;
+- `GET /church/settings`;
+- `PATCH /church/settings`.
+
+Qualquer usuário autenticado pode consultar os dados institucionais seguros e
+as configurações da própria igreja. Somente um `ADMIN` atualmente ativo no
+banco pode alterar dados ou configurações. Nome, slug, contatos e endereço são
+normalizados no servidor; telefone usa E.164, CEP brasileiro usa oito dígitos e
+o slug é globalmente único e protegido contra valores reservados.
+
+Os PATCH são parciais: campo omitido é preservado e `null` remove somente um
+campo institucional opcional. Alterações produzem auditoria transacional por
+grupo, sem tokens, credenciais ou campos internos. Fuso horário usa
+identificador IANA e o início da semana usa o enum `DayOfWeek`.
+
 Configure valores reais apenas em ambiente local ou em um provedor seguro:
 
 - `AUTH_CHURCH_ID`: UUID da igreja do MVP;
@@ -131,6 +152,7 @@ npm.cmd run test:e2e
 npm.cmd run test:integration
 npm.cmd run test:auth:integration
 npm.cmd run test:auth:e2e
+npm.cmd run test:churches:e2e
 ```
 
 `npm test` executa somente testes unitários. O smoke test web fica separado em `npm run test:e2e`.

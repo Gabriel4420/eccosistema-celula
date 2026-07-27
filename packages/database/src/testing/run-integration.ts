@@ -30,7 +30,6 @@ run(process.execPath, [npmCliPath, "run", "db:migrate:deploy"]);
 run(process.execPath, [npmCliPath, "run", "db:seed"]);
 run(process.execPath, [npmCliPath, "run", "db:seed"]);
 run(process.execPath, [
-  "--experimental-vm-modules",
   "../../node_modules/jest/bin/jest.js",
   "--runInBand",
   "--config",

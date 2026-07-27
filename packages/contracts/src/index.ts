@@ -27,3 +27,19 @@ export type {
   UpdateUserRequest,
   UserStatusRequest
 } from "./users";
+export {
+  churchWeekDays,
+  isIanaTimezone,
+  normalizeChurchPhone,
+  normalizeChurchPostalCode,
+  normalizeChurchSlug,
+  normalizeChurchText,
+  reservedChurchSlugs,
+  updateChurchRequestSchema,
+  updateChurchSettingsRequestSchema
+} from "./church";
+export type {
+  ChurchWeekDay,
+  UpdateChurchRequest,
+  UpdateChurchSettingsRequest
+} from "./church";

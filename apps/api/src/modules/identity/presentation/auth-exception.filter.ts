@@ -18,10 +18,17 @@ export class AuthExceptionFilter implements ExceptionFilter {
       return;
     }
     if (exception instanceof ZodError) {
+      const reservedChurchSlug = exception.issues.some(
+        (issue) => issue.message === "Reserved church slug"
+      );
       response.status(400).json({
         error: {
-          code: "VALIDATION_ERROR",
-          message: "Invalid request",
+          code: reservedChurchSlug
+            ? "CHURCH_SLUG_RESERVED"
+            : "VALIDATION_ERROR",
+          message: reservedChurchSlug
+            ? "Church slug is reserved"
+            : "Invalid request",
           details: {}
         }
       });
@@ -53,7 +60,10 @@ function applicationErrorStatus(code: string): number {
     ROLE_NOT_FOUND: 404,
     USER_EMAIL_CONFLICT: 409,
     LAST_ACTIVE_ADMIN: 409,
-    USER_ROLE_CONFLICT: 409
+    USER_ROLE_CONFLICT: 409,
+    CHURCH_NOT_FOUND: 404,
+    CHURCH_SLUG_CONFLICT: 409,
+    CHURCH_SLUG_RESERVED: 400
   };
   return statuses[code] ?? 500;
 }

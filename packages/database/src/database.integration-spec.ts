@@ -6,6 +6,7 @@ const churchOneId = "10000000-0000-4000-8000-000000000001";
 const churchTwoId = "20000000-0000-4000-8000-000000000002";
 const userOneId = "10000000-0000-4000-8000-000000000011";
 const roleTwoId = "20000000-0000-4000-8000-000000000022";
+const churchSettingsId = "30000000-0000-4000-8000-000000000003";
 
 describe("database foundation", () => {
   let admin: PrismaClient;
@@ -18,8 +19,17 @@ describe("database foundation", () => {
     await admin.church.deleteMany({
       where: {
         OR: [
-          { id: { in: [churchOneId, churchTwoId] } },
-          { slug: { in: ["ficticia-um", "tenant-um", "tenant-dois"] } }
+          { id: { in: [churchOneId, churchTwoId, churchSettingsId] } },
+          {
+            slug: {
+              in: [
+                "ficticia-um",
+                "tenant-um",
+                "tenant-dois",
+                "church-settings-defaults"
+              ]
+            }
+          }
         ]
       }
     });
@@ -171,5 +181,49 @@ describe("database foundation", () => {
 
     expect(indexes).toHaveLength(1);
     expect(columns).toEqual([{ data_type: "date" }]);
+  });
+
+  it("backfills and defaults required church settings", async () => {
+    const church = await admin.church.create({
+      data: {
+        id: churchSettingsId,
+        name: "Church Settings Defaults",
+        slug: "church-settings-defaults"
+      }
+    });
+
+    expect(church).toMatchObject({
+      country: "BR",
+      timezone: "America/Sao_Paulo",
+      weekStartsOn: "SUNDAY"
+    });
+  });
+
+  it("enforces institutional normalization constraints in PostgreSQL", async () => {
+    await expect(
+      admin.church.update({
+        where: { id: churchSettingsId },
+        data: { phone: "not-e164" }
+      })
+    ).rejects.toThrow();
+    await expect(
+      admin.church.update({
+        where: { id: churchSettingsId },
+        data: { email: "UPPERCASE@EXAMPLE.TEST" }
+      })
+    ).rejects.toThrow();
+
+    const constraints = await admin.$queryRaw<Array<{ conname: string }>>`
+      SELECT conname
+      FROM pg_constraint
+      WHERE conrelid = 'churches'::regclass
+        AND conname IN (
+          'churches_slug_format_check',
+          'churches_slug_reserved_check',
+          'churches_phone_e164_check',
+          'churches_postal_code_br_check'
+        )
+    `;
+    expect(constraints).toHaveLength(4);
   });
 });

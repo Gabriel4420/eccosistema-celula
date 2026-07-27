@@ -19,9 +19,33 @@ async function seed(): Promise<void> {
       create: {
         id: FICTIONAL_CHURCH_ID,
         name: "Igreja Exemplo Fictícia",
-        slug: "igreja-exemplo-ficticia"
+        slug: "igreja-exemplo-ficticia",
+        email: "contato@igreja-exemplo.test",
+        phone: "+5511999999999",
+        addressLine: "Rua Exemplo",
+        addressNumber: "100",
+        neighborhood: "Centro",
+        city: "São Paulo",
+        state: "SP",
+        postalCode: "01001000",
+        country: "BR",
+        timezone: "America/Sao_Paulo",
+        weekStartsOn: "SUNDAY"
       },
-      update: { name: "Igreja Exemplo Fictícia" }
+      update: {
+        name: "Igreja Exemplo Fictícia",
+        email: "contato@igreja-exemplo.test",
+        phone: "+5511999999999",
+        addressLine: "Rua Exemplo",
+        addressNumber: "100",
+        neighborhood: "Centro",
+        city: "São Paulo",
+        state: "SP",
+        postalCode: "01001000",
+        country: "BR",
+        timezone: "America/Sao_Paulo",
+        weekStartsOn: "SUNDAY"
+      }
     });
     console.info("Seed fictícia aplicada com sucesso.");
   } finally {
@@ -29,4 +53,7 @@ async function seed(): Promise<void> {
   }
 }
 
-await seed();
+void seed().catch(() => {
+  console.error("Falha ao aplicar a seed fictícia.");
+  process.exitCode = 1;
+});

@@ -1,6 +1,6 @@
 # Plano 005 — Gerenciamento institucional da igreja
 
-**Status:** proposto  
+**Status:** implementado, aguardando revisão
 **Responsável:** a definir  
 **Criado em:** 2026-07-26  
 **Atualizado em:** 2026-07-26  
@@ -120,7 +120,7 @@ Limitações herdadas relevantes:
 
 ## 6. Perguntas e decisões pendentes
 
-- [ ] Confirmar os valores de backfill do registro real da igreja: `country = BR`, `timezone = America/Sao_Paulo` e `weekStartsOn = SUNDAY`.
+- [x] Usar no backfill aprovado: `country = BR`, `timezone = America/Sao_Paulo` e `weekStartsOn = SUNDAY`.
 - [x] Manter `PASTOR` somente com leitura e escrita exclusiva de `ADMIN` ativo.
 - [x] Persistir telefone em E.164, com formatação somente na apresentação futura.
 - [x] Persistir CEP brasileiro com oito dígitos e estado com duas letras uppercase quando `country = BR`.
@@ -874,3 +874,34 @@ Regras:
 - bloqueios: confirmar os valores reais de backfill e aprovar o preflight dos registros existentes;
 - limitações conhecidas: validações PostgreSQL dos planos anteriores continuam dependentes de ambiente de teste controlado;
 - próximo passo: revisar e aprovar este plano e resolver as decisões bloqueantes antes de qualquer implementação; não criar o plano 006.
+
+### 2026-07-26 — implementação
+
+- realizado: contratos Zod e normalizadores; campos institucionais no modelo `Church`; duas migrations aditivas; seed fictícia atualizada; módulo NestJS `churches`; queries, commands, ports, policies, unidade de trabalho Prisma, presenter, controller, Swagger, auditoria transacional e documentação;
+- endpoints: `GET /church`, `PATCH /church`, `GET /church/settings` e `PATCH /church/settings`;
+- decisões fechadas: backfill `BR`/`America/Sao_Paulo`/`SUNDAY`; leitura para qualquer principal autenticado; escrita somente para `ADMIN` ativo; telefone E.164; CEP brasileiro com oito dígitos; estado uppercase; UUID como referência interna; slug global, normalizado e protegido por lista reservada;
+- arquitetura: controllers fazem somente validação, coordenação HTTP e apresentação; commands coordenam autorização, diff e auditoria; Prisma implementa consulta, lock, retry limitado, persistência e commit; nenhuma dependência de Prisma foi introduzida na aplicação ou apresentação;
+- migrations criadas: `20260726180000_add_church_institutional_fields` para expansão nullable e `20260726181000_enforce_church_institutional_constraints` para preflight, backfill, defaults, `NOT NULL` e checks;
+- dependências: nenhuma adicionada ou instalada; `package-lock.json` preservado;
+- testes adicionados: 5 cenários de contratos, 2 de policies, 6 de aplicação, 2 de presenter, 4 de repository Prisma, 2 de migration/constraints e 5 fluxos E2E HTTP;
+- validações aprovadas: `npm.cmd run db:format`, `npm.cmd run db:validate`, `npm.cmd run db:generate`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd test`, `npm.cmd run build` e `git diff --check`;
+- resultados unitários: API com 14 suítes e 36 testes; contratos com 3 suítes e 11 testes; banco com 4 testes; configuração com 5 testes; domínio com 3 testes; total de 59 testes aprovados;
+- validações conectadas tentadas: `docker compose up -d postgres-test`, `db:migrate:deploy`, `db:migrate:status`, `db:seed`, integrações de database/API e `test:churches:e2e`;
+- limitações: Docker Desktop não possui daemon acessível; sem `DATABASE_URL`/`TEST_DATABASE_URL` reais os scripts recusam execução e, com a URL fictícia local, o schema engine não conectou ao PostgreSQL na porta 5433; por isso migrations, seed, integração e E2E não foram concluídos contra banco real;
+- correção durante a validação: a seed deixou de usar top-level await incompatível com o output CommonJS e agora falha com código não zero e mensagem segura;
+- escopo: nenhuma alteração em web/mobile e nenhuma funcionalidade de usuários, células, pessoas, supervisores, reuniões, frequência, dashboard, relatórios, notificações, upload ou plano futuro;
+- próximo passo: executar migrations e suítes conectadas em PostgreSQL de teste controlado e aguardar revisão; não mover para `completed` e não criar o plano 006.
+
+### 2026-07-27 — validações PostgreSQL pendentes
+
+- ambiente: Docker Desktop disponível; `postgres-dev` validado em `localhost:5432`; a porta `5433` estava ocupada por outra instância PostgreSQL, portanto as suítes usaram um container descartável PostgreSQL 18.4 em `127.0.0.1:55433`, com `DATABASE_URL` e `TEST_DATABASE_URL` distintas;
+- migrations: as sete migrations foram aplicadas com sucesso desde banco vazio em desenvolvimento e teste; `db:migrate:status` confirmou ambos os schemas atualizados;
+- seed: executada duas vezes consecutivas em desenvolvimento e duas vezes pela suíte de integração, confirmando idempotência;
+- correção de infraestrutura de testes: o runner de integração do banco foi alinhado ao CommonJS do workspace e passou a resolver imports TypeScript escritos com sufixo `.js`;
+- integração do banco: 1 suíte e 8 testes aprovados, cobrindo UUID, timestamps, unicidade, relações cross-tenant, checks, índice parcial, exclusão física bloqueada, auditoria append-only, defaults e constraints institucionais;
+- integração da API: 3 suítes e 11 testes aprovados para autenticação, usuários e igreja;
+- E2E da API: usuários com 4 testes, igreja com 5 testes e conjunto completo com 3 suítes/11 testes aprovados; o timeout do runner E2E foi ajustado para 30 segundos devido à preparação real de hashes e banco;
+- qualidade final: `npm run lint`, `npm run typecheck`, `npm test` e `npm run build` aprovados;
+- desempenho: `EXPLAIN ANALYZE` com 20 mil usuários fictícios, revertidos na mesma transação, concluiu em aproximadamente 42,5 ms, mas usou o índice do tenant e filtrou 20 mil linhas; os índices trigram não foram escolhidos para a busca combinada e a consulta deve ser otimizada ou reavaliada em etapa futura;
+- limitação remanescente: o smoke test Playwright iniciou servidor e Chromium, porém ficou bloqueado sem resultado e precisou ter apenas os processos Node da execução encerrados; as validações PostgreSQL antes bloqueadas foram concluídas;
+- escopo: nenhum recurso funcional novo, plano futuro ou alteração de dados persistente foi introduzido.
