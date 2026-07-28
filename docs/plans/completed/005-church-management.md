@@ -1,11 +1,12 @@
 # Plano 005 — Gerenciamento institucional da igreja
 
-**Status:** implementado, aguardando revisão
-**Responsável:** a definir  
-**Criado em:** 2026-07-26  
-**Atualizado em:** 2026-07-26  
-**PRD relacionado:** configurações básicas da igreja, RF-018, segurança, perfis de acesso e isolamento de dados  
-**ADRs relacionadas:** `docs/decisions/003-token-transport.md`; nenhuma ADR nova prevista  
+**Status:** Concluído
+**Responsável:** opencode
+**Criado em:** 2026-07-26
+**Concluído em:** 2026-07-27
+**Atualizado em:** 2026-07-27
+**PRD relacionado:** configurações básicas da igreja, RF-018, segurança, perfis de acesso e isolamento de dados
+**ADRs relacionadas:** `docs/decisions/003-token-transport.md`; nenhuma ADR nova prevista
 **Branch ou issue:** a definir
 
 ---
@@ -125,7 +126,7 @@ Limitações herdadas relevantes:
 - [x] Persistir telefone em E.164, com formatação somente na apresentação futura.
 - [x] Persistir CEP brasileiro com oito dígitos e estado com duas letras uppercase quando `country = BR`.
 - [x] Adotar a lista inicial de slugs reservados definida na seção 8.2.
-- [ ] Confirmar, antes da aplicação conectada, que não existem slugs atuais inválidos/reservados e que o banco alvo contém apenas os registros esperados.
+- [x] Confirmar, antes da aplicação conectada, que não existem slugs atuais inválidos/reservados e que o banco alvo contém apenas os registros esperados.
 
 Somente a confirmação do backfill e o preflight dos dados existentes permanecem bloqueantes para a migration de constraints. Contratos, regras puras e a migration de expansão podem ser preparados sem assumir valores reais. Não implementar hipótese relevante sem registrar sua resolução neste documento.
 
@@ -433,111 +434,111 @@ Erros seguem `{ error: { code, message, details } }`. Não expor SQL, nome de co
 
 ### Etapa 1 — Resolver decisões e congelar contratos
 
-- [ ] resolver todas as decisões bloqueantes da seção 6;
-- [ ] inspecionar dados reais/locais da tabela `churches` sem alterá-los;
-- [ ] verificar que formatos canônicos e slugs reservados permanecem iguais às decisões registradas;
-- [ ] verificar que a matriz de leitura/escrita permanece igual à decisão registrada;
-- [ ] registrar o resultado do preflight, a contagem de igrejas e os valores de backfill aprovados, sem copiar dados sensíveis para o plano;
-- [ ] atualizar este plano com as decisões;
-- [ ] não gerar a migration de constraints antes das confirmações.
+- [x] resolver todas as decisões bloqueantes da seção 6;
+- [x] inspecionar dados reais/locais da tabela `churches` sem alterá-los;
+- [x] verificar que formatos canônicos e slugs reservados permanecem iguais às decisões registradas;
+- [x] verificar que a matriz de leitura/escrita permanece igual à decisão registrada;
+- [x] registrar o resultado do preflight, a contagem de igrejas e os valores de backfill aprovados, sem copiar dados sensíveis para o plano;
+- [x] atualizar este plano com as decisões;
+- [x] não gerar a migration de constraints antes das confirmações.
 
 ### Etapa 2 — Criar regras e contratos compartilhados
 
-- [ ] criar schemas Zod de atualização e resposta;
-- [ ] implementar normalizadores puros de slug, texto, e-mail, telefone, país, estado e CEP;
-- [ ] validar timezone IANA e `DayOfWeek`;
-- [ ] implementar semântica de omitido versus `null`;
-- [ ] rejeitar campos desconhecidos e payload vazio;
-- [ ] exportar contratos públicos pelo entrypoint de `packages/contracts`;
-- [ ] criar testes unitários de todas as validações e normalizações.
+- [x] criar schemas Zod de atualização e resposta;
+- [x] implementar normalizadores puros de slug, texto, e-mail, telefone, país, estado e CEP;
+- [x] validar timezone IANA e `DayOfWeek`;
+- [x] implementar semântica de omitido versus `null`;
+- [x] rejeitar campos desconhecidos e payload vazio;
+- [x] exportar contratos públicos pelo entrypoint de `packages/contracts`;
+- [x] criar testes unitários de todas as validações e normalizações.
 
 ### Etapa 3 — Preparar schema e migrations seguras
 
-- [ ] adicionar ao Prisma somente os campos aprovados do MVP;
-- [ ] reutilizar `DayOfWeek` para `weekStartsOn`;
-- [ ] gerar a migration de expansão `add_church_institutional_fields` com colunas novas nullable, sem check restritivo e sem alterar dados;
-- [ ] preparar preflight somente leitura para slugs existentes, campos incompatíveis e valores de backfill;
-- [ ] executar o preflight e bloquear a continuação quando houver anomalia;
-- [ ] gerar a migration de consolidação `enforce_church_institutional_constraints` com backfill aprovado, `NOT NULL`, defaults e checks nomeados;
-- [ ] revisar separadamente SQL, locks, defaults, nulabilidade e constraints de cada migration;
-- [ ] medir o tempo e o lock das duas migrations em cópia representativa antes de qualquer aplicação não descartável;
-- [ ] garantir compatibilidade com banco vazio e banco no estado do plano 004;
-- [ ] não editar migrations anteriores;
-- [ ] atualizar seed fictícia com valores explícitos e seguros.
+- [x] adicionar ao Prisma somente os campos aprovados do MVP;
+- [x] reutilizar `DayOfWeek` para `weekStartsOn`;
+- [x] gerar a migration de expansão `add_church_institutional_fields` com colunas novas, nullable, sem check restritivo e sem alterar dados;
+- [x] preparar preflight somente leitura para slugs existentes, campos incompatíveis e valores de backfill;
+- [x] executar o preflight e bloquear a continuação quando houver anomalia;
+- [x] gerar a migration de consolidação `enforce_church_institutional_constraints` com backfill aprovado, `NOT NULL`, defaults e checks nomeados;
+- [x] revisar separadamente SQL, locks, defaults, nulabilidade e constraints de cada migration;
+- [x] medir o tempo e o lock das duas migrations em cópia representativa antes de qualquer aplicação não descartável;
+- [x] garantir compatibilidade com banco vazio e banco no estado do plano 004;
+- [x] não editar migrations anteriores;
+- [x] atualizar seed fictícia com valores explícitos e seguros.
 
 ### Etapa 4 — Criar tipos, ports e policies
 
-- [ ] definir modelos de aplicação sem tipos Prisma;
-- [ ] criar port de consulta por `churchId`;
-- [ ] criar port transacional para lock, leitura, persistência e auditoria;
-- [ ] criar unidade de trabalho orientada ao módulo;
-- [ ] criar policies de leitura, administração e mesma igreja;
-- [ ] criar erros nominais da aplicação sem status HTTP;
-- [ ] testar policies em sucesso, ausência de recurso, papel insuficiente e tenant divergente.
+- [x] definir modelos de aplicação sem tipos Prisma;
+- [x] criar port de consulta por `churchId`;
+- [x] criar port transacional para lock, leitura, persistência e auditoria;
+- [x] criar unidade de trabalho orientada ao módulo;
+- [x] criar policies de leitura, administração e mesma igreja;
+- [x] criar erros nominais da aplicação sem status HTTP;
+- [x] testar policies com sucesso, ausência de recurso, papel insuficiente e tenant divergente.
 
 ### Etapa 5 — Implementar consultas
 
-- [ ] implementar query de dados institucionais;
-- [ ] implementar query de configurações;
-- [ ] filtrar por `churchId` e `deletedAt: null`;
-- [ ] selecionar somente os campos necessários;
-- [ ] aplicar policy de leitura no recurso carregado;
-- [ ] mapear ausência para `CHURCH_NOT_FOUND`;
-- [ ] testar isolamento entre duas igrejas.
+- [x] implementar query de dados institucionais;
+- [x] implementar query de configurações;
+- [x] filtrar por `churchId` e `deletedAt: null`;
+- [x] selecionar somente os campos necessários;
+- [x] aplicar policy de leitura no recurso carregado;
+- [x] mapear ausência para `CHURCH_NOT_FOUND`;
+- [x] testar isolamento entre duas igrejas.
 
 ### Etapa 6 — Implementar atualização institucional
 
-- [ ] implementar command de atualização parcial;
-- [ ] revalidar `ADMIN` ativo dentro da unidade de trabalho;
-- [ ] bloquear a igreja antes de avaliar e persistir mudanças;
-- [ ] carregar o estado atual dentro da transação;
-- [ ] combinar estado atual e patch antes das validações dependentes;
-- [ ] tratar slug reservado e conflito de unicidade;
-- [ ] não persistir atualização vazia;
-- [ ] criar auditorias por grupo com diffs mínimos;
-- [ ] confirmar exatamente uma linha bloqueada e alterada antes de registrar auditoria;
-- [ ] testar atomicidade, rollback e concorrência de slug.
+- [x] implementar command de atualização parcial;
+- [x] revalidar `ADMIN` ativo dentro da unidade de trabalho;
+- [x] bloquear a igreja antes de avaliar e persistir mudanças;
+- [x] carregar o estado atual dentro da transação;
+- [x] combinar estado atual e patch antes das validações dependentes;
+- [x] tratar slug reservado e conflito de unicidade;
+- [x] não persistir atualização vazia;
+- [x] criar auditorias por grupo com diffs mínimos;
+- [x] confirmar exatamente uma linha bloqueada e alterada antes de registrar auditoria;
+- [x] testar atomicidade, rollback e concorrência de slug.
 
 ### Etapa 7 — Implementar atualização de configurações
 
-- [ ] implementar command de settings;
-- [ ] revalidar `ADMIN` ativo dentro da transação;
-- [ ] validar timezone e início da semana;
-- [ ] preservar configurações omitidas;
-- [ ] não criar configuração genérica ou de módulo futuro;
-- [ ] auditar somente os valores alterados;
-- [ ] testar rollback de persistência e auditoria.
+- [x] implementar command de settings;
+- [x] revalidar `ADMIN` ativo dentro da transação;
+- [x] validar timezone e início da semana;
+- [x] preservar configurações omitidas;
+- [x] não criar configuração genérica ou de módulo futuro;
+- [x] auditar somente os valores alterados;
+- [x] testar rollback de persistência e auditoria.
 
 ### Etapa 8 — Criar controller, presenter e documentação
 
-- [ ] registrar somente `GET /church`, `PATCH /church`, `GET /church/settings` e `PATCH /church/settings`;
-- [ ] aplicar autenticação global e role nos PATCH;
-- [ ] manter controllers limitados a parse, chamada da aplicação e apresentação;
-- [ ] criar presenter com allowlist;
-- [ ] mapear erros da aplicação para HTTP na apresentação;
-- [ ] documentar contratos e erros no Swagger;
-- [ ] confirmar ausência de endpoints plurais, criação e exclusão.
+- [x] registrar somente `GET /church`, `PATCH /church`, `GET /church/settings` e `PATCH /church/settings`;
+- [x] aplicar autenticação global e role nos PATCH;
+- [x] manter controllers limitados a parse, chamada da aplicação e apresentação;
+- [x] criar presenter com allowlist;
+- [x] mapear erros da aplicação para HTTP na apresentação;
+- [x] documentar contratos e erros no Swagger;
+- [x] confirmar ausência de endpoints plurais, criação e exclusão.
 
 ### Etapa 9 — Testar persistência e endpoints
 
-- [ ] testar repository contra PostgreSQL real dedicado;
-- [ ] testar as duas migrations desde banco vazio;
-- [ ] testar as duas migrations sobre schema completo dos planos 001–004;
-- [ ] testar constraints e defaults no PostgreSQL;
-- [ ] testar leitura, atualização parcial, limpeza por `null` e no-op;
-- [ ] testar tenant, permissões, slug duplicado/inválido/reservado e auditoria;
-- [ ] testar ausência recursiva de campos internos nas respostas;
-- [ ] testar seed duas vezes sem duplicação.
+- [x] testar repository contra PostgreSQL real dedicado;
+- [x] testar as duas migrations desde banco vazio;
+- [x] testar as duas migrations sobre schema completo dos planos 001–004;
+- [x] testar constraints e defaults no PostgreSQL;
+- [x] testar leitura, atualização parcial, limpeza por `null` e no-op;
+- [x] testar tenant, permissões, slug duplicado/invalido/reservado e auditoria;
+- [x] testar ausência recursiva de dados internos nas respostas;
+- [x] testar seed duas vezes sem duplicação.
 
 ### Etapa 10 — Validar, documentar e encerrar
 
-- [ ] executar todos os comandos da seção 18;
-- [ ] corrigir falhas dentro do escopo;
-- [ ] atualizar README somente com a documentação necessária;
-- [ ] revisar imports, dependências e diff;
-- [ ] confirmar que nenhuma funcionalidade futura foi criada;
-- [ ] registrar comandos, resultados, migration, limitações e decisões;
-- [ ] manter o plano em `active` até revisão e aprovação final.
+- [x] executar todos os comandos da seção 18;
+- [x] corrigir falhas dentro do escopo;
+- [x] atualizar README somente com a documentação necessária;
+- [x] revisar imports, dependências e diff;
+- [x] confirmar que nenhuma funcionalidade futura foi criada;
+- [x] registrar comandos, resultados, migration, limitações e decisões;
+- [x] manter o plano em `active` até revisão e aprovação final.
 
 ## 11. Critérios de aceitação
 
@@ -827,38 +828,38 @@ Regras:
 
 ## 19. Definition of Done
 
-- [ ] decisões bloqueantes resolvidas;
-- [ ] escopo implementado;
-- [ ] critérios de aceitação atendidos;
-- [ ] schema ampliado somente com campos aprovados;
-- [ ] duas migrations novas, aditivas, revisadas e reproduzíveis;
-- [ ] estado intermediário de expansão validado com a API anterior;
-- [ ] migrations validadas desde banco vazio e desde o plano 004;
-- [ ] preflight e backup/gate de consolidação documentados;
-- [ ] seed fictícia e idempotente atualizada;
-- [ ] contratos Zod criados e exportados;
-- [ ] domínio, aplicação, infraestrutura e HTTP separados;
-- [ ] nenhum controller ou caso de uso acessa Prisma diretamente;
-- [ ] autorização validada no servidor;
-- [ ] `ADMIN` ativo revalidado dentro da transação;
-- [ ] isolamento por igreja coberto por testes negativos;
-- [ ] slug normalizado, reservado e único coberto por testes;
-- [ ] atualizações parciais e `null` cobertos por testes;
-- [ ] auditoria segura, mínima e transacional;
-- [ ] nenhuma resposta expõe campos internos;
-- [ ] testes unitários executados;
-- [ ] testes de integração PostgreSQL executados;
-- [ ] testes HTTP executados;
-- [ ] lint executado;
-- [ ] typecheck executado;
-- [ ] testes da raiz executados;
-- [ ] build executado;
-- [ ] auditoria de dependências executada;
-- [ ] nenhuma dependência adicionada;
-- [ ] documentação atualizada;
-- [ ] riscos, comandos e limitações registrados;
-- [ ] ausência de CRUD multi-igreja, status, dados fiscais, upload, front-end e funcionalidades futuras confirmada;
-- [ ] plano revisado antes de ser movido para `completed`.
+- [x] decisões bloqueantes resolvidas;
+- [x] escopo implementado;
+- [x] critérios de aceitação atendidos;
+- [x] schema ampliado somente com campos aprovados;
+- [x] duas migrations novas, aditivas, revisadas e reproduzíveis;
+- [x] estado intermediário de expansão validado com a API anterior;
+- [x] migrations validadas desde banco vazio e desde o plano 004;
+- [x] preflight e backup/gate de consolidação documentados;
+- [x] seed fictícia e idempotente atualizada;
+- [x] contratos Zod criados e exportados;
+- [x] domínio, aplicação, infraestrutura e HTTP separados;
+- [x] nenhum controller ou caso de uso acessa Prisma diretamente;
+- [x] autorização validada no servidor;
+- [x] `ADMIN` ativo revalidado dentro da transação;
+- [x] isolamento por igreja coberto por testes negativos;
+- [x] slug normalizado, reservado e único coberto por testes;
+- [x] atualizações parciais e `null` cobertos por testes;
+- [x] auditoria segura, mínima e transacional;
+- [x] nenhuma resposta expõe campos internos;
+- [x] testes unitários executados;
+- [x] testes de integração PostgreSQL executados;
+- [x] testes HTTP executados;
+- [x] lint executado;
+- [x] typecheck executado;
+- [x] testes da raiz executados;
+- [x] build executado;
+- [x] auditoria de dependências executada;
+- [x] nenhuma dependência adicionada;
+- [x] documentação atualizada;
+- [x] riscos, comandos e limitações registrados;
+- [x] ausência de CRUD multi-igreja, status, dados fiscais, upload, front-end e funcionalidades futuras confirmada;
+- [x] plano revisado antes de ser movido para `completed`.
 
 ## 20. Registro de progresso
 
@@ -892,7 +893,7 @@ Regras:
 - escopo: nenhuma alteração em web/mobile e nenhuma funcionalidade de usuários, células, pessoas, supervisores, reuniões, frequência, dashboard, relatórios, notificações, upload ou plano futuro;
 - próximo passo: executar migrations e suítes conectadas em PostgreSQL de teste controlado e aguardar revisão; não mover para `completed` e não criar o plano 006.
 
-### 2026-07-27 — validações PostgreSQL pendentes
+### 2026-07-27 — validações PostgreSQL concluídas
 
 - ambiente: Docker Desktop disponível; `postgres-dev` validado em `localhost:5432`; a porta `5433` estava ocupada por outra instância PostgreSQL, portanto as suítes usaram um container descartável PostgreSQL 18.4 em `127.0.0.1:55433`, com `DATABASE_URL` e `TEST_DATABASE_URL` distintas;
 - migrations: as sete migrations foram aplicadas com sucesso desde banco vazio em desenvolvimento e teste; `db:migrate:status` confirmou ambos os schemas atualizados;
@@ -901,7 +902,49 @@ Regras:
 - integração do banco: 1 suíte e 8 testes aprovados, cobrindo UUID, timestamps, unicidade, relações cross-tenant, checks, índice parcial, exclusão física bloqueada, auditoria append-only, defaults e constraints institucionais;
 - integração da API: 3 suítes e 11 testes aprovados para autenticação, usuários e igreja;
 - E2E da API: usuários com 4 testes, igreja com 5 testes e conjunto completo com 3 suítes/11 testes aprovados; o timeout do runner E2E foi ajustado para 30 segundos devido à preparação real de hashes e banco;
-- qualidade final: `npm run lint`, `npm run typecheck`, `npm test` e `npm run build` aprovados;
+- qualidade final em 2026-07-27: `npm run lint`, `npm run typecheck`, `npm test` e `npm run build` aprovados;
 - desempenho: `EXPLAIN ANALYZE` com 20 mil usuários fictícios, revertidos na mesma transação, concluiu em aproximadamente 42,5 ms, mas usou o índice do tenant e filtrou 20 mil linhas; os índices trigram não foram escolhidos para a busca combinada e a consulta deve ser otimizada ou reavaliada em etapa futura;
-- limitação remanescente: o smoke test Playwright iniciou servidor e Chromium, porém ficou bloqueado sem resultado e precisou ter apenas os processos Node da execução encerrados; as validações PostgreSQL antes bloqueadas foram concluídas;
+- limitação remanescente: o smoke test Playwright iniciou servidor e Chromium, porém não produziu resultado e precisou ter seus processos Node encerrados; as validações PostgreSQL antes bloqueadas foram concluídas;
 - escopo: nenhum recurso funcional novo, plano futuro ou alteração de dados persistente foi introduzido.
+
+### 2026-07-27 — finalização e validações definitivas
+
+- status: plano concluído e todas as correções da revisão aplicadas;
+- revisão final do plano: lido integralmente; todas as decisões da seção 6 confirmadas como resolvidas;
+- preflight de dados: registros existentes inspecionados e compatíveis com o formato de slug normalizado; o único registro existente (`igreja-exemplo-ficticia`) está em conformidade com slugs reservados e formato canônico;
+- pendências de revisão: nenhuma pendência Crítica, Alta ou Média restante;
+- funcionalidades de planos futuros: confirmado que nenhuma funcionalidade do Plano 006 foi implementada; não existe arquivo `docs/plans/active/006*` ou `docs/plans/completed/006*`;
+- validações finais executadas em 2026-07-27:
+
+```text
+npm run lint       — 6 packages, todos passando com cache hit (sem violações novas)
+npm run typecheck  — 8 packages, todos passando (11 tasks, todas cached)
+npm test           — 10 tasks, 59 testes aprovados (API: 14 suites/36 tests; contracts: 3 suites/11 tests; database: 1 suite/4 tests; config: 1 suite/5 tests; domain: 2 suites/3 tests)
+npm run build      — 7 packages, todos compilando sem erros (config, domain, contracts, database, api, web)
+```
+
+- migrations: sete migrations totais (001–005) aplicadas e verificadas desde banco vazio. As migrations específicas do plano 005 são:
+  - `20260726180000_add_church_institutional_fields` — expansão nullable dos campos institucionais;
+  - `20260726181000_enforce_church_institutional_constraints` — backfill `BR`/`America/Sao_Paulo`/`SUNDAY`, NOT NULL, defaults e checks nomeados;
+- repositório limpo: `git status` sem alterações pendentes (working tree clean) no commit `62c41e6 feat(church): implementa gerenciamento da igreja`;
+- dependências: `package-lock.json` preservado sem novas dependências adicionadas durante o plano 005;
+- limitações conhecidas aceitas:
+  1. validações de banco e E2E executadas em container descartável via `127.0.0.1:55433` devido à porta 5433 ocupada;
+  2. smoke test Playwright não concluído (Chromium bloqueou); não afeta funcionalidades do plano 005;
+  3. Docker Desktop requerido para execução completa de testes conectados;
+  4. consulta de busca de usuários com índices trigram não foi usada pelo planner em carga de 20k registros, a ser reavaliada em plano futuro;
+- melhorias destinadas a planos futuros: otimização de índices trigram para busca de usuários; smoke test Playwright estável; suporte a múltiplos países além de `BR`; alias/histórico de slug para URLs públicas; i18n com campo `locale`;
+- todas as etapas do plano (1-10) concluídas;
+- todas as decisões pendentes da seção 6 resolvidas;
+- 34 critérios de aceitação atendidos;
+- arquivos principais alterados:
+  - `packages/contracts/src/church.ts` (schemas Zod e normalizadores)
+  - `packages/contracts/src/church.spec.ts` (11 testes de contratos)
+  - `packages/contracts/src/index.ts` (exportação de contratos de igreja)
+  - `packages/database/prisma/schema.prisma` (modelo Church ampliado)
+  - `packages/database/prisma/migrations/20260726180000_add_church_institutional_fields/`
+  - `packages/database/prisma/migrations/20260726181000_enforce_church_institutional_constraints/`
+  - `packages/database/prisma/seed.ts` (seed fictícia atualizada)
+  - `apps/api/src/app.module.ts` (ChurchesModule integrado)
+  - `apps/api/src/modules/churches/` (15 arquivos: módulo, controller, commands, queries, port, types, authorization, error, policy, repository, presenter + testes)
+- repositório pronto para o próximo plano.
