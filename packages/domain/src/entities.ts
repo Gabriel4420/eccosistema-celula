@@ -67,6 +67,7 @@ export interface Person extends MutableEntity {
   email: string | null;
   birthDate: Date | null;
   gender: string | null;
+  observations: string | null;
 }
 
 export interface CellMembership extends MutableEntity {

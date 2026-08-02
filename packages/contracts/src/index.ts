@@ -38,6 +38,27 @@ export {
   updateChurchRequestSchema,
   updateChurchSettingsRequestSchema
 } from "./church";
+export {
+  createPersonRequestSchema,
+  listPeopleQuerySchema,
+  personIdParamsSchema,
+  personResponseSchema,
+  personItemEnvelopeSchema,
+  peoplePageEnvelopeSchema,
+  peopleErrorEnvelopeSchema,
+  updatePersonRequestSchema,
+  updatePersonStatusRequestSchema
+} from "./people";
+export type {
+  CreatePersonRequest,
+  ListPeopleQuery,
+  PersonResponse,
+  PersonItemEnvelope,
+  PeoplePageEnvelope,
+  PeopleErrorEnvelope,
+  UpdatePersonRequest,
+  PersonStatusRequest
+} from "./people";
 export type {
   ChurchWeekDay,
   UpdateChurchRequest,

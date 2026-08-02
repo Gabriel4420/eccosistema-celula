@@ -63,7 +63,9 @@ function applicationErrorStatus(code: string): number {
     USER_ROLE_CONFLICT: 409,
     CHURCH_NOT_FOUND: 404,
     CHURCH_SLUG_CONFLICT: 409,
-    CHURCH_SLUG_RESERVED: 400
+    CHURCH_SLUG_RESERVED: 400,
+    PERSON_NOT_FOUND: 404,
+    PERSON_DUPLICATE: 409
   };
   return statuses[code] ?? 500;
 }

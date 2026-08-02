@@ -171,3 +171,14 @@ packages/
   eslint-config/       regras compartilhadas de lint
   typescript-config/   configurações TypeScript estritas
 ```
+
+## Gerenciamento de pessoas
+
+A API disponibiliza `GET /people`, `GET /people/:id`, `POST /people`,
+`PATCH /people/:id` e `PATCH /people/:id/status`. Todas as rotas derivam a
+igreja do principal autenticado. `ADMIN` e `PASTOR` criam e atualizam;
+somente `ADMIN` altera status e lista inativos; `SUPERVISOR` e `LEADER`
+consultam ativos. Observações são visíveis somente para `ADMIN` e `PASTOR`.
+
+O teste HTTP específico é executado com
+`npm run test:people:e2e --workspace @mission-atos/api`.
