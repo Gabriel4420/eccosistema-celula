@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { PersonResponse } from "@mission-atos/contracts";
 import { Alert, Button, EmptyState, ErrorState, Pagination, SelectField, Skeleton, StatusBadge, Table, TextField } from "@/src/shared/components";
@@ -24,8 +24,9 @@ interface PeopleParams {
 
 function readParams(searchParams: URLSearchParams): PeopleParams {
   const status = searchParams.get("status");
+  const requestedPage = Number(searchParams.get("page") ?? "1");
   return {
-    page: Number(searchParams.get("page") ?? "1") || 1,
+    page: Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
     search: searchParams.get("search") ?? "",
     status: status === "ACTIVE" || status === "INACTIVE" ? status : "",
     gender: searchParams.get("gender") ?? ""
@@ -58,7 +59,15 @@ export function PeopleList() {
   });
 
   const [searchInput, setSearchInput] = useState(params.search);
+  const searchTimer = useRef<number | null>(null);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+
+  useEffect(
+    () => () => {
+      if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    },
+    []
+  );
 
   const navigate = (next: Partial<PeopleParams>) => {
     router.push(`/people${toQuery({ ...params, ...next })}`);
@@ -107,9 +116,11 @@ export function PeopleList() {
           name="search"
           value={searchInput}
           onChange={(event) => {
-            setSearchInput(event.target.value);
-            window.setTimeout(() => {
-              navigate({ search: event.target.value, page: 1 });
+            const value = event.target.value;
+            setSearchInput(value);
+            if (searchTimer.current) window.clearTimeout(searchTimer.current);
+            searchTimer.current = window.setTimeout(() => {
+              navigate({ search: value, page: 1 });
             }, 300);
           }}
           hint="Nome, e-mail ou telefone"

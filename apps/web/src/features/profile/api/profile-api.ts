@@ -11,6 +11,7 @@ export async function getMyProfile(api: ApiClient): Promise<UserResponse> {
     method: "GET",
     path: "/users/me",
     bearer: true,
+    allowRetry: true,
     schema: userItemEnvelopeSchema
   });
   return envelope.data;

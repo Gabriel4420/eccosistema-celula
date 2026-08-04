@@ -38,6 +38,7 @@ export async function listPeople(
       gender: query.gender ?? ""
     },
     bearer: true,
+    allowRetry: true,
     schema: peoplePageEnvelopeSchema
   });
 }
@@ -47,6 +48,7 @@ export async function getPerson(api: ApiClient, id: string): Promise<PersonRespo
     method: "GET",
     path: `/people/${id}`,
     bearer: true,
+    allowRetry: true,
     schema: personItemEnvelopeSchema
   });
   return envelope.data;

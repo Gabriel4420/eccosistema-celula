@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, EmptyState, ErrorState, Pagination, SelectField, Skeleton, StatusBadge, Table, TextField } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
@@ -22,8 +22,9 @@ interface UsersParams {
 
 function readParams(searchParams: URLSearchParams): UsersParams {
   const status = searchParams.get("status");
+  const requestedPage = Number(searchParams.get("page") ?? "1");
   return {
-    page: Number(searchParams.get("page") ?? "1") || 1,
+    page: Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
     search: searchParams.get("search") ?? "",
     status: status === "ACTIVE" || status === "BLOCKED" ? status : "",
     roleId: searchParams.get("roleId") ?? ""
@@ -61,6 +62,14 @@ export function UsersList() {
   });
 
   const [searchInput, setSearchInput] = useState(params.search);
+  const searchTimer = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    },
+    []
+  );
 
   const navigate = (next: Partial<UsersParams>) => {
     router.push(`/users${toQuery({ ...params, ...next })}`);
@@ -88,9 +97,11 @@ export function UsersList() {
           name="search"
           value={searchInput}
           onChange={(event) => {
-            setSearchInput(event.target.value);
-            window.setTimeout(() => {
-              navigate({ search: event.target.value, page: 1 });
+            const value = event.target.value;
+            setSearchInput(value);
+            if (searchTimer.current) window.clearTimeout(searchTimer.current);
+            searchTimer.current = window.setTimeout(() => {
+              navigate({ search: value, page: 1 });
             }, 300);
           }}
           hint="Nome ou e-mail"

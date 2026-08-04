@@ -43,6 +43,7 @@ export async function listUsers(
       roleId: query.roleId ?? ""
     },
     bearer: true,
+    allowRetry: true,
     schema: userPageEnvelopeSchema
   });
 }
@@ -52,6 +53,7 @@ export async function getManagedRoles(api: ApiClient): Promise<ManagedRole[]> {
     method: "GET",
     path: "/users/managed-roles",
     bearer: true,
+    allowRetry: true,
     schema: managedRolesEnvelopeSchema
   });
   return envelope.data;
@@ -62,6 +64,7 @@ export async function getUser(api: ApiClient, id: string): Promise<UserResponse>
     method: "GET",
     path: `/users/${id}`,
     bearer: true,
+    allowRetry: true,
     schema: userItemEnvelopeSchema
   });
   return envelope.data;

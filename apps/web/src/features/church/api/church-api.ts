@@ -17,6 +17,7 @@ export async function getChurch(api: ApiClient): Promise<ChurchResponse> {
     method: "GET",
     path: "/church",
     bearer: true,
+    allowRetry: true,
     schema: churchEnvelopeSchema
   });
   return envelope.data;
@@ -42,6 +43,7 @@ export async function getChurchSettings(api: ApiClient): Promise<ChurchSettingsR
     method: "GET",
     path: "/church/settings",
     bearer: true,
+    allowRetry: true,
     schema: churchSettingsEnvelopeSchema
   });
   return envelope.data;

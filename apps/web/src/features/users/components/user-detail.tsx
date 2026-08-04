@@ -39,7 +39,7 @@ export function UserDetail() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[] | null>(null);
   const [resetPassword, setResetPassword] = useState("");
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>("none");
   const [busy, setBusy] = useState(false);
@@ -70,10 +70,11 @@ export function UserDetail() {
   const dirtyLastName = lastName !== "" && lastName !== user.lastName;
   const dirtyEmail = email !== "" && email !== user.email;
   const hasEdits = dirtyName || dirtyLastName || dirtyEmail;
+  const currentRoleIds = selectedRoleIds ?? user.roles.map((role) => role.id);
   const roleDirty =
-    selectedRoleIds.length > 0 &&
-    (selectedRoleIds.length !== user.roles.length ||
-      user.roles.some((role) => !selectedRoleIds.includes(role.id)));
+    selectedRoleIds !== null &&
+    (currentRoleIds.length !== user.roles.length ||
+      user.roles.some((role) => !currentRoleIds.includes(role.id)));
 
   const currentFirstName = firstName === "" ? user.firstName : firstName;
   const currentLastName = lastName === "" ? user.lastName : lastName;
@@ -113,7 +114,7 @@ export function UserDetail() {
         await updateUserStatus(api, id, next);
         setFeedback({ kind: "success", message: next === "ACTIVE" ? "Usuário ativado." : "Usuário bloqueado." });
       } else if (confirmAction === "roles") {
-        await replaceUserRoles(api, id, { roleIds: selectedRoleIds });
+        await replaceUserRoles(api, id, { roleIds: currentRoleIds });
         setFeedback({ kind: "success", message: "Papéis atualizados." });
       } else if (confirmAction === "reset") {
         await resetUserPassword(api, id, resetPassword);
@@ -138,9 +139,12 @@ export function UserDetail() {
   };
 
   const toggleRole = (roleId: string) => {
-    setSelectedRoleIds((current) =>
-      current.includes(roleId) ? current.filter((item) => item !== roleId) : [...current, roleId]
-    );
+    setSelectedRoleIds((selection) => {
+      const current = selection ?? user.roles.map((role) => role.id);
+      return current.includes(roleId)
+        ? current.filter((item) => item !== roleId)
+        : [...current, roleId];
+    });
   };
 
   const confirmTitle =
@@ -236,15 +240,14 @@ export function UserDetail() {
           <legend className="fieldset__legend">Papéis</legend>
           <p className="page-description">A alteração exige confirmação e pode afetar permissões.</p>
           {(managedRoles ?? []).map((role) => {
-            const isSelected = selectedRoleIds.includes(role.id);
-            const isCurrentlyAssigned = user.roles.some((assigned) => assigned.id === role.id);
+            const isSelected = currentRoleIds.includes(role.id);
             return (
               <label key={role.id} className="field__label" style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", fontWeight: 500 }}>
                 <input
                   type="checkbox"
                   name="roleIds"
                   value={role.id}
-                  checked={isSelected || (selectedRoleIds.length === 0 && isCurrentlyAssigned)}
+                  checked={isSelected}
                   onChange={() => toggleRole(role.id)}
                 />
                 {role.name}
