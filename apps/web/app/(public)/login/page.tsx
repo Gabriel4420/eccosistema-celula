@@ -21,7 +21,9 @@ export default function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const destination = consumePendingDestination() ?? "/dashboard";
+  const [destination] = useState(
+    () => consumePendingDestination() ?? "/dashboard"
+  );
 
   useEffect(() => {
     if (status === "authenticated") router.replace(destination);

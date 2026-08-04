@@ -83,6 +83,7 @@ export class RefreshCoordinator {
       this.options.onRefreshed(result);
       return true;
     } catch {
+      this.options.onExpired();
       return false;
     } finally {
       this.inflight = null;

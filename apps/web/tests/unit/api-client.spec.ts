@@ -101,6 +101,28 @@ describe("ApiClient", () => {
     api.clearAccessToken();
   });
 
+  it("ends the session when a 401 refresh request throws", async () => {
+    fetchMock.mockResolvedValue(
+      response(401, {
+        error: { code: "AUTH_UNAUTHENTICATED", message: "x", details: {} }
+      })
+    );
+    const onSessionEnded = jest.fn();
+    const api = client({
+      refreshRequest: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      onSessionEnded
+    });
+    api.setAccessToken("token", 600);
+
+    await expect(
+      api.request({ method: "GET", path: "/users", bearer: true, schema: idEnvelopeSchema })
+    ).rejects.toMatchObject({ code: "AUTH_UNAUTHENTICATED" });
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    api.clearAccessToken();
+  });
+
   it("retries transient network errors once for queries", async () => {
     fetchMock
       .mockRejectedValueOnce(new TypeError("Failed to fetch"))

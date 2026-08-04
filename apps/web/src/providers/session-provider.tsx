@@ -134,12 +134,15 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
 
   const logout = useCallback(async () => {
     setStatus("ending");
-    await postLogout(baseUrl);
-    api.clearAccessToken();
-    clearAllCaches();
-    setPrincipal(null);
-    setStatus("anonymous");
-    router.replace("/login");
+    try {
+      await postLogout(baseUrl);
+    } finally {
+      api.clearAccessToken();
+      clearAllCaches();
+      setPrincipal(null);
+      setStatus("anonymous");
+      router.replace("/login");
+    }
   }, [baseUrl, api, router]);
 
   const capabilities = useMemo(() => capabilitiesFor(principal), [principal]);

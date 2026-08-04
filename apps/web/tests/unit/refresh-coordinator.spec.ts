@@ -121,4 +121,19 @@ describe("RefreshCoordinator", () => {
     expect(onExpired).toHaveBeenCalledTimes(1);
     coordinator.dispose();
   });
+
+  it("ends the session when refresh throws", async () => {
+    const onExpired = jest.fn();
+    const coordinator = new RefreshCoordinator({
+      refresh: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      onRefreshed: jest.fn(),
+      onExpired
+    });
+
+    await expect(coordinator.refresh()).resolves.toBe(false);
+    expect(onExpired).toHaveBeenCalledTimes(1);
+    coordinator.dispose();
+  });
 });
