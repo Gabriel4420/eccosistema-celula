@@ -1,0 +1,214 @@
+"use client";
+
+import { churchWeekDays } from "@mission-atos/contracts";
+import type { ChurchResponse } from "@mission-atos/contracts";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Alert, Button, EmptyState, ErrorState, SelectField, Skeleton, TextField } from "@/src/shared/components";
+import { Can } from "@/src/shared/auth/guards";
+import { cacheStore } from "@/src/shared/cache/cache";
+import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
+import { useSession } from "@/src/providers/session-provider";
+import { getChurch, getChurchSettings, updateChurch, updateChurchSettings } from "@/src/features/church/api/church-api";
+
+const CHURCH_CACHE = "church";
+
+export function ChurchSettingsView() {
+  const { api } = useSession();
+  const { data: church, loading, error, reload } = useRemoteQuery({
+    fetcher: () => getChurch(api),
+    cacheName: CHURCH_CACHE,
+    cacheKey: "data",
+    ttlMs: 30_000
+  });
+  const { data: settings, loading: settingsLoading, error: settingsError, reload: reloadSettings } = useRemoteQuery({
+    fetcher: () => getChurchSettings(api),
+    cacheName: CHURCH_CACHE,
+    cacheKey: "settings",
+    ttlMs: 30_000
+  });
+
+  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  if ((loading && !church) || (settingsLoading && !settings)) {
+    return (
+      <div aria-label="Carregando igreja">
+        <Skeleton width="40%" height="2.5rem" />
+        <Skeleton width="100%" height="8rem" />
+      </div>
+    );
+  }
+
+  if ((error && !church) || (settingsError && !settings)) {
+    return (
+      <ErrorState title="Não foi possível carregar os dados da igreja" onRetry={() => { void reload(); void reloadSettings(); }}>
+        Tente novamente em instantes.
+      </ErrorState>
+    );
+  }
+
+  if (!church || !settings) {
+    return <EmptyState title="Igreja indisponível">Os dados da igreja não puderam ser carregados.</EmptyState>;
+  }
+
+  const handleSaveChurch = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFeedback(null);
+    const formData = new FormData(event.currentTarget);
+    const payload: Record<string, string | null> = {};
+    const fields: ReadonlyArray<[keyof ChurchResponse | "address", string]> = [
+      ["name", String(formData.get("name") ?? "").trim()],
+      ["slug", String(formData.get("slug") ?? "").trim()],
+      ["email", String(formData.get("email") ?? "").trim()],
+      ["phone", String(formData.get("phone") ?? "").trim()]
+    ];
+    for (const [key, value] of fields) {
+      if (key === "name" || key === "slug") {
+        const original = church[key];
+        if (value !== original && value !== "") payload[key] = value;
+      } else {
+        const original = church[key];
+        if (value !== (original ?? "")) payload[key] = value === "" ? null : value;
+      }
+    }
+    const addressFields: ReadonlyArray<[string, string]> = [
+      ["line", String(formData.get("addressLine") ?? "").trim()],
+      ["number", String(formData.get("addressNumber") ?? "").trim()],
+      ["complement", String(formData.get("addressComplement") ?? "").trim()],
+      ["neighborhood", String(formData.get("neighborhood") ?? "").trim()],
+      ["city", String(formData.get("city") ?? "").trim()],
+      ["state", String(formData.get("state") ?? "").trim()],
+      ["postalCode", String(formData.get("postalCode") ?? "").trim()]
+    ];
+    for (const [key, value] of addressFields) {
+      const original = church.address[key as keyof typeof church.address];
+      if (value !== (original ?? "")) payload[`address${capitalize(key)}`] = value === "" ? null : value;
+    }
+
+    if (Object.keys(payload).length === 0) {
+      setFeedback({ kind: "success", message: "Nenhuma alteração para salvar." });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updateChurch(api, payload);
+      cacheStore(CHURCH_CACHE).invalidatePrefix("data");
+      await reload();
+      setFeedback({ kind: "success", message: "Dados da igreja atualizados." });
+    } catch {
+      setFeedback({ kind: "error", message: "Não foi possível salvar. Verifique slug, contato e endereço." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveSettings = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFeedback(null);
+    const formData = new FormData(event.currentTarget);
+    const payload: Record<string, string> = {};
+    const timezone = String(formData.get("timezone") ?? "").trim();
+    const weekStartsOn = String(formData.get("weekStartsOn") ?? "");
+    if (timezone !== settings.timezone && timezone !== "") payload.timezone = timezone;
+    if (weekStartsOn !== settings.weekStartsOn && weekStartsOn !== "") payload.weekStartsOn = weekStartsOn;
+    if (Object.keys(payload).length === 0) {
+      setFeedback({ kind: "success", message: "Nenhuma alteração para salvar." });
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateChurchSettings(api, payload);
+      cacheStore(CHURCH_CACHE).invalidatePrefix("settings");
+      await reloadSettings();
+      setFeedback({ kind: "success", message: "Configurações atualizadas." });
+    } catch {
+      setFeedback({ kind: "error", message: "Não foi possível salvar as configurações. Verifique o fuso horário." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section aria-labelledby="church-title">
+      <div className="page-header">
+        <h1 className="page-title" id="church-title">
+          Igreja
+        </h1>
+        <p className="page-description">
+          Dados institucionais e ajustes. A edição está disponível somente para administradores.
+        </p>
+      </div>
+
+      {feedback ? (
+        <Alert variant={feedback.kind} title={feedback.kind === "success" ? "Sucesso" : "Falha"}>
+          {feedback.message}
+        </Alert>
+      ) : null}
+
+      <form className="fieldset" onSubmit={(event) => void handleSaveChurch(event)}>
+        <fieldset className="fieldset">
+          <legend className="fieldset__legend">Dados institucionais</legend>
+          <TextField label="Nome" name="name" defaultValue={church.name} required />
+          <TextField
+            label="Identificador (slug)"
+            name="slug"
+            defaultValue={church.slug}
+            hint="Letras minúsculas, números e hífens."
+            required
+          />
+          <TextField label="E-mail" type="email" name="email" defaultValue={church.email ?? ""} />
+          <TextField label="Telefone" name="phone" defaultValue={church.phone ?? ""} hint="Inclua o código do país, ex.: +5511999999999." />
+        </fieldset>
+
+        <fieldset className="fieldset">
+          <legend className="fieldset__legend">Endereço</legend>
+          <TextField label="Logradouro" name="addressLine" defaultValue={church.address.line ?? ""} />
+          <TextField label="Número" name="addressNumber" defaultValue={church.address.number ?? ""} />
+          <TextField label="Complemento" name="addressComplement" defaultValue={church.address.complement ?? ""} />
+          <TextField label="Bairro" name="neighborhood" defaultValue={church.address.neighborhood ?? ""} />
+          <TextField label="Cidade" name="city" defaultValue={church.address.city ?? ""} />
+          <TextField label="Estado (UF)" name="state" defaultValue={church.address.state ?? ""} maxLength={2} />
+          <TextField label="CEP" name="postalCode" defaultValue={church.address.postalCode ?? ""} maxLength={8} />
+          <TextField label="País" name="country" defaultValue={church.address.country} disabled />
+        </fieldset>
+
+        <Can capability="editChurch">
+          <Button type="submit" loading={saving} loadingLabel="Salvando…">
+            Salvar dados
+          </Button>
+        </Can>
+      </form>
+
+      <form className="fieldset" style={{ marginTop: "var(--space-6)" }} onSubmit={(event) => void handleSaveSettings(event)}>
+        <fieldset className="fieldset">
+          <legend className="fieldset__legend">Configurações</legend>
+          <TextField
+            label="Fuso horário"
+            name="timezone"
+            defaultValue={settings.timezone}
+            hint="Padrão IANA, ex.: America/Sao_Paulo."
+            required
+          />
+          <SelectField
+            label="Dia de início da semana"
+            name="weekStartsOn"
+            defaultValue={settings.weekStartsOn}
+            options={churchWeekDays.map((day) => ({ value: day, label: day }))}
+            required
+          />
+          <Can capability="editChurch">
+            <Button type="submit" loading={saving} loadingLabel="Salvando…">
+              Salvar configurações
+            </Button>
+          </Can>
+        </fieldset>
+      </form>
+    </section>
+  );
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
