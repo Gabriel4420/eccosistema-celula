@@ -1,9 +1,9 @@
 # Plano 006.1 — Fundação do frontend para módulos existentes
 
-**Status:** Em andamento — aprovado para implementação; decisões conservadoras da seção 6 registradas em 2026-08-03  
+**Status:** Implementação revisada e aprovada — Playwright E2E aprovado em PostgreSQL descartável
 **Responsável:** a definir  
 **Criado em:** 2026-08-02  
-**Atualizado em:** 2026-08-03  
+**Atualizado em:** 2026-08-04
 **PRD relacionado:** RF-001, RF-003, RF-005, RF-006, RF-007, RF-008, RF-018; RN-001 a RN-012; usabilidade, segurança e escopo do MVP  
 **ADRs relacionadas:** `docs/decisions/003-token-transport.md`; criar ADR somente se o transporte de sessão ou a biblioteca visual mudar  
 **Branch ou issue:** a definir
@@ -103,7 +103,7 @@ Como o cookie pertence à API e tem `Path=/auth`, o middleware e os Server Compo
 - [x] **Contratos de saída compartilhados aprovados:** exportar em `packages/contracts` schemas Zod aditivos que reproduzam exatamente as allowlists atuais de `user.presenter.ts` e `church.presenter.ts`, incluindo item, coleção, settings e catálogo de papéis, com testes de paridade e sem alterar respostas existentes.
 - [x] **Detalhe de pessoa inativa:** decisão conservadora registrada — sem mudança de API. Reativação de pessoa inativa ocorre somente pela linha da listagem (`ADMIN`), via `PATCH /people/:id/status`; `/people/[id]` permanece exclusivo para registros ativos (a API retorna `404` para inativos) e a UI não oferece navegação de detalhe para pessoas inativas.
 - [x] **Possíveis duplicidades:** decisão conservadora registrada — a UI apresenta apenas aviso genérico de conflito (`409 PERSON_DUPLICATE`), sem lista de candidatos; consulta dedicada de duplicidades fica para plano separado.
-- [x] **Biblioteca visual:** decisão conservadora registrada — componentes próprios mínimos e acessíveis (HTML/CSS primitives) com tokens centralizados; nenhuma biblioteca de componentes/tabelas/notificações. `@tanstack/react-query` não aprovado nesta etapa (uso de cache próprio leve conforme alternativa nativa do plano); `react-hook-form` aprovado pelo plano para users/church/people com adapter Zod local (sem `@hookform/resolvers`).
+- [x] **Biblioteca visual e formulários:** decisão conservadora registrada — componentes próprios mínimos e acessíveis (HTML/CSS primitives) com tokens centralizados; nenhuma biblioteca de componentes/tabelas/notificações. `@tanstack/react-query` não aprovado nesta etapa (uso de cache próprio leve conforme alternativa nativa do plano). A implementação demonstrou que APIs nativas de formulário + Zod atendem ao escopo sem `react-hook-form` ou `@hookform/resolvers`; essa simplificação está aprovada.
 
 Nenhuma dessas lacunas autoriza inventar rota, contrato ou dado. A implementação deverá bloquear ou reduzir a UI afetada até a decisão ser aprovada e registrada no plano.
 
@@ -590,7 +590,7 @@ npm run test:e2e
 npm audit
 ```
 
-O script `test` ainda não existe em `@mission-atos/web` e deverá ser criado na etapa de testes. O E2E funcional exigirá API/PostgreSQL dedicados, migrations aplicadas, fixtures fictícias e variáveis de auth; os comandos de preparação deverão reutilizar scripts npm existentes e ser documentados na implementação. Nenhum outro gerenciador de pacotes ou script incompatível com PowerShell será adicionado.
+Os scripts `test` e `test:e2e` existem em `@mission-atos/web`. O E2E funcional exige API/PostgreSQL dedicados, migrations aplicadas, fixtures fictícias e `TEST_DATABASE_URL`; o runner recusa bancos cujo nome não identifique teste. Nenhum outro gerenciador de pacotes ou script incompatível com PowerShell foi adicionado.
 
 ## 19. Definition of Done
 
@@ -610,14 +610,14 @@ O script `test` ainda não existe em `@mission-atos/web` e deverá ser criado na
 - [ ] critérios de acessibilidade e responsividade verificados;
 - [x] nenhum dado sensível persistido, logado ou renderizado;
 - [x] testes unitários e de integração do web aprovados;
-- [ ] Playwright E2E aprovado com API/PostgreSQL reais;
-- [ ] ausência de erros inesperados no console validada;
+- [x] Playwright E2E aprovado com API/PostgreSQL reais;
+- [x] ausência de erros inesperados no console validada;
 - [x] lint aprovado;
 - [x] typecheck aprovado;
 - [x] testes aprovados;
 - [x] build aprovado;
 - [x] dependências justificadas, revisadas e registradas;
-- [ ] documentação e registro de progresso atualizados;
+- [x] documentação e registro de progresso atualizados;
 - [x] nenhuma migration ou funcionalidade fora do escopo criada;
 - [x] Plano 007 não criado nem implementado.
 
@@ -649,8 +649,8 @@ O script `test` ainda não existe em `@mission-atos/web` e deverá ser criado na
 | --- | --- | --- | --- | --- |
 | `@mission-atos/contracts` | workspace | schemas e tipos HTTP compartilhados | duplicar schemas, proibido | adicionar ao web |
 | `@tanstack/react-query` | produção | cache privado, deduplicação, invalidação e estados remotos | hooks com `fetch` e cache próprio | pendente de spike: confirmar suporte às versões instaladas de React/Next, uso somente client-side para cache privado, impacto no bundle e integração com refresh |
-| `react-hook-form` | produção | formulários complexos, dirty fields e desempenho | state/FormData nativos | aprovar para users/church/people |
-| `@hookform/resolvers` | produção | integração consistente RHF/Zod | adapter local pequeno | avaliar; usar adapter local se suficiente |
+| `react-hook-form` | produção | formulários complexos, dirty fields e desempenho | state/FormData nativos | não adicionar; alternativa nativa atende ao escopo implementado |
+| `@hookform/resolvers` | produção | integração consistente RHF/Zod | validação direta pelos contratos | não adicionar; não há RHF no fluxo aprovado |
 | `zod` | transitiva/workspace | validação runtime dos contratos | validação manual | reutilizar via contracts; evitar versão divergente |
 | `@testing-library/react` | desenvolvimento | testes de componentes por comportamento | React DOM test utils | aprovar |
 | `@testing-library/user-event` | desenvolvimento | interação realista de teclado/formulário | eventos manuais | aprovar |
@@ -719,3 +719,24 @@ Nenhuma dependência será instalada durante o planejamento.
 - capacidade visual: `capabilitiesFor` mantém `listInactivePeople`, `editPeople`, `changePersonStatus` e `viewPersonObservations`; `PeopleList` neutraliza `status=INACTIVE` na URL para papéis sem permissão;
 - testes: web unit 32/32; lint, typecheck e build do web verdes (12 rotas, incluindo `/church/settings`, `/people/[id]` e `/users/[id]` dinâmicos); E2E `foundation.spec.ts` continua verde;
 - próximo passo: Etapa 9 — E2E Playwright dos fluxos, validação completa `lint`/`typecheck`/`test`/`build`/`test:e2e`, documentação e registro de progresso; não criar o Plano 007.
+
+### 2026-08-04 — revisão autônoma da implementação
+
+- revisão: auditados plano, ADR 003, contratos, controllers/policies da API, sessão, cliente HTTP, guards, cache, filtros, formulários, fluxos críticos e testes do web;
+- correções de sessão: logout passou a garantir limpeza local em `finally`; falha excepcional do refresh agora encerra a sessão; regressões cobertas nos testes do `ApiClient` e `RefreshCoordinator`;
+- correções de navegação: destino privado pendente deixou de ser consumido novamente durante rerenders do login; buscas de usuários e pessoas cancelam o debounce anterior; páginas inválidas ou negativas na URL são normalizadas para a primeira página;
+- correção de usuários: seleção de papéis passou a distinguir estado inicial de seleção vazia, permitindo remover um papel atribuído e enviar exatamente a seleção visual confirmada;
+- resiliência: consultas GET de perfil, igreja, usuários, papéis e pessoas passaram a usar a repetição única já prevista para erros transitórios; mutações continuam sem repetição automática;
+- dependências: aprovado manter formulários com APIs nativas + Zod; `react-hook-form`, `@hookform/resolvers`, React Query e bibliotecas visuais continuam desnecessários, evitando custo e bundle sem ganho comprovado;
+- validação concluída: testes unitários web 34/34, lint web e typecheck web aprovados; `git diff --check` aprovado;
+- validação conectada: Playwright foi iniciado com a proteção de `TEST_DATABASE_URL`; a URL dedicada configurada em `localhost:5433/mission_atos_test` não estava acessível e o Docker Engine também estava indisponível, portanto nenhuma base de desenvolvimento foi reutilizada ou alterada;
+- aprovação: implementação e decisões técnicas aprovadas; o plano permanece ativo somente até a execução do Playwright contra PostgreSQL de teste controlado, verificação responsiva/teclado e confirmação de console limpo.
+
+### 2026-08-04 — Playwright E2E aprovado
+
+- ambiente: como a porta canônica `5433` continuava interceptada por outra instância PostgreSQL local, foi criado o container descartável `mission-atos-playwright-db` com PostgreSQL 18.4 em `127.0.0.1:55433`; as 9 migrations foram aplicadas desde banco vazio;
+- correção de ambiente web: `allowedDevOrigins` passou a permitir `127.0.0.1`, evitando bloqueio dos módulos/HMR pelo Next.js durante o runner local;
+- correção de ambiente API: os limites por IP e conta do login passaram a ser configuráveis com defaults seguros `10/5`; somente o runner E2E usa `100/100`, preservando a proteção de produção e evitando interferência entre 21 contextos isolados;
+- testes estabilizados: seletores ambíguos foram tornados inequívocos e cenários deixaram de depender do nome alterado por um teste anterior;
+- resultado: Playwright Chromium 21/21 aprovado em 51,6 segundos, cobrindo autenticação, bootstrap, logout, igreja, guards por papel, pessoas, perfil e usuários; cenário de fundação confirmou ausência de erros inesperados no console;
+- aprovação: pendências Playwright e console da Definition of Done encerradas; permanece somente a verificação manual específica de acessibilidade e responsividade já registrada.
