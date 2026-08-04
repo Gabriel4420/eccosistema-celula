@@ -1,11 +1,28 @@
 import {
   createUserRequestSchema,
   listUsersQuerySchema,
+  managedRoleNames,
+  managedRoleSchema,
+  managedRolesEnvelopeSchema,
   replaceUserRolesRequestSchema,
   resetUserPasswordRequestSchema,
   updateUserRequestSchema,
-  updateOwnProfileRequestSchema
+  updateOwnProfileRequestSchema,
+  userItemEnvelopeSchema,
+  userPageEnvelopeSchema,
+  userResponseSchema
 } from "./users";
+
+const baseUser = {
+  id: "00000000-0000-4000-8000-000000000001",
+  firstName: "Ana",
+  lastName: "Silva",
+  email: "ana@example.com",
+  status: "ACTIVE",
+  roles: [{ id: "00000000-0000-4000-8000-000000000002", name: "LEADER" }],
+  createdAt: "2026-08-03T12:00:00.000Z",
+  updatedAt: "2026-08-03T12:00:00.000Z"
+};
 
 describe("user contracts", () => {
   it("normalizes email and supplies pagination defaults", () => {
@@ -49,5 +66,51 @@ describe("user contracts", () => {
         churchId: "00000000-0000-4000-8000-000000000001"
       })
     ).toThrow();
+  });
+
+  it("parses a single user response with presenter parity", () => {
+    expect(userResponseSchema.parse(baseUser)).toEqual(baseUser);
+    expect(
+      userItemEnvelopeSchema.parse({
+        data: baseUser,
+        meta: {}
+      }).data
+    ).toEqual(baseUser);
+  });
+
+  it("parses a user page envelope with pagination metadata", () => {
+    const page = userPageEnvelopeSchema.parse({
+      data: [baseUser],
+      meta: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 }
+    });
+    expect(page.meta.totalPages).toBe(1);
+    expect(() =>
+      userPageEnvelopeSchema.parse({
+        data: [baseUser],
+        meta: { page: 1, pageSize: 20, totalItems: 1 }
+      })
+    ).toThrow();
+  });
+
+  it("rejects unknown fields and invalid statuses in user responses", () => {
+    expect(() =>
+      userResponseSchema.parse({ ...baseUser, churchId: crypto.randomUUID() })
+    ).toThrow();
+    expect(() =>
+      userResponseSchema.parse({ ...baseUser, status: "DELETED" })
+    ).toThrow();
+  });
+
+  it("restricts managed roles to canonical names", () => {
+    const role = {
+      id: "00000000-0000-4000-8000-000000000003",
+      name: "ADMIN"
+    };
+    expect(managedRoleSchema.parse(role)).toEqual(role);
+    expect(managedRoleNames).toContain("LEADER");
+    expect(() => managedRoleSchema.parse({ ...role, name: "OWNER" })).toThrow();
+    expect(
+      managedRolesEnvelopeSchema.parse({ data: [role], meta: {} }).data
+    ).toEqual([role]);
   });
 });

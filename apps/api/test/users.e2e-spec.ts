@@ -157,6 +157,29 @@ describe("user management HTTP flow", () => {
       .expect(403);
   });
 
+  it("exposes only canonical active roles of the authenticated church", async () => {
+    await request(app.getHttpServer())
+      .get("/users/managed-roles")
+      .expect(401);
+    const leaderLogin = await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: `${leaderId}@example.test`, password })
+      .expect(200);
+    await request(app.getHttpServer())
+      .get("/users/managed-roles")
+      .set("Authorization", `Bearer ${leaderLogin.body.data.accessToken}`)
+      .expect(403);
+    const { body } = await request(app.getHttpServer())
+      .get("/users/managed-roles")
+      .set("Authorization", authorization)
+      .expect(200);
+    expect(body.data).toEqual([
+      { id: adminRoleId, name: "ADMIN" },
+      { id: leaderRoleId, name: "LEADER" },
+    ]);
+    expect(body.meta).toEqual({});
+  });
+
   it("creates and lists users without exposing sensitive fields or crossing churches", async () => {
     const created = await request(app.getHttpServer())
       .post("/users")

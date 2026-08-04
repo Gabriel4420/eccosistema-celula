@@ -125,9 +125,51 @@ export const updateChurchSettingsRequestSchema = z
   .strict()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
 
+export const churchAddressResponseSchema = z.object({
+  line: z.string().nullable(),
+  number: z.string().nullable(),
+  complement: z.string().nullable(),
+  neighborhood: z.string().nullable(),
+  city: z.string().nullable(),
+  state: z.string().nullable(),
+  postalCode: z.string().nullable(),
+  country: z.string()
+}).strict();
+
+export const churchResponseSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  slug: z.string(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  address: churchAddressResponseSchema,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime()
+}).strict();
+
+export const churchEnvelopeSchema = z.object({
+  data: churchResponseSchema,
+  meta: z.object({}).strict()
+}).strict();
+
+export const churchSettingsResponseSchema = z.object({
+  timezone: z.string(),
+  weekStartsOn: z.enum(churchWeekDays)
+}).strict();
+
+export const churchSettingsEnvelopeSchema = z.object({
+  data: churchSettingsResponseSchema,
+  meta: z.object({}).strict()
+}).strict();
+
 export type UpdateChurchRequest = z.infer<typeof updateChurchRequestSchema>;
 export type UpdateChurchSettingsRequest = z.infer<
   typeof updateChurchSettingsRequestSchema
 >;
 export type ChurchWeekDay = typeof churchWeekDays[number];
+export type ChurchAddressResponse = z.infer<typeof churchAddressResponseSchema>;
+export type ChurchResponse = z.infer<typeof churchResponseSchema>;
+export type ChurchEnvelope = z.infer<typeof churchEnvelopeSchema>;
+export type ChurchSettingsResponse = z.infer<typeof churchSettingsResponseSchema>;
+export type ChurchSettingsEnvelope = z.infer<typeof churchSettingsEnvelopeSchema>;
 

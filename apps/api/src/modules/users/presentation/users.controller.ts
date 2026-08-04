@@ -22,6 +22,7 @@ import {
 import {
   createUserRequestSchema,
   listUsersQuerySchema,
+  managedRoleNames,
   replaceUserRolesRequestSchema,
   resetUserPasswordRequestSchema,
   updateOwnProfileRequestSchema,
@@ -67,6 +68,14 @@ export class UsersController {
       data: presentUser(await this.commands.updateOwn(principal, input)),
       meta: {}
     };
+  }
+
+  @Roles("ADMIN")
+  @Get("managed-roles")
+  @ApiOperation({ summary: "List canonical managed roles available in the authenticated church" })
+  @ApiResponse({ status: 200, description: "Managed roles catalog", schema: managedRolesEnvelopeSchema() })
+  async managedRoles(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
+    return { data: await this.queries.managedRoles(principal), meta: {} };
   }
 
   @Roles("ADMIN")
@@ -276,6 +285,27 @@ function userSchema() {
       },
       createdAt: { type: "string", format: "date-time" },
       updatedAt: { type: "string", format: "date-time" }
+    }
+  };
+}
+
+function managedRolesEnvelopeSchema() {
+  return {
+    type: "object",
+    required: ["data", "meta"],
+    properties: {
+      data: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["id", "name"],
+          properties: {
+            id: { type: "string", format: "uuid" },
+            name: { type: "string", enum: [...managedRoleNames] }
+          }
+        }
+      },
+      meta: { type: "object" }
     }
   };
 }

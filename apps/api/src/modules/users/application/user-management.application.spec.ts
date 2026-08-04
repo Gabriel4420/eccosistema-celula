@@ -231,6 +231,7 @@ function repositoryMock(): jest.Mocked<UserManagementRepository> {
   };
   return {
     isActiveAdministrator: jest.fn().mockResolvedValue(true),
+    managedRoles: jest.fn().mockResolvedValue([]),
     list: jest.fn().mockResolvedValue({ items: [], totalItems: 0 }),
     find: jest.fn().mockResolvedValue(user)
   };

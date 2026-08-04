@@ -1,7 +1,12 @@
 import type { AuthenticatedPrincipal } from "@mission-atos/domain";
 import { UserManagementError } from "./user-management.error";
 import type { UserManagementRepository } from "./user-management.port";
-import type { ListUsersInput, ManagedUser, UserPage } from "./user-management.types";
+import type {
+  ListUsersInput,
+  ManagedRole,
+  ManagedUser,
+  UserPage
+} from "./user-management.types";
 import type { UserManagementAuthorization } from "./user-management.authorization";
 
 export class UserManagementQueries {
@@ -16,6 +21,13 @@ export class UserManagementQueries {
   ): Promise<UserPage> {
     await this.authorization.assertAdministrator(principal);
     return this.users.list(principal.churchId, query);
+  }
+
+  async managedRoles(
+    principal: AuthenticatedPrincipal
+  ): Promise<ManagedRole[]> {
+    await this.authorization.assertAdministrator(principal);
+    return this.users.managedRoles(principal.churchId);
   }
 
   async get(

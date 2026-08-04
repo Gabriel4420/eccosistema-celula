@@ -12,23 +12,38 @@ export {
   createUserRequestSchema,
   listUsersQuerySchema,
   managedRoleNames,
+  managedRoleSchema,
+  managedRolesEnvelopeSchema,
   replaceUserRolesRequestSchema,
   resetUserPasswordRequestSchema,
   updateOwnProfileRequestSchema,
   updateUserRequestSchema,
   updateUserStatusRequestSchema,
-  userIdParamsSchema
+  userIdParamsSchema,
+  userItemEnvelopeSchema,
+  userPageEnvelopeSchema,
+  userResponseSchema
 } from "./users";
 export type {
   CreateUserRequest,
   ListUsersQuery,
+  ManagedRole,
+  ManagedRolesEnvelope,
   ReplaceUserRolesRequest,
   UpdateOwnProfileRequest,
   UpdateUserRequest,
+  UserItemEnvelope,
+  UserPageEnvelope,
+  UserResponse,
   UserStatusRequest
 } from "./users";
 export {
+  churchEnvelopeSchema,
+  churchSettingsEnvelopeSchema,
+  churchSettingsResponseSchema,
   churchWeekDays,
+  churchResponseSchema,
+  churchAddressResponseSchema,
   isIanaTimezone,
   normalizeChurchPhone,
   normalizeChurchPostalCode,
@@ -60,6 +75,11 @@ export type {
   PersonStatusRequest
 } from "./people";
 export type {
+  ChurchAddressResponse,
+  ChurchEnvelope,
+  ChurchResponse,
+  ChurchSettingsEnvelope,
+  ChurchSettingsResponse,
   ChurchWeekDay,
   UpdateChurchRequest,
   UpdateChurchSettingsRequest

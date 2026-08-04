@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { RuntimeDatabaseClient } from "@mission-atos/database";
 import type { UserStatus } from "@mission-atos/domain";
+import { managedRoleNames } from "@mission-atos/contracts";
 import { DATABASE_CLIENT } from "../../identity/identity.tokens";
 import { UserManagementError } from "../application/user-management.error";
 import type {
@@ -11,6 +12,7 @@ import type {
 } from "../application/user-management.port";
 import type {
   ListUsersInput,
+  ManagedRole,
   ManagedUser,
   UserPage
 } from "../application/user-management.types";
@@ -48,6 +50,18 @@ export class PrismaUserManagementRepository
         }
       })) === 1
     );
+  }
+
+  async managedRoles(churchId: string): Promise<ManagedRole[]> {
+    return this.database.role.findMany({
+      where: {
+        churchId,
+        deletedAt: null,
+        name: { in: [...managedRoleNames] }
+      },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" }
+    });
   }
 
   async list(churchId: string, query: ListUsersInput): Promise<UserPage> {

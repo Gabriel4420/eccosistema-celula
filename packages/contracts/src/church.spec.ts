@@ -1,9 +1,32 @@
 import {
+  churchEnvelopeSchema,
+  churchResponseSchema,
+  churchSettingsEnvelopeSchema,
   isIanaTimezone,
   normalizeChurchSlug,
   updateChurchRequestSchema,
   updateChurchSettingsRequestSchema
 } from "./church";
+
+const baseChurch = {
+  id: "00000000-0000-4000-8000-000000000001",
+  name: "Missão Atos",
+  slug: "missao-atos",
+  email: "contato@missaoatos.example",
+  phone: "+5511999999999",
+  address: {
+    line: "Rua Central",
+    number: "100",
+    complement: null,
+    neighborhood: "Centro",
+    city: "São Paulo",
+    state: "SP",
+    postalCode: "01001000",
+    country: "BR"
+  },
+  createdAt: "2026-08-03T12:00:00.000Z",
+  updatedAt: "2026-08-03T12:00:00.000Z"
+};
 
 describe("church contracts", () => {
   it("normalizes institutional fields", () => {
@@ -62,6 +85,48 @@ describe("church contracts", () => {
 
   it("normalizes accented and punctuated slugs deterministically", () => {
     expect(normalizeChurchSlug("  Missão -- Atos! ")).toBe("missao-atos");
+  });
+
+  it("parses a church response with presenter parity", () => {
+    expect(churchResponseSchema.parse(baseChurch)).toEqual(baseChurch);
+    expect(
+      churchEnvelopeSchema.parse({ data: baseChurch, meta: {} }).data
+    ).toEqual(baseChurch);
+  });
+
+  it("accepts nullable institutional fields and rejects unknown keys", () => {
+    const minimal = {
+      ...baseChurch,
+      email: null,
+      phone: null,
+      address: {
+        ...baseChurch.address,
+        line: null,
+        number: null,
+        complement: null,
+        neighborhood: null,
+        city: null,
+        state: null,
+        postalCode: null
+      }
+    };
+    expect(churchResponseSchema.parse(minimal)).toEqual(minimal);
+    expect(() =>
+      churchResponseSchema.parse({ ...baseChurch, churchId: crypto.randomUUID() })
+    ).toThrow();
+  });
+
+  it("parses church settings envelopes", () => {
+    const settings = { timezone: "America/Sao_Paulo", weekStartsOn: "SUNDAY" };
+    expect(
+      churchSettingsEnvelopeSchema.parse({ data: settings, meta: {} }).data
+    ).toEqual(settings);
+    expect(() =>
+      churchSettingsEnvelopeSchema.parse({
+        data: { ...settings, weekStartsOn: "MONDAY?" },
+        meta: {}
+      })
+    ).toThrow();
   });
 });
 

@@ -18,6 +18,7 @@ export type AuditValue =
 
 export interface UserManagementRepository {
   isActiveAdministrator(churchId: string, userId: string): Promise<boolean>;
+  managedRoles(churchId: string): Promise<ManagedRole[]>;
   list(churchId: string, query: ListUsersInput): Promise<UserPage>;
   find(churchId: string, userId: string): Promise<ManagedUser | null>;
 }

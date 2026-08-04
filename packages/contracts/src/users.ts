@@ -53,10 +53,51 @@ export const resetUserPasswordRequestSchema = z
   .object({ newPassword: password })
   .strict();
 
+export const userResponseSchema = z.object({
+  id: z.uuid(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string(),
+  status: z.enum(["ACTIVE", "BLOCKED"]),
+  roles: z.array(z.object({ id: z.uuid(), name: z.string() }).strict()),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime()
+}).strict();
+
+export const userItemEnvelopeSchema = z.object({
+  data: userResponseSchema,
+  meta: z.object({}).strict()
+}).strict();
+
+export const userPageEnvelopeSchema = z.object({
+  data: z.array(userResponseSchema),
+  meta: z.object({
+    page: z.number().int().min(1),
+    pageSize: z.number().int().min(1).max(100),
+    totalItems: z.number().int().nonnegative(),
+    totalPages: z.number().int().nonnegative()
+  }).strict()
+}).strict();
+
+export const managedRoleSchema = z.object({
+  id: z.uuid(),
+  name: z.enum(managedRoleNames)
+}).strict();
+
+export const managedRolesEnvelopeSchema = z.object({
+  data: z.array(managedRoleSchema),
+  meta: z.object({}).strict()
+}).strict();
+
 export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>;
 export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
 export type UpdateOwnProfileRequest = z.infer<typeof updateOwnProfileRequestSchema>;
 export type UserStatusRequest = z.infer<typeof updateUserStatusRequestSchema>;
 export type ReplaceUserRolesRequest = z.infer<typeof replaceUserRolesRequestSchema>;
+export type UserResponse = z.infer<typeof userResponseSchema>;
+export type UserItemEnvelope = z.infer<typeof userItemEnvelopeSchema>;
+export type UserPageEnvelope = z.infer<typeof userPageEnvelopeSchema>;
+export type ManagedRole = z.infer<typeof managedRoleSchema>;
+export type ManagedRolesEnvelope = z.infer<typeof managedRolesEnvelopeSchema>;
 
