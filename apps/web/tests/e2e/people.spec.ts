@@ -43,7 +43,7 @@ test.describe("people management", () => {
 
     await inactiveRow.getByRole("button", { name: "Reativar" }).click();
     await expect(page.getByText(/foi reativado/)).toBeVisible();
-    await expect(page.getByText("João E2E Inativo")).not.toBeVisible();
+    await expect(inactiveRow).not.toBeVisible();
   });
 
   test("SUPERVISOR does not see observations on the detail page", async ({ page }) => {

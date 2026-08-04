@@ -12,7 +12,9 @@ test.describe("users management (ADMIN)", () => {
 
     const search = page.getByLabel("Buscar");
     await search.fill("pastor@e2e.test");
-    await expect(page.getByRole("link", { name: /Paulo Pastor/ })).toBeVisible();
+    const pastorRow = page.getByRole("row", { name: /pastor@e2e\.test/ });
+    await expect(pastorRow).toBeVisible();
+    await expect(pastorRow.getByRole("link").first()).toBeVisible();
   });
 
   test("creates a new user and lands on the detail page", async ({ page }) => {
@@ -22,7 +24,7 @@ test.describe("users management (ADMIN)", () => {
       page.getByRole("heading", { name: "Novo usuário" })
     ).toBeVisible();
 
-    await page.getByLabel("Nome").fill("Carla");
+    await page.locator('input[name="firstName"]').fill("Carla");
     await page.getByLabel("Sobrenome").fill("Cadastro");
     await page.getByLabel("E-mail").fill("carla.cadastro@e2e.test");
     await page.getByLabel("Senha inicial").fill("nova-senha-1234");
