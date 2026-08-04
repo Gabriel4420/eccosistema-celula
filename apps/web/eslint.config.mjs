@@ -1,3 +1,14 @@
+import globals from "globals";
 import nextConfig from "@mission-atos/eslint-config/next";
 
-export default nextConfig;
+const webConfig = [
+  ...nextConfig,
+  {
+    files: ["**/*.{cjs,js,mjs}"],
+    languageOptions: {
+      globals: globals.node
+    }
+  }
+];
+
+export default webConfig;

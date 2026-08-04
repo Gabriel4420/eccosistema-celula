@@ -1,30 +1,29 @@
-import { parseWebPublicEnvironment } from "@mission-atos/config/public";
+"use client";
 
-export default function HomePage() {
-  const environment = parseWebPublicEnvironment({
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL
-  });
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Skeleton } from "@/src/shared/components";
+import { useSession } from "@/src/providers/session-provider";
+
+export default function BootstrapEntry() {
+  const { status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/dashboard");
+    if (status === "anonymous") router.replace("/login");
+  }, [status, router]);
 
   return (
-    <main className="page-shell">
-      <section aria-labelledby="foundation-title" className="status-card">
-        <p className="eyebrow">Fundação técnica</p>
-        <h1 id="foundation-title">Ecossistema de Células</h1>
-        <p>
-          A aplicação web está pronta para receber os próximos planos do
-          produto.
+    <div className="auth-shell">
+      <div className="auth-card" aria-label="Carregando sessão">
+        <h1 className="auth-card__title">Ecossistema de Células</h1>
+        <p className="auth-card__description">
+          Verificando sua sessão…
         </p>
-        <dl>
-          <div>
-            <dt>Web</dt>
-            <dd>Next.js com App Router</dd>
-          </div>
-          <div>
-            <dt>API local</dt>
-            <dd>{environment.NEXT_PUBLIC_API_URL}</dd>
-          </div>
-        </dl>
-      </section>
-    </main>
+        <Skeleton width="100%" height="2.5rem" />
+        <Skeleton width="100%" height="2.5rem" />
+      </div>
+    </div>
   );
 }

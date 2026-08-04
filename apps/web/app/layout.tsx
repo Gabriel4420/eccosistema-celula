@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { SessionProvider } from "@/src/providers/session-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  description: "Fundação técnica do ecossistema de gestão de células.",
-  title: "Ecossistema de Células"
+  description: "Ecossistema de gestão de células e pequenos grupos.",
+  title: {
+    default: "Ecossistema de Células",
+    template: "%s · Ecossistema de Células"
+  }
 };
 
 interface RootLayoutProps {
@@ -14,7 +18,9 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }
