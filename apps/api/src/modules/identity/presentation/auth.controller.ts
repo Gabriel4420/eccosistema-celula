@@ -56,7 +56,12 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Throttle({ default: { limit: 10, ttl: 900_000 } })
+  @Throttle({
+    default: {
+      limit: Number(process.env.AUTH_LOGIN_IP_LIMIT ?? 10),
+      ttl: 900_000
+    }
+  })
   @Post("login")
   @ApiBody({
     schema: {

@@ -10,6 +10,8 @@ describe("OpaqueRefreshTokenService", () => {
     JWT_ISSUER: "issuer",
     JWT_AUDIENCE: "audience",
     JWT_ACCESS_TTL_SECONDS: 600,
+    AUTH_LOGIN_IP_LIMIT: 10,
+    AUTH_LOGIN_ACCOUNT_LIMIT: 5,
     REFRESH_TOKEN_PEPPER: "b".repeat(32),
     REFRESH_TOKEN_TTL_SECONDS: 3600,
     AUTH_COOKIE_SECURE: false,

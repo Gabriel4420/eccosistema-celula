@@ -20,6 +20,8 @@ const apiEnvironment = {
   AUTH_CHURCH_ID: E2E_CHURCH_ID,
   JWT_ACCESS_SECRET: "e2e-access-secret-that-is-at-least-32-characters",
   REFRESH_TOKEN_PEPPER: "e2e-refresh-pepper-that-is-distinct-and-long",
+  AUTH_LOGIN_IP_LIMIT: "100",
+  AUTH_LOGIN_ACCOUNT_LIMIT: "100",
   AUTH_COOKIE_SECURE: "false",
   CORS_ORIGINS: "http://127.0.0.1:3000"
 };

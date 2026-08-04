@@ -7,17 +7,26 @@ interface Counter {
   resetsAt: number;
 }
 
+export interface LoginRateLimits {
+  readonly ip: number;
+  readonly account: number;
+}
+
 @Injectable()
 export class LoginRateLimiter {
   private readonly counters = new Map<string, Counter>();
   private readonly windowMs = 15 * 60 * 1000;
 
+  constructor(
+    private readonly limits: LoginRateLimits = { ip: 10, account: 5 }
+  ) {}
+
   assertAllowed(ip: string, normalizedEmail: string, now = Date.now()): void {
-    this.consume(`ip:${ip}`, 10, now);
+    this.consume(`ip:${ip}`, this.limits.ip, now);
     const accountKey = createHash("sha256")
       .update(normalizedEmail)
       .digest("hex");
-    this.consume(`account:${accountKey}`, 5, now);
+    this.consume(`account:${accountKey}`, this.limits.account, now);
   }
 
   private consume(key: string, limit: number, now: number): void {

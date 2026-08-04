@@ -12,6 +12,8 @@ const serverEnvironmentSchema = z.object({
   JWT_ISSUER: z.string().min(1).default("mission-atos-api"),
   JWT_AUDIENCE: z.string().min(1).default("mission-atos-clients"),
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(600),
+  AUTH_LOGIN_IP_LIMIT: z.coerce.number().int().min(1).max(10_000).default(10),
+  AUTH_LOGIN_ACCOUNT_LIMIT: z.coerce.number().int().min(1).max(10_000).default(5),
   REFRESH_TOKEN_PEPPER: z.string().min(32).optional(),
   REFRESH_TOKEN_TTL_SECONDS: z.coerce
     .number()

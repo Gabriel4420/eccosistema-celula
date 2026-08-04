@@ -48,7 +48,16 @@ import { LoginRateLimiter } from "./presentation/login-rate-limiter";
     RefreshSessionUseCase,
     LogoutUseCase,
     ChangePasswordUseCase,
-    LoginRateLimiter,
+    {
+      provide: LoginRateLimiter,
+      useFactory: () => {
+        const environment = parseAuthenticationEnvironment(process.env);
+        return new LoginRateLimiter({
+          ip: environment.AUTH_LOGIN_IP_LIMIT,
+          account: environment.AUTH_LOGIN_ACCOUNT_LIMIT
+        });
+      }
+    },
     RefreshCookieService,
     {
       provide: USER_CREDENTIALS_REPOSITORY,
