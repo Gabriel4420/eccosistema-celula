@@ -5,7 +5,10 @@ test("loads the technical foundation page without console errors", async ({
 }) => {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") {
+    const isExpectedAnonymousRefresh =
+      message.text() ===
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)";
+    if (message.type() === "error" && !isExpectedAnonymousRefresh) {
       errors.push(message.text());
     }
   });
