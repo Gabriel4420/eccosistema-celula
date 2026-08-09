@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { normalizeChurchPhone } from "@mission-atos/contracts";
 import { Alert, Button, Dialog, EmptyState, ErrorState, Skeleton, StatusBadge, TextareaField, TextField } from "@/src/shared/components";
 import { Can } from "@/src/shared/auth/guards";
 import { cacheStore } from "@/src/shared/cache/cache";
@@ -57,7 +58,6 @@ export function PersonDetail() {
     const payload: Record<string, string> = {};
     const fields: ReadonlyArray<[string, string | null]> = [
       ["fullName", person.fullName],
-      ["phone", person.phone],
       ["email", person.email],
       ["birthDate", person.birthDate],
       ["gender", person.gender]
@@ -66,6 +66,8 @@ export function PersonDetail() {
       const value = String(formData.get(key) ?? "").trim();
       if (value !== (original ?? "")) payload[key] = value;
     }
+    const phone = normalizeChurchPhone(String(formData.get("phone") ?? ""));
+    if (phone !== (person.phone ?? "")) payload.phone = phone;
     const observations = String(formData.get("observations") ?? "").trim();
     if (observations !== (person.observations ?? "")) payload.observations = observations;
     if (Object.keys(payload).length === 0) {
@@ -154,8 +156,8 @@ export function PersonDetail() {
             <TextField label="Nome completo" name="fullName" defaultValue={person.fullName} required />
             <TextField label="Gênero" name="gender" defaultValue={person.gender ?? ""} />
             <TextField label="Data de nascimento" type="date" name="birthDate" defaultValue={person.birthDate ?? ""} />
-            <TextField label="E-mail" type="email" name="email" defaultValue={person.email ?? ""} />
-            <TextField label="Telefone" name="phone" defaultValue={person.phone ?? ""} />
+            <TextField label="E-mail" type="email" name="email" mask="email" defaultValue={person.email ?? ""} />
+            <TextField label="Telefone" name="phone" mask="phone" defaultValue={person.phone ?? ""} />
             <Can capability="viewPersonObservations">
               <TextareaField label="Observações" name="observations" rows={4} defaultValue={person.observations ?? ""} />
             </Can>

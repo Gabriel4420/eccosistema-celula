@@ -135,6 +135,7 @@ export function CreateUserForm() {
             label="E-mail"
             type="email"
             name="email"
+            mask="email"
             autoComplete="off"
             value={email}
             onChange={(event) => setEmail(event.target.value)}

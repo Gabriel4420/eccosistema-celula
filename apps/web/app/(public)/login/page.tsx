@@ -88,6 +88,7 @@ export default function LoginPage() {
             label="E-mail"
             type="email"
             name="email"
+            mask="email"
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}

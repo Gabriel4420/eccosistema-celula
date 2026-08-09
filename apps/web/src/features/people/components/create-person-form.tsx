@@ -69,8 +69,8 @@ export function CreatePersonForm() {
 
         <fieldset className="fieldset">
           <legend className="fieldset__legend">Contato</legend>
-          <TextField label="E-mail" type="email" name="email" hint="Será normalizado para letras minúsculas." />
-          <TextField label="Telefone" name="phone" hint="Inclua o código do país, ex.: +5511999999999." />
+          <TextField label="E-mail" type="email" name="email" mask="email" hint="Será normalizado para letras minúsculas." />
+          <TextField label="Telefone" name="phone" mask="phone" hint="Formato brasileiro, ex.: (11) 99999-9999." />
         </fieldset>
 
         <fieldset className="fieldset">

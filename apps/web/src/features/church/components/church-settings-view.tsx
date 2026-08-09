@@ -1,6 +1,6 @@
 "use client";
 
-import { churchWeekDays } from "@mission-atos/contracts";
+import { churchWeekDays, normalizeChurchPhone } from "@mission-atos/contracts";
 import type { ChurchResponse } from "@mission-atos/contracts";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -57,18 +57,17 @@ export function ChurchSettingsView() {
     setFeedback(null);
     const formData = new FormData(event.currentTarget);
     const payload: Record<string, string | null> = {};
-    const fields: ReadonlyArray<[keyof ChurchResponse | "address", string]> = [
+    const fields: ReadonlyArray<[keyof ChurchResponse, string]> = [
       ["name", String(formData.get("name") ?? "").trim()],
       ["slug", String(formData.get("slug") ?? "").trim()],
       ["email", String(formData.get("email") ?? "").trim()],
-      ["phone", String(formData.get("phone") ?? "").trim()]
+      ["phone", normalizeChurchPhone(String(formData.get("phone") ?? ""))]
     ];
     for (const [key, value] of fields) {
+      const original = church[key];
       if (key === "name" || key === "slug") {
-        const original = church[key];
         if (value !== original && value !== "") payload[key] = value;
       } else {
-        const original = church[key];
         if (value !== (original ?? "")) payload[key] = value === "" ? null : value;
       }
     }
@@ -158,8 +157,8 @@ export function ChurchSettingsView() {
             hint="Letras minúsculas, números e hífens."
             required
           />
-          <TextField label="E-mail" type="email" name="email" defaultValue={church.email ?? ""} />
-          <TextField label="Telefone" name="phone" defaultValue={church.phone ?? ""} hint="Inclua o código do país, ex.: +5511999999999." />
+          <TextField label="E-mail" type="email" name="email" mask="email" defaultValue={church.email ?? ""} />
+          <TextField label="Telefone" name="phone" mask="phone" defaultValue={church.phone ?? ""} hint="Formato brasileiro, ex.: (11) 99999-9999." />
         </fieldset>
 
         <fieldset className="fieldset">

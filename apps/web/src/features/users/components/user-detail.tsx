@@ -218,6 +218,7 @@ export function UserDetail() {
             label="E-mail"
             type="email"
             name="email"
+            mask="email"
             value={currentEmail}
             onChange={(event) => setEmail(event.target.value)}
             required
