@@ -29,7 +29,7 @@ export async function login(
 ): Promise<void> {
   await page.goto("/login");
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(password);
+  await page.getByRole("textbox", { name: "Senha", exact: true }).fill(password);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
 }

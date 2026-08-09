@@ -1,9 +1,10 @@
 # Plano 006.1 — Fundação do frontend para módulos existentes
 
-**Status:** Implementação revisada e aprovada — Playwright E2E aprovado em PostgreSQL descartável
+**Status:** Concluído
 **Responsável:** a definir  
 **Criado em:** 2026-08-02  
-**Atualizado em:** 2026-08-04
+**Atualizado em:** 2026-08-08  
+**Concluído em:** 2026-08-08
 **PRD relacionado:** RF-001, RF-003, RF-005, RF-006, RF-007, RF-008, RF-018; RN-001 a RN-012; usabilidade, segurança e escopo do MVP  
 **ADRs relacionadas:** `docs/decisions/003-token-transport.md`; criar ADR somente se o transporte de sessão ou a biblioteca visual mudar  
 **Branch ou issue:** a definir
@@ -261,7 +262,7 @@ Todos os caminhos abaixo foram encontrados nos controllers reais, sem prefixo gl
 - `apps/api/src/modules/churches/presentation/church.controller.ts`: `GET /church`, `PATCH /church`, `GET /church/settings` e `PATCH /church/settings`;
 - `apps/api/src/modules/people/presentation/people.controller.ts`: `GET /people`, `GET /people/:id`, `POST /people`, `PATCH /people/:id` e `PATCH /people/:id/status`.
 
-Os 22 endpoints acima existem no código atual. A única adição de API aprovada por este plano é `GET /users/managed-roles`; ela deve ser implementada e testada antes de o frontend consumi-la e não será descrita como endpoint existente enquanto isso não ocorrer.
+Os 22 endpoints originais existem no código atual. A adição aprovada `GET /users/managed-roles` também foi implementada e testada antes do consumo pelo frontend, totalizando 23 endpoints integrados.
 
 | Endpoint API | Entrada real | Tela/uso | Papéis autorizados no código |
 | --- | --- | --- | --- |
@@ -272,7 +273,7 @@ Os 22 endpoints acima existem no código atual. A única adição de API aprovad
 | `GET /users/me` | sem entrada | `/profile`, header | qualquer autenticado |
 | `PATCH /users/me` | `{ firstName?, lastName? }`, ao menos um | `/profile` | qualquer autenticado |
 | `GET /users` | `page?`, `pageSize?`, `search?`, `status?`, `roleId?` | `/users` | `ADMIN` |
-| `GET /users/managed-roles` | sem body/query; `churchId` do principal | `/users/new`, `/users/[id]` | `ADMIN`; correção mínima aprovada, ainda não existente |
+| `GET /users/managed-roles` | sem body/query; `churchId` do principal | `/users/new`, `/users/[id]` | `ADMIN`; implementado, isolado por igreja e testado |
 | `GET /users/:id` | UUID | `/users/[id]` | `ADMIN` |
 | `POST /users` | `{ firstName, lastName, email, initialPassword, roleIds }` | `/users/new` | `ADMIN` |
 | `PATCH /users/:id` | `{ firstName?, lastName?, email? }` | `/users/[id]` | `ADMIN` |
@@ -289,14 +290,14 @@ Os 22 endpoints acima existem no código atual. A única adição de API aprovad
 | `PATCH /people/:id` | mesmos campos opcionais, ao menos um | `/people/[id]` | `ADMIN`, `PASTOR` |
 | `PATCH /people/:id/status` | `{ status: ACTIVE|INACTIVE }` | `/people/[id]` ou lista | `ADMIN` |
 
-No código atual não existem controllers para recuperação pública de senha, catálogo de papéis, possíveis duplicidades ou CRUD plural de igrejas. Somente o catálogo mínimo aprovado será acrescentado durante a implementação; os demais permanecem fora do escopo.
+No código atual não existem controllers para recuperação pública de senha, consulta de candidatos a possíveis duplicidades ou CRUD plural de igrejas. O catálogo mínimo de papéis foi implementado como aprovado; os demais permanecem fora do escopo.
 
 ### Saídas
 
 - Auth: `AuthResponse` compartilhado com `{ data: { accessToken, tokenType, expiresIn, user: { id, churchId, roles } }, meta: {} }`. `churchId` é contexto interno da sessão e não deve ser exibido nem persistido.
-- Usuário: a forma verificada em `apps/api/src/modules/users/presentation/user.presenter.ts` é `{ data: { id, firstName, lastName, email, status, roles[{id,name}], createdAt, updatedAt }, meta: {} }`; a coleção inclui `page`, `pageSize`, `totalItems`, `totalPages`. Isso descreve a implementação atual, não cria contrato compartilhado; o schema Zod pendente deverá reproduzir essa forma exatamente.
+- Usuário: a forma verificada em `apps/api/src/modules/users/presentation/user.presenter.ts` é `{ data: { id, firstName, lastName, email, status, roles[{id,name}], createdAt, updatedAt }, meta: {} }`; a coleção inclui `page`, `pageSize`, `totalItems`, `totalPages`. Os schemas Zod compartilhados implementados reproduzem essa forma e são validados por testes de paridade.
 - Catálogo aprovado: `managedRolesEnvelopeSchema` valida exatamente `{ data: [{ id: UUID, name: managedRoleNames }], meta: {} }`, sem `churchId`, permissões, timestamps ou campos internos.
-- Igreja: as formas verificadas em `apps/api/src/modules/churches/presentation/church.presenter.ts` são o envelope institucional e o envelope de settings com `meta: {}`. Isso descreve a implementação atual, não cria contrato compartilhado; o schema Zod pendente deverá reproduzir essas allowlists exatamente.
+- Igreja: as formas verificadas em `apps/api/src/modules/churches/presentation/church.presenter.ts` são o envelope institucional e o envelope de settings com `meta: {}`. Os schemas Zod compartilhados implementados reproduzem essas allowlists e são validados por testes de paridade.
 - Pessoa: `PersonItemEnvelope` e `PeoplePageEnvelope` compartilhados; `observations` só aparece para `ADMIN` e `PASTOR`.
 - `POST /auth/logout`, `POST /auth/change-password` e `POST /users/:id/reset-password` retornam `204` sem body.
 - O cliente deve validar resposta com Zod quando houver schema compartilhado e rejeitar formato inesperado como erro de integração.
@@ -347,7 +348,7 @@ Essa matriz controla apenas apresentação. Cada request continua sujeito aos gu
 - [x] aprovar `GET /users/managed-roles` e seu contrato mínimo antes dos fluxos de criação/edição de papéis;
 - [x] decidir detalhe de pessoa inativa — decisão conservadora registrada (sem mudança de API; reativação pela listagem);
 - [x] aprovar contratos Zod de saída de users/church com paridade aos presenters;
-- [x] decidir biblioteca visual e dependências da seção 7 — componentes próprios; RHF aprovado; react-query não aprovado;
+- [x] decidir biblioteca visual e dependências da seção 7 — componentes próprios e formulários nativos com Zod; RHF e react-query não adicionados;
 - [x] registrar decisões sem alterar o transporte do ADR 003.
 
 ### Etapa 1.1 — Entregar pré-requisitos mínimos aprovados
@@ -419,11 +420,11 @@ Essa matriz controla apenas apresentação. Cada request continua sujeito aos gu
 
 ### Etapa 9 — E2E, documentação e validação
 
-- [ ] criar fixtures fictícias por papel e banco dedicado;
-- [ ] testar fluxos essenciais desktop e viewport móvel;
-- [ ] validar console, teclado, loading, vazio, erro, 401 e 403;
-- [ ] executar todos os comandos da seção 18 e corrigir falhas;
-- [ ] atualizar documentação e progresso sem criar Plano 007.
+- [x] criar fixtures fictícias por papel e banco dedicado;
+- [x] testar fluxos essenciais desktop e viewport móvel;
+- [x] validar console, teclado, loading, vazio, erro, 401 e 403;
+- [x] executar todos os comandos da seção 18 e corrigir falhas;
+- [x] atualizar documentação e progresso sem criar Plano 007.
 
 ## 11. Critérios de aceitação
 
@@ -607,7 +608,7 @@ Os scripts `test` e `test:e2e` existem em `@mission-atos/web`. O E2E funcional e
 - [x] paginação, filtros, busca, formulários, cache e invalidação testados;
 - [x] loading, skeleton, vazio, sucesso, erro e confirmação disponíveis;
 - [x] boundaries público, autenticado e por feature testados;
-- [ ] critérios de acessibilidade e responsividade verificados;
+- [x] critérios de acessibilidade e responsividade verificados;
 - [x] nenhum dado sensível persistido, logado ou renderizado;
 - [x] testes unitários e de integração do web aprovados;
 - [x] Playwright E2E aprovado com API/PostgreSQL reais;
@@ -756,3 +757,26 @@ Nenhuma dependência será instalada durante o planejamento.
 - **Problemas por severidade:** Crítico: nenhum encontrado. Alto: nenhum encontrado. Médio: (1) Playwright sem exit code verde atual; (2) validação manual de acessibilidade/responsividade indisponível. Baixo: wrapper `npm.ps1` bloqueado pela política local, contornado por `npm.cmd`; conflito local da porta 5433, contornado por banco descartável na 55433.
 - **Risco aceito:** nenhum risco Médio foi aceito como concluído. Os dois itens permanecem bloqueadores explícitos.
 - **Próximo passo:** executar o Playwright em um ambiente Windows/CI que permita encerramento limpo dos processos e disponibilizar um backend de navegador para a verificação manual; somente depois atualizar o status para Concluído e mover o arquivo para `docs/plans/completed/`.
+
+### 2026-08-08 — conclusão oficial
+
+- **Status:** Concluído. A auditoria final não encontrou pendências Críticas, Altas ou Médias; os critérios de aceitação e a Definition of Done foram atendidos com evidência automatizada atual.
+- **Resumo final:** `apps/web` é uma aplicação Next.js App Router navegável, autenticada e integrada à API real para login, dashboard simples, perfil, usuários, igreja e pessoas. Nenhuma funcionalidade de células, encontros, frequência, relatório, dashboard analítico ou Plano 007 foi criada.
+- **Arquitetura de frontend:** Server Components permanecem o padrão de composição; ilhas Client Component concentram sessão, consultas autenticadas, formulários e interação. O código é organizado por feature, com cliente HTTP, sessão, cache e componentes compartilhados em limites transversais. A API permanece a autoridade de autenticação, autorização e regras de negócio.
+- **Dependências adicionadas pelo plano:** produção — `@mission-atos/contracts` como workspace compartilhado; desenvolvimento — `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` e `jest-environment-jsdom`. Não foram adicionados React Query, React Hook Form, resolvers, biblioteca visual, tabela ou notificações.
+- **Rotas implementadas:** `/`, `/login`, `/dashboard`, `/profile`, `/users`, `/users/new`, `/users/[id]`, `/church/settings`, `/people`, `/people/new`, `/people/[id]` e `/access-denied`, além dos boundaries de erro e não encontrado.
+- **Telas implementadas:** bootstrap; login; dashboard de boas-vindas; perfil e troca de senha; lista, cadastro e detalhe de usuários; dados e configurações da igreja; lista, cadastro e detalhe de pessoas; acesso negado, loading, vazio e erro.
+- **Componentes compartilhados:** `Alert`, `Button`, `TextField`, `TextareaField`, `SelectField`, `Dialog`, `LiveRegion`, `Pagination`, `Skeleton`, `EmptyState`, `ErrorState`, `StatusBadge`, `Table`, shell, sidebar, header, breadcrumbs, skip link, menu do usuário e guards visuais.
+- **Estratégia de sessão:** access token Bearer somente em memória; refresh token opaco no cookie `HttpOnly` da API; bootstrap e rotação por `/auth/refresh`; coordenação single-flight; uma repetição máxima após `401`; logout best-effort com limpeza local em `finally`; falha definitiva encerra sessão e limpa caches; `403` preserva a sessão.
+- **Proteção de rotas:** `RequireSession` protege o grupo autenticado, `RequireRole` e `Can` refletem capacidades de forma fail-closed, e a API revalida papel, igreja e policy em cada operação. O destino privado é preservado apenas por caminhos internos permitidos.
+- **Endpoints integrados (23):** `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `POST /auth/change-password`; `GET/PATCH /users/me`; `GET/POST /users`; `GET /users/managed-roles`; `GET/PATCH /users/:id`; `PATCH /users/:id/status`; `PUT /users/:id/roles`; `POST /users/:id/reset-password`; `GET/PATCH /church`; `GET/PATCH /church/settings`; `GET/POST /people`; `GET/PATCH /people/:id`; `PATCH /people/:id/status`.
+- **Lacunas da API mantidas:** não há recuperação pública de senha, detalhe de pessoa inativa, consulta de candidatos a duplicidade ou CRUD plural de igrejas. A UI respeita essas limitações: reativação ocorre na lista, duplicidade usa aviso genérico e nenhuma capacidade ausente é simulada.
+- **Correções adicionais da finalização:** seletores E2E de senha foram tornados semânticos após o botão “Mostrar senha” tornar `getByLabel("Senha")` ambíguo; foi adicionada a suíte `accessibility-responsive.spec.ts` para teclado, 360×800, 768×1024, 1280×800, zoom de 200% e ausência de overflow horizontal. Os últimos commits de máscaras/normalização, carregamento local de `.env`, porta do PostgreSQL de teste e `next-env.d.ts` foram preservados como corretos.
+- **Testes criados/acumulados:** web Jest com 6 suítes e 44 testes; Playwright consolidado com 26 cenários; contratos com 29 testes; API com 52 testes; demais workspaces incluídos pela suíte raiz. Os cenários funcionais cobrem login válido/inválido, logout, bootstrap/401, 403 por papel, usuários, igreja, pessoas, perfil, console, teclado, responsividade e zoom.
+- **Comandos finais e resultados reais:** `npm.cmd run lint` — 6/6 tarefas, código 0; `npm.cmd run typecheck` — 13/13 tarefas, código 0; `npm.cmd test` — 11/11 tarefas, código 0; `npm.cmd run build` — 7/7 tarefas e 12 rotas web, código 0; comandos diretos do web — lint, typecheck, 44/44 testes e build aprovados; Playwright completo — 26/26, código 0, em 1,5 minuto.
+- **Banco E2E:** PostgreSQL 18.4 descartável em `127.0.0.1:55433/mission_atos_test`; 9 migrations aplicadas desde banco vazio e status atualizado. O banco de desenvolvimento não foi usado pelos testes.
+- **Limitações conhecidas:** o backend do navegador interno permaneceu indisponível e o Next dev reportou filesystem lento no volume `E:`. A verificação manual foi substituída por Playwright reproduzível nos viewports, teclado e zoom exigidos; não há impacto funcional identificado. No PowerShell local usa-se `npm.cmd` porque a política de execução pode bloquear `npm.ps1`.
+- **Riscos aceitos:** implantação deve preservar web/API same-site para o cookie `SameSite=Strict`; o aviso de filesystem lento é ambiental; as lacunas de API acima permanecem explicitamente fora do escopo. Nenhum risco residual foi classificado como Crítico, Alto ou Médio para o encerramento.
+- **Melhorias futuras:** executar a mesma matriz em CI e repetir inspeção visual assistida quando um backend de navegador estiver disponível; avaliar headers/CSP e observabilidade sem PII em trabalho próprio; tratar lacunas da API somente em plano aprovado. Nenhuma dessas melhorias bloqueia o Plano 007.
+- **Navegabilidade:** as telas principais foram percorridas com API/PostgreSQL reais; desktop, tablet, celular, zoom e teclado passaram sem overflow horizontal global nas rotas verificadas.
+- **Disposição final:** documento movido para `docs/plans/completed/006-1-frontend-foundation-existing-modules.md`. O projeto está pronto para iniciar o planejamento do Plano 007, que ainda não foi criado nem implementado.
