@@ -84,3 +84,37 @@ export type {
   UpdateChurchRequest,
   UpdateChurchSettingsRequest
 } from "./church";
+export {
+  cellAssignmentOptionSchema,
+  cellAssignmentOptionsEnvelopeSchema,
+  cellCodePattern,
+  cellIdParamsSchema,
+  cellItemEnvelopeSchema,
+  cellResponseSchema,
+  cellsErrorEnvelopeSchema,
+  cellsPageEnvelopeSchema,
+  createCellRequestSchema,
+  idempotencyKeySchema,
+  listCellAssignmentOptionsQuerySchema,
+  listCellsQuerySchema,
+  normalizeCellCode,
+  updateCellLeaderRequestSchema,
+  updateCellRequestSchema,
+  updateCellStatusRequestSchema,
+  updateCellTraineeLeaderRequestSchema
+} from "./cells";
+export type {
+  CellAssignmentOption,
+  CellAssignmentOptionsEnvelope,
+  CellItemEnvelope,
+  CellResponse,
+  CellsErrorEnvelope,
+  CellsPageEnvelope,
+  CellStatusRequest,
+  CreateCellRequest,
+  ListCellAssignmentOptionsQuery,
+  ListCellsQuery,
+  UpdateCellLeaderRequest,
+  UpdateCellRequest,
+  UpdateCellTraineeLeaderRequest
+} from "./cells";

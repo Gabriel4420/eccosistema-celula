@@ -95,6 +95,7 @@ model Church {
   meetingReports        MeetingReport[]
   auditLogs             AuditLog[]
   sessions              Session[]
+  idempotencyRequests   IdempotencyRequest[]
 
   @@index([deletedAt], map: "churches_deleted_at_idx")
   @@map("churches")
@@ -120,6 +121,7 @@ model User {
   submittedReports      MeetingReport[]
   auditLogs             AuditLog[]
   sessions              Session[]
+  idempotencyRequests   IdempotencyRequest[]
 
   @@unique([id, churchId], map: "users_id_church_id_key")
   @@unique([churchId, email], map: "users_church_id_email_key")
@@ -184,6 +186,7 @@ model SupervisorAssignment {
   @@index([supervisorId], map: "supervisor_assignments_supervisor_id_idx")
   @@index([leaderId], map: "supervisor_assignments_leader_id_idx")
   @@index([churchId, deletedAt], map: "supervisor_assignments_church_deleted_at_idx")
+  @@index([churchId, supervisorId, deletedAt, leaderId], map: "supervisor_assignments_church_supervisor_deleted_leader_idx")
   @@map("supervisor_assignments")
 }
 
@@ -213,6 +216,11 @@ model Cell {
   @@index([leaderId], map: "cells_leader_id_idx")
   @@index([traineeLeaderId], map: "cells_trainee_leader_id_idx")
   @@index([churchId, deletedAt], map: "cells_church_id_deleted_at_idx")
+  @@index([churchId, deletedAt, status, name, id], map: "cells_church_deleted_status_name_idx")
+  @@index([churchId, leaderId, deletedAt], map: "cells_church_leader_deleted_idx")
+  @@index([churchId, traineeLeaderId, deletedAt], map: "cells_church_trainee_deleted_idx")
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "cells_name_trgm_idx")
+  @@index([code(ops: raw("gin_trgm_ops"))], type: Gin, map: "cells_code_trgm_idx")
   @@map("cells")
 }
 
@@ -374,4 +382,26 @@ model Session {
   @@index([userId, revokedAt], map: "sessions_user_id_revoked_at_idx")
   @@index([churchId, userId], map: "sessions_church_id_user_id_idx")
   @@map("sessions")
+}
+
+model IdempotencyRequest {
+  id          String   @id @default(uuid()) @db.Uuid
+  churchId    String   @map("church_id") @db.Uuid
+  actorId     String   @map("actor_id") @db.Uuid
+  operation   String   @db.VarChar(100)
+  key         String   @db.Uuid
+  requestHash String   @map("request_hash") @db.VarChar(64)
+  resourceId  String?  @map("resource_id") @db.Uuid
+  result      Json
+  status      String   @default("COMPLETED") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(3)
+  church      Church   @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  actor       User     @relation(fields: [actorId, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@unique([churchId, actorId, operation, key], map: "idempotency_requests_church_actor_operation_key_key")
+  @@index([churchId, createdAt], map: "idempotency_requests_church_created_at_idx")
+  @@index([expiresAt], map: "idempotency_requests_expires_at_idx")
+  @@map("idempotency_requests")
 }
