@@ -13,7 +13,7 @@ pequenos grupos composto por:
 
 A fonte principal das regras de produto está em:
 
-- docs/product/PRD-Ecossistema-Celulas.md
+- docs/product/PRD.md
 - docs/product/PRD-Ecossistema-Celulas.pdf
 
 Antes de implementar uma funcionalidade, consulte o PRD e o plano
