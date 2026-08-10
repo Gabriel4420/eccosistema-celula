@@ -19,6 +19,15 @@ export class UserManagementAuthorization {
     }
   }
 
+  assertManager(principal: AuthenticatedPrincipal): void {
+    if (
+      !principal.roles.includes("ADMIN") &&
+      !principal.roles.includes("PASTOR")
+    ) {
+      this.forbidden();
+    }
+  }
+
   assertCurrentAdministrator(
     principal: AuthenticatedPrincipal,
     isActiveAdministrator: boolean

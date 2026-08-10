@@ -3,6 +3,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { HealthController } from "./health.controller";
 import { HealthService } from "./health.service";
+import { CellsModule } from "./modules/cells/cells.module";
 import { IdentityModule } from "./modules/identity/identity.module";
 import { PermissionsModule } from "./modules/permissions/permissions.module";
 import { UsersModule } from "./modules/users/users.module";
@@ -18,7 +19,8 @@ import { PeopleModule } from "./modules/people/people.module";
     PermissionsModule,
     UsersModule,
     ChurchesModule,
-    PeopleModule
+    PeopleModule,
+    CellsModule
   ],
   controllers: [HealthController],
   providers: [

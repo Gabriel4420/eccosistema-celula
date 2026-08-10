@@ -1,4 +1,6 @@
 import type {
+  CellAssignmentOptionsPage,
+  ListCellAssignmentOptionsInput,
   ListUsersInput,
   ManagedUser,
   ManagedRole,
@@ -20,6 +22,10 @@ export interface UserManagementRepository {
   isActiveAdministrator(churchId: string, userId: string): Promise<boolean>;
   managedRoles(churchId: string): Promise<ManagedRole[]>;
   list(churchId: string, query: ListUsersInput): Promise<UserPage>;
+  listCellAssignmentOptions(
+    churchId: string,
+    input: ListCellAssignmentOptionsInput
+  ): Promise<CellAssignmentOptionsPage>;
   find(churchId: string, userId: string): Promise<ManagedUser | null>;
 }
 

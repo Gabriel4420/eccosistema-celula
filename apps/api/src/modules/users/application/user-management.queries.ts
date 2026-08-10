@@ -2,6 +2,8 @@ import type { AuthenticatedPrincipal } from "@mission-atos/domain";
 import { UserManagementError } from "./user-management.error";
 import type { UserManagementRepository } from "./user-management.port";
 import type {
+  CellAssignmentOptionsPage,
+  ListCellAssignmentOptionsInput,
   ListUsersInput,
   ManagedRole,
   ManagedUser,
@@ -28,6 +30,14 @@ export class UserManagementQueries {
   ): Promise<ManagedRole[]> {
     await this.authorization.assertAdministrator(principal);
     return this.users.managedRoles(principal.churchId);
+  }
+
+  async listCellAssignmentOptions(
+    principal: AuthenticatedPrincipal,
+    query: ListCellAssignmentOptionsInput
+  ): Promise<CellAssignmentOptionsPage> {
+    this.authorization.assertManager(principal);
+    return this.users.listCellAssignmentOptions(principal.churchId, query);
   }
 
   async get(

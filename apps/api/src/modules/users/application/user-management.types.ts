@@ -48,3 +48,22 @@ export interface UpdateOwnProfileInput {
   firstName?: string;
   lastName?: string;
 }
+
+export type CellAssignmentKind = "SUPERVISOR" | "LEADER" | "TRAINEE";
+
+export interface ListCellAssignmentOptionsInput {
+  page: number;
+  pageSize: number;
+  search?: string;
+  kind: CellAssignmentKind;
+}
+
+export interface CellAssignmentOption {
+  id: string;
+  name: string;
+}
+
+export interface CellAssignmentOptionsPage {
+  items: CellAssignmentOption[];
+  totalItems: number;
+}

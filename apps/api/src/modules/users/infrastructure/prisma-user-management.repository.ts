@@ -11,6 +11,9 @@ import type {
   UserManagementUnitOfWork
 } from "../application/user-management.port";
 import type {
+  CellAssignmentKind,
+  CellAssignmentOptionsPage,
+  ListCellAssignmentOptionsInput,
   ListUsersInput,
   ManagedRole,
   ManagedUser,
@@ -107,6 +110,52 @@ export class PrismaUserManagementRepository
       include: publicInclude
     });
     return user ? mapUser(user) : null;
+  }
+
+  async listCellAssignmentOptions(
+    churchId: string,
+    input: ListCellAssignmentOptionsInput
+  ): Promise<CellAssignmentOptionsPage> {
+    const searchTerms = input.search?.trim().split(/\s+/).filter(Boolean);
+    const where = {
+      churchId,
+      status: "ACTIVE" as const,
+      deletedAt: null,
+      userRoles: {
+        some: {
+          churchId,
+          deletedAt: null,
+          role: { name: roleNameFor(input.kind), deletedAt: null }
+        }
+      },
+      ...(searchTerms?.length
+        ? {
+            AND: searchTerms.map((term) => ({
+              OR: [
+                { firstName: { contains: term, mode: "insensitive" as const } },
+                { lastName: { contains: term, mode: "insensitive" as const } }
+              ]
+            }))
+          }
+        : {})
+    };
+    const [items, totalItems] = await this.database.$transaction(
+      [
+        this.database.user.findMany({
+          where,
+          select: { id: true, firstName: true, lastName: true },
+          orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
+          skip: (input.page - 1) * input.pageSize,
+          take: input.pageSize
+        }),
+        this.database.user.count({ where })
+      ],
+      { isolationLevel: "RepeatableRead" }
+    );
+    return {
+      items: items.map((user) => ({ id: user.id, name: fullName(user) })),
+      totalItems
+    };
   }
 
   async execute<T>(
@@ -397,6 +446,14 @@ function mapUser(user: {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   };
+}
+
+function fullName(user: { firstName: string; lastName: string }): string {
+  return `${user.firstName} ${user.lastName}`.trim();
+}
+
+function roleNameFor(kind: CellAssignmentKind): string {
+  return kind === "SUPERVISOR" ? "SUPERVISOR" : "LEADER";
 }
 
 function isPrismaCode(error: unknown, code: string): boolean {

@@ -21,6 +21,7 @@ import {
 } from "@nestjs/swagger";
 import {
   createUserRequestSchema,
+  listCellAssignmentOptionsQuerySchema,
   listUsersQuerySchema,
   managedRoleNames,
   replaceUserRolesRequestSchema,
@@ -76,6 +77,34 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "Managed roles catalog", schema: managedRolesEnvelopeSchema() })
   async managedRoles(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
     return { data: await this.queries.managedRoles(principal), meta: {} };
+  }
+
+  @Roles("ADMIN", "PASTOR")
+  @Get("cell-assignment-options")
+  @ApiOperation({ summary: "List candidate users for cell leadership assignment" })
+  @ApiQuery({ name: "page", required: false, type: Number, minimum: 1 })
+  @ApiQuery({ name: "pageSize", required: false, type: Number, minimum: 1, maximum: 100 })
+  @ApiQuery({ name: "search", required: false, type: String, maxLength: 160 })
+  @ApiQuery({ name: "kind", required: true, enum: ["SUPERVISOR", "LEADER", "TRAINEE"] })
+  @ApiResponse({ status: 200, description: "Paginated candidates from the authenticated church", schema: assignmentOptionsEnvelopeSchema() })
+  @ApiResponse({ status: 400, description: "Invalid filters", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 401, description: "Authentication required", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 403, description: "ADMIN or PASTOR required", schema: errorEnvelopeSchema() })
+  async cellAssignmentOptions(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Query() query: unknown
+  ) {
+    const input = listCellAssignmentOptionsQuerySchema.parse(query);
+    const page = await this.queries.listCellAssignmentOptions(principal, input);
+    return {
+      data: page.items,
+      meta: {
+        page: input.page,
+        pageSize: input.pageSize,
+        totalItems: page.totalItems,
+        totalPages: Math.ceil(page.totalItems / input.pageSize)
+      }
+    };
   }
 
   @Roles("ADMIN")
@@ -306,6 +335,36 @@ function managedRolesEnvelopeSchema() {
         }
       },
       meta: { type: "object" }
+    }
+  };
+}
+
+function assignmentOptionsEnvelopeSchema() {
+  return {
+    type: "object",
+    required: ["data", "meta"],
+    properties: {
+      data: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["id", "name"],
+          properties: {
+            id: { type: "string", format: "uuid" },
+            name: { type: "string" }
+          }
+        }
+      },
+      meta: {
+        type: "object",
+        required: ["page", "pageSize", "totalItems", "totalPages"],
+        properties: {
+          page: { type: "integer", minimum: 1 },
+          pageSize: { type: "integer", minimum: 1 },
+          totalItems: { type: "integer", minimum: 0 },
+          totalPages: { type: "integer", minimum: 0 }
+        }
+      }
     }
   };
 }
