@@ -51,6 +51,7 @@ export interface CellUpdateData {
 
 export interface CellsManagementTransaction {
   hasActiveRole(userId: string, roles: readonly string[]): Promise<boolean>;
+  findActiveRoleNames(userId: string): Promise<ReadonlyArray<string>>;
   findCandidateUser(userId: string): Promise<CandidateUser | null>;
   findCell(cellId: string, includeDeleted?: boolean): Promise<ManagedCell | null>;
   findCellByCode(code: string): Promise<ManagedCell | null>;

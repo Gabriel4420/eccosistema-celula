@@ -12,6 +12,7 @@
     "test:users:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern users.e2e-spec.ts",
     "test:churches:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern churches.e2e-spec.ts",
     "test:people:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern people.e2e-spec.ts",
+    "test:cells:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern cells.e2e-spec.ts",
     "test:integration": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.integration.config.cjs",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "typecheck": "tsc --noEmit && npm run typecheck:test"

@@ -117,17 +117,22 @@ export class PrismaUserManagementRepository
     input: ListCellAssignmentOptionsInput
   ): Promise<CellAssignmentOptionsPage> {
     const searchTerms = input.search?.trim().split(/\s+/).filter(Boolean);
+    const roleName = requiredRoleNameFor(input.kind);
     const where = {
       churchId,
       status: "ACTIVE" as const,
       deletedAt: null,
-      userRoles: {
-        some: {
-          churchId,
-          deletedAt: null,
-          role: { name: roleNameFor(input.kind), deletedAt: null }
-        }
-      },
+      ...(roleName
+        ? {
+            userRoles: {
+              some: {
+                churchId,
+                deletedAt: null,
+                role: { name: roleName, deletedAt: null }
+              }
+            }
+          }
+        : {}),
       ...(searchTerms?.length
         ? {
             AND: searchTerms.map((term) => ({
@@ -452,8 +457,15 @@ function fullName(user: { firstName: string; lastName: string }): string {
   return `${user.firstName} ${user.lastName}`.trim();
 }
 
-function roleNameFor(kind: CellAssignmentKind): string {
-  return kind === "SUPERVISOR" ? "SUPERVISOR" : "LEADER";
+function requiredRoleNameFor(kind: CellAssignmentKind): string | null {
+  switch (kind) {
+    case "SUPERVISOR":
+      return "SUPERVISOR";
+    case "LEADER":
+      return "LEADER";
+    case "TRAINEE":
+      return null;
+  }
 }
 
 function isPrismaCode(error: unknown, code: string): boolean {

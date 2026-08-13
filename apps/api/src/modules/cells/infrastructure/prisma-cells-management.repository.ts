@@ -233,6 +233,20 @@ class PrismaCellsManagementTransaction implements CellsManagementTransaction {
     );
   }
 
+  async findActiveRoleNames(userId: string): Promise<ReadonlyArray<string>> {
+    const user = await this.transaction.user.findFirst({
+      where: { id: userId, churchId: this.churchId, status: "ACTIVE", deletedAt: null },
+      select: {
+        userRoles: {
+          where: { churchId: this.churchId, deletedAt: null, role: { deletedAt: null } },
+          select: { role: { select: { name: true } } }
+        }
+      }
+    });
+    if (!user) return [];
+    return user.userRoles.map(({ role }) => role.name);
+  }
+
   async findCandidateUser(userId: string): Promise<CandidateUser | null> {
     const user = await this.transaction.user.findFirst({
       where: { id: userId, churchId: this.churchId, status: "ACTIVE", deletedAt: null },

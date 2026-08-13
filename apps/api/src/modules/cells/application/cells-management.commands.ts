@@ -106,9 +106,12 @@ export class CellsManagementCommands {
     patch: CellUpdateInput
   ): Promise<ManagedCell> {
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
-      await this.assertManage(transaction, principal);
       const current = await this.requireCell(transaction, cellId);
-      const level = this.authorization.assertCanEdit(principal, current);
+      const activeRoles = await transaction.findActiveRoleNames(principal.userId);
+      const level = this.authorization.assertCanEdit(
+        { ...principal, roles: activeRoles },
+        current
+      );
       if (level === "meeting" && (patch.code !== undefined || patch.name !== undefined)) {
         throw new CellsManagementError(
           "CELL_ACCESS_DENIED",

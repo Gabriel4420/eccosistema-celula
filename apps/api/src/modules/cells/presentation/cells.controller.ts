@@ -144,15 +144,15 @@ export class CellsController {
     );
   }
 
-  @Roles("ADMIN", "PASTOR")
+  @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER")
   @Patch(":id")
-  @ApiOperation({ summary: "Update cell general data" })
+  @ApiOperation({ summary: "Update cell data within the actor scope" })
   @ApiParam({ name: "id", format: "uuid" })
   @ApiBody({ schema: updateCellBodySchema() })
   @ApiResponse({ status: 200, description: "Cell updated", schema: cellEnvelopeSchema() })
   @ApiResponse({ status: 400, description: "Invalid body or UUID", schema: errorEnvelopeSchema() })
   @ApiResponse({ status: 401, description: "Authentication required", schema: errorEnvelopeSchema() })
-  @ApiResponse({ status: 403, description: "ADMIN or PASTOR required", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 403, description: "Cell is outside the actor scope or fields are not allowed for the role", schema: errorEnvelopeSchema() })
   @ApiResponse({ status: 404, description: "Cell not found in the authenticated church", schema: errorEnvelopeSchema() })
   @ApiResponse({ status: 409, description: "Code already in use", schema: errorEnvelopeSchema() })
   async update(

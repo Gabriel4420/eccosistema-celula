@@ -5,14 +5,14 @@ import type {
   CellEditPolicy,
   CellListScopePolicy,
   CellViewPolicy,
-  CellEditLevel
+  CellEditLevel,
 } from "../domain/cells-management.policy";
 
 export class CellsManagementAuthorization {
   constructor(
     private readonly listScopePolicy: CellListScopePolicy,
     private readonly viewPolicy: CellViewPolicy,
-    private readonly editPolicy: CellEditPolicy
+    private readonly editPolicy: CellEditPolicy,
   ) {}
 
   resolveListScope(principal: AuthenticatedPrincipal): CellListScope {
@@ -27,17 +27,14 @@ export class CellsManagementAuthorization {
 
   assertCanEdit(
     principal: AuthenticatedPrincipal,
-    cell: ManagedCell
+    cell: ManagedCell,
   ): CellEditLevel {
     const level = this.editPolicy.evaluate(principal, cell);
     if (level === "none") this.forbidden();
     return level;
   }
 
-  assertManage(
-    principal: AuthenticatedPrincipal,
-    currentRole: boolean
-  ): void {
+  assertManage(principal: AuthenticatedPrincipal, currentRole: boolean): void {
     const isManager =
       currentRole &&
       (principal.roles.includes("ADMIN") || principal.roles.includes("PASTOR"));
@@ -45,6 +42,9 @@ export class CellsManagementAuthorization {
   }
 
   private forbidden(): never {
-    throw new CellsManagementError("CELL_ACCESS_DENIED", "Access is not allowed");
+    throw new CellsManagementError(
+      "CELL_ACCESS_DENIED",
+      "Access is not allowed",
+    );
   }
 }
