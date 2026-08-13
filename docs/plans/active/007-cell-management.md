@@ -133,7 +133,7 @@ Supervisão proposta para fechar US-002 sem duplicar fonte de verdade:
 - [x] aprovar ADR para a estratégia transversal de `Idempotency-Key` antes de criar persistência genérica; **ratificada por `docs/decisions/006-idempotency-key.md`**;
 - [x] recomendação aprovada: `POST /cells` aceita cabeçalho UUID obrigatório, persiste chave, ator, igreja, operação, hash canônico do request e resultado/recurso em uma tabela genérica; repetição idêntica devolve a resposta original e reutilização com payload diferente retorna conflito;
 - [x] mutações `PATCH` usam semântica de estado desejado, são idempotentes por natureza e não geram atualização/auditoria em no-op; podem aceitar a chave opcionalmente após existir a infraestrutura compartilhada;
-- [ ] definir retenção e limpeza das chaves antes de produção; não armazenar token, PII ou payload integral.
+- [x] definir retenção e limpeza das chaves antes de produção; TTL definido na ADR 006 (`expires_at` + purge periódico, sem remover célula/auditoria); não armazenar token, PII ou payload integral.
 
 Comportamento mínimo a ser ratificado na ADR:
 
@@ -832,3 +832,15 @@ Todos os comandos usam npm/npm workspaces e PowerShell compatível. Registrar re
 - decisões fechadas: código canônico (trim/uppercase/sem diacríticos/`-`/regex), desativar=`SUSPENDED`, ativar=`ACTIVE`, criação padrão `FORMING`/`ACTIVE` explícito, elegibilidade de trainee sem papel `TRAINEE_LEADER`, liderança múltipla permitida, escopo de supervisor por `SupervisorAssignment`, escopo de líder por liderança/treinamento, `PASTOR` com status/liderança na igreja;
 - arquivos: `docs/decisions/004-direct-cell-leadership.md`, `docs/decisions/005-idempotent-status-transitions.md`, `docs/decisions/006-idempotency-key.md` e seções 3/6/10 deste plano atualizadas;
 - testes/comandos: nenhum código alterado nesta etapa documental; próxima etapa inicia a Etapa 1.
+
+### 2026-08-13 — implementação e validação
+
+- API: módulo de células concluído — contratos Zod, casos de uso (criar, editar, status, liderança, trainee, listar/pesquisar), autorização hierárquica (ADMIN/PASTOR na igreja; SUPERVISOR e LEADER no escopo próprio), auditoria transacional, normalização de código e idempotência com `Idempotency-Key` no `POST /cells`; endpoint `GET /users/cell-assignment-options` para autocomplete de líderes.
+- API — testes: unit 110/110 (21 suites), integração PostgreSQL 26/26 (5 suites) e HTTP 25/25 (5 suites, `cells.e2e-spec.ts` 8/8); typecheck, lint e build aprovados.
+- Web: features de cells completas — `cells-api`, sidebar/breadcrumbs/atalho, lista com busca/filtro/paginação, formulário de criação (chave de idempotência estável por payload), detalhe com edição field-scoped e diálogos de status/liderança/trainee, autocomplete remoto (`assignment-select`), badges e helpers de formatação; capabilities fail-closed; páginas `/cells`, `/cells/new` (ADMIN|PASTOR) e `/cells/[id]`.
+- Web — testes: unit 53/53 (7 suites, incluindo `cells-api.spec.ts` e capabilities atualizadas); typecheck, lint e build aprovados.
+- Migrations: 12 aplicadas e reproduzidas desde banco vazio (`db:migrate:deploy` em banco recém-criado).
+- DoD raiz: lint (6/6), typecheck (13/13), testes (230), build (7/7) aprovados.
+- Documentação: TTL de retenção de chaves de idempotência definido na ADR 006.
+- Bloqueio real: o E2E Playwright do fluxo de login não executa neste ambiente — `next dev` entra em loop de Fast Refresh com 401 repetidos e a página de login permanece em "Carregando" (afeta o suite existente, não só cells). O spec `cells.spec.ts` e a seed E2E (célula `CEL-E2E-001` + `SupervisorAssignment`) foram escritos e devem ser executados em ambiente com `next dev` estável; item 19 "Playwright do fluxo funcional executado" permanece em aberto e o plano permanece em `docs/plans/active/` até a execução real.
+- pendências para fechamento do plano: executar Playwright em ambiente estável; revisar dependências/audit; decidir movimento para `docs/plans/completed/`.

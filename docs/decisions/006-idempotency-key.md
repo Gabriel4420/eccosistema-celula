@@ -87,7 +87,10 @@ detectar divergência e referência ao recurso para replay determinístico.
 
 ### Operação e infraestrutura
 
-- Script/rotina de retenção de chaves a definir em produção.
+- Retenção de chaves definida: a coluna `expires_at` e o índice
+  `idempotency_requests_expires_at_idx` suportam um purge periódico que remove
+  chaves com `expires_at` vencido (janela sugerida de 7 dias) em rotina agendada
+  em produção; a limpeza nunca remove a célula nem o `AuditLog` associados.
 
 ### Segurança e privacidade
 
