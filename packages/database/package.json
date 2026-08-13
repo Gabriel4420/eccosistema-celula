@@ -19,6 +19,7 @@
     "db:migrate:deploy": "tsx src/cli/run-prisma.ts migrate deploy",
     "db:migrate:status": "tsx src/cli/run-prisma.ts migrate status",
     "db:seed": "prisma db seed",
+    "db:seed:full": "tsx prisma/seed-full.ts",
     "db:validate": "prisma validate",
     "lint": "eslint . --max-warnings=0",
     "test": "npm run db:generate && jest --runInBand --config jest.config.cjs",
