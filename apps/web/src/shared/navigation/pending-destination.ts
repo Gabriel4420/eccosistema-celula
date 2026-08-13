@@ -1,4 +1,4 @@
-const ALLOWED_PREFIXES = ["/dashboard", "/profile", "/users", "/church", "/people"];
+const ALLOWED_PREFIXES = ["/dashboard", "/profile", "/users", "/church", "/people", "/cells"];
 
 let pending: string | null = null;
 

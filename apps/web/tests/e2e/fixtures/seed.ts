@@ -43,6 +43,14 @@ export async function seedDatabase(): Promise<void> {
       E2E_CHURCH_ID
     );
     await database.$executeRawUnsafe(
+      'DELETE FROM "cells" WHERE "church_id" = $1::uuid',
+      E2E_CHURCH_ID
+    );
+    await database.$executeRawUnsafe(
+      'DELETE FROM "supervisor_assignments" WHERE "church_id" = $1::uuid',
+      E2E_CHURCH_ID
+    );
+    await database.$executeRawUnsafe(
       'DELETE FROM "people" WHERE "church_id" = $1::uuid',
       E2E_CHURCH_ID
     );
@@ -111,6 +119,40 @@ export async function seedDatabase(): Promise<void> {
         });
       }
     }
+
+    const userByKey = new Map<string, { id: string; firstName: string; lastName: string }>();
+    for (const user of SEED_USERS) {
+      const created = await database.user.findUniqueOrThrow({
+        where: { churchId_email: { churchId: E2E_CHURCH_ID, email: user.email } },
+        select: { id: true, firstName: true, lastName: true }
+      });
+      userByKey.set(user.key, created);
+    }
+
+    const leader = userByKey.get("leader");
+    const supervisor = userByKey.get("supervisor");
+    if (!leader || !supervisor) throw new Error("Missing leader/supervisor seed users");
+
+    await database.supervisorAssignment.create({
+      data: {
+        churchId: E2E_CHURCH_ID,
+        supervisorId: supervisor.id,
+        leaderId: leader.id
+      }
+    });
+
+    await database.cell.create({
+      data: {
+        churchId: E2E_CHURCH_ID,
+        code: "CEL-E2E-001",
+        name: "Célula E2E Esperança",
+        status: "ACTIVE",
+        leaderId: leader.id,
+        meetingDay: "WEDNESDAY",
+        meetingTime: new Date("1970-01-01T19:30:00"),
+        address: "Rua das Flores, 10 - Centro"
+      }
+    });
 
     await database.person.create({
       data: {

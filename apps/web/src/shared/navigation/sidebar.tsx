@@ -8,7 +8,8 @@ const BASE_LINKS: ReadonlyArray<{ readonly href: string; readonly label: string 
   { href: "/dashboard", label: "Painel" },
   { href: "/profile", label: "Meu perfil" },
   { href: "/church/settings", label: "Igreja" },
-  { href: "/people", label: "Pessoas" }
+  { href: "/people", label: "Pessoas" },
+  { href: "/cells", label: "Células" }
 ];
 
 export function Sidebar() {

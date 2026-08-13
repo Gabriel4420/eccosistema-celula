@@ -8,6 +8,12 @@ export interface Capabilities {
   readonly editPeople: boolean;
   readonly changePersonStatus: boolean;
   readonly viewPersonObservations: boolean;
+  readonly viewCells: boolean;
+  readonly createCells: boolean;
+  readonly editCellGeneralData: boolean;
+  readonly editCellSchedule: boolean;
+  readonly changeCellStatus: boolean;
+  readonly changeCellLeadership: boolean;
 }
 
 export function capabilitiesFor(principal: SessionPrincipal | null): Capabilities {
@@ -18,7 +24,13 @@ export function capabilitiesFor(principal: SessionPrincipal | null): Capabilitie
     listInactivePeople: hasRole(roles, ROLE_ADMIN),
     editPeople: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
     changePersonStatus: hasRole(roles, ROLE_ADMIN),
-    viewPersonObservations: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR)
+    viewPersonObservations: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
+    viewCells: principal !== null,
+    createCells: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
+    editCellGeneralData: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
+    editCellSchedule: principal !== null,
+    changeCellStatus: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
+    changeCellLeadership: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR)
   };
 }
 

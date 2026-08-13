@@ -22,6 +22,7 @@ export interface RequestOptions<T> {
   readonly path: string;
   readonly query?: Readonly<Record<string, string | number | boolean | undefined>>;
   readonly body?: unknown;
+  readonly headers?: Readonly<Record<string, string>>;
   readonly schema?: z.ZodType<T>;
   readonly bearer?: boolean;
   readonly allowRetry?: boolean;
@@ -147,7 +148,10 @@ export class ApiClient {
     return httpRequest({
       method: options.method,
       url,
-      headers: token ? { authorization: `Bearer ${token}` } : {},
+      headers: {
+        ...options.headers,
+        ...(token ? { authorization: `Bearer ${token}` } : {})
+      },
       body: options.body,
       timeoutMs: this.deps.timeoutMs
     });

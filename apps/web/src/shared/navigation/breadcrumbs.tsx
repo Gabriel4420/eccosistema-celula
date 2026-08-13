@@ -17,7 +17,10 @@ const ROUTE_LABELS: ReadonlyArray<{ readonly pattern: RegExp; readonly crumbs: r
   { pattern: /^\/church\/settings$/, crumbs: [{ label: "Igreja", href: "/dashboard" }, { label: "Configurações" }] },
   { pattern: /^\/people\/new$/, crumbs: [{ label: "Pessoas", href: "/people" }, { label: "Nova pessoa" }] },
   { pattern: /^\/people\/[^/]+$/, crumbs: [{ label: "Pessoas", href: "/people" }, { label: "Detalhe da pessoa" }] },
-  { pattern: /^\/people$/, crumbs: [{ label: "Pessoas" }] }
+  { pattern: /^\/people$/, crumbs: [{ label: "Pessoas" }] },
+  { pattern: /^\/cells\/new$/, crumbs: [{ label: "Células", href: "/cells" }, { label: "Nova célula" }] },
+  { pattern: /^\/cells\/[^/]+$/, crumbs: [{ label: "Células", href: "/cells" }, { label: "Detalhe da célula" }] },
+  { pattern: /^\/cells$/, crumbs: [{ label: "Células" }] }
 ];
 
 function crumbsFor(pathname: string): readonly Crumb[] {

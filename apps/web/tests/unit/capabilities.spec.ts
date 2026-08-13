@@ -1,5 +1,14 @@
 import { capabilitiesFor } from "@/src/shared/auth/capabilities";
 
+const NO_CELLS = {
+  viewCells: false,
+  createCells: false,
+  editCellGeneralData: false,
+  editCellSchedule: false,
+  changeCellStatus: false,
+  changeCellLeadership: false
+};
+
 describe("capabilitiesFor", () => {
   it("denies everything by default (fail-closed)", () => {
     expect(capabilitiesFor(null)).toEqual({
@@ -8,7 +17,8 @@ describe("capabilitiesFor", () => {
       listInactivePeople: false,
       editPeople: false,
       changePersonStatus: false,
-      viewPersonObservations: false
+      viewPersonObservations: false,
+      ...NO_CELLS
     });
   });
 
@@ -24,7 +34,14 @@ describe("capabilitiesFor", () => {
       listInactivePeople: true,
       editPeople: true,
       changePersonStatus: true,
-      viewPersonObservations: true
+      viewPersonObservations: true,
+      ...NO_CELLS,
+      viewCells: true,
+      createCells: true,
+      editCellGeneralData: true,
+      editCellSchedule: true,
+      changeCellStatus: true,
+      changeCellLeadership: true
     });
   });
 
@@ -34,6 +51,10 @@ describe("capabilitiesFor", () => {
     expect(pastor.manageUsers).toBe(false);
     expect(pastor.changePersonStatus).toBe(false);
     expect(pastor.listInactivePeople).toBe(false);
+    expect(pastor.viewCells).toBe(true);
+    expect(pastor.createCells).toBe(true);
+    expect(pastor.changeCellStatus).toBe(true);
+    expect(pastor.changeCellLeadership).toBe(true);
   });
 
   it("treats unknown roles as read-only person viewers", () => {
@@ -41,5 +62,23 @@ describe("capabilitiesFor", () => {
     expect(leader.editPeople).toBe(false);
     expect(leader.viewPersonObservations).toBe(false);
     expect(leader.manageUsers).toBe(false);
+  });
+
+  it("gives supervisors and leaders cells view and schedule editing only", () => {
+    const supervisor = capabilitiesFor({ userId: "u", churchId: "c", roles: ["SUPERVISOR"] });
+    expect(supervisor.viewCells).toBe(true);
+    expect(supervisor.editCellSchedule).toBe(true);
+    expect(supervisor.createCells).toBe(false);
+    expect(supervisor.editCellGeneralData).toBe(false);
+    expect(supervisor.changeCellStatus).toBe(false);
+    expect(supervisor.changeCellLeadership).toBe(false);
+
+    const leader = capabilitiesFor({ userId: "u", churchId: "c", roles: ["LEADER"] });
+    expect(leader.viewCells).toBe(true);
+    expect(leader.editCellSchedule).toBe(true);
+    expect(leader.createCells).toBe(false);
+    expect(leader.editCellGeneralData).toBe(false);
+    expect(leader.changeCellStatus).toBe(false);
+    expect(leader.changeCellLeadership).toBe(false);
   });
 });

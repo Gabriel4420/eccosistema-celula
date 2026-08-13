@@ -9,7 +9,7 @@ interface Shortcut {
   readonly title: string;
   readonly description: string;
   readonly href: string;
-  readonly capability?: "manageUsers" | "editPeople";
+  readonly capability?: "manageUsers" | "editPeople" | "viewCells";
 }
 
 const SHORTCUTS: readonly Shortcut[] = [
@@ -28,6 +28,12 @@ const SHORTCUTS: readonly Shortcut[] = [
     description: "Consulte e gerencie as pessoas.",
     href: "/people",
     capability: "editPeople"
+  },
+  {
+    title: "Células",
+    description: "Consulte e gerencie as células da igreja.",
+    href: "/cells",
+    capability: "viewCells"
   }
 ];
 
