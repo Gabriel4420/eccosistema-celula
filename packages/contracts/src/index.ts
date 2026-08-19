@@ -85,6 +85,34 @@ export type {
   UpdateChurchSettingsRequest
 } from "./church";
 export {
+  createMeetingRequestSchema,
+  listMeetingsQuerySchema,
+  meetingCellParamsSchema,
+  meetingItemEnvelopeSchema,
+  meetingParamsSchema,
+  meetingReportDraftRequestSchema,
+  meetingReportDraftResponseSchema,
+  meetingReportEnvelopeSchema,
+  meetingResponseSchema,
+  meetingsErrorEnvelopeSchema,
+  meetingsPageEnvelopeSchema,
+  updateMeetingRequestSchema,
+  updateMeetingStatusRequestSchema
+} from "./meetings";
+export type {
+  CreateMeetingRequest,
+  ListMeetingsQuery,
+  MeetingItemEnvelope,
+  MeetingReportDraftRequest,
+  MeetingReportDraftResponse,
+  MeetingReportEnvelope,
+  MeetingResponse,
+  MeetingsErrorEnvelope,
+  MeetingsPageEnvelope,
+  UpdateMeetingRequest,
+  UpdateMeetingStatusRequest
+} from "./meetings";
+export {
   cellAssignmentOptionSchema,
   cellAssignmentOptionsEnvelopeSchema,
   cellCodePattern,
