@@ -26,7 +26,12 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <p className="sidebar__brand">Ecossistema de Células</p>
+      <p className="sidebar__brand">
+        <span className="sidebar__brand-mark" aria-hidden="true">
+          EC
+        </span>
+        <span>Ecossistema de Células</span>
+      </p>
       <nav aria-label="Navegação principal" className="sidebar__nav">
         {links}
       </nav>
