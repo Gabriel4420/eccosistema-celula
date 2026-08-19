@@ -5,6 +5,7 @@ import { HealthController } from "./health.controller";
 import { HealthService } from "./health.service";
 import { CellsModule } from "./modules/cells/cells.module";
 import { IdentityModule } from "./modules/identity/identity.module";
+import { MeetingsModule } from "./modules/meetings/meetings.module";
 import { PermissionsModule } from "./modules/permissions/permissions.module";
 import { UsersModule } from "./modules/users/users.module";
 import { ChurchesModule } from "./modules/churches/churches.module";
@@ -20,7 +21,8 @@ import { PeopleModule } from "./modules/people/people.module";
     UsersModule,
     ChurchesModule,
     PeopleModule,
-    CellsModule
+    CellsModule,
+    MeetingsModule
   ],
   controllers: [HealthController],
   providers: [
