@@ -219,7 +219,10 @@ export function CellDetail() {
           {cell.name}
         </h1>
         <Link className="breadcrumbs__link" href="/cells">
-          Voltar para células
+          Voltar para celulas
+        </Link>
+        <Link className="button button--secondary" href={`/cells/${id}/meetings`}>
+          Ver encontros
         </Link>
       </div>
 

@@ -11,16 +11,19 @@ interface Crumb {
 const ROUTE_LABELS: ReadonlyArray<{ readonly pattern: RegExp; readonly crumbs: readonly Crumb[] }> = [
   { pattern: /^\/dashboard$/, crumbs: [{ label: "Painel" }] },
   { pattern: /^\/profile$/, crumbs: [{ label: "Painel", href: "/dashboard" }, { label: "Meu perfil" }] },
-  { pattern: /^\/users\/new$/, crumbs: [{ label: "Usuários", href: "/users" }, { label: "Novo usuário" }] },
-  { pattern: /^\/users\/[^/]+$/, crumbs: [{ label: "Usuários", href: "/users" }, { label: "Detalhe do usuário" }] },
-  { pattern: /^\/users$/, crumbs: [{ label: "Usuários" }] },
-  { pattern: /^\/church\/settings$/, crumbs: [{ label: "Igreja", href: "/dashboard" }, { label: "Configurações" }] },
+  { pattern: /^\/users\/new$/, crumbs: [{ label: "Usuarios", href: "/users" }, { label: "Novo usuario" }] },
+  { pattern: /^\/users\/[^/]+$/, crumbs: [{ label: "Usuarios", href: "/users" }, { label: "Detalhe do usuario" }] },
+  { pattern: /^\/users$/, crumbs: [{ label: "Usuarios" }] },
+  { pattern: /^\/church\/settings$/, crumbs: [{ label: "Igreja", href: "/dashboard" }, { label: "Configuracoes" }] },
   { pattern: /^\/people\/new$/, crumbs: [{ label: "Pessoas", href: "/people" }, { label: "Nova pessoa" }] },
   { pattern: /^\/people\/[^/]+$/, crumbs: [{ label: "Pessoas", href: "/people" }, { label: "Detalhe da pessoa" }] },
   { pattern: /^\/people$/, crumbs: [{ label: "Pessoas" }] },
-  { pattern: /^\/cells\/new$/, crumbs: [{ label: "Células", href: "/cells" }, { label: "Nova célula" }] },
-  { pattern: /^\/cells\/[^/]+$/, crumbs: [{ label: "Células", href: "/cells" }, { label: "Detalhe da célula" }] },
-  { pattern: /^\/cells$/, crumbs: [{ label: "Células" }] }
+  { pattern: /^\/cells\/new$/, crumbs: [{ label: "Celulas", href: "/cells" }, { label: "Nova celula" }] },
+  { pattern: /^\/cells\/[^/]+\/meetings\/new$/, crumbs: [{ label: "Celulas", href: "/cells" }, { label: "Encontros", href: "#" }, { label: "Novo encontro" }] },
+  { pattern: /^\/cells\/[^/]+\/meetings\/[^/]+$/, crumbs: [{ label: "Celulas", href: "/cells" }, { label: "Encontros", href: "#" }, { label: "Detalhe do encontro" }] },
+  { pattern: /^\/cells\/[^/]+\/meetings$/, crumbs: [{ label: "Celulas", href: "/cells" }, { label: "Encontros" }] },
+  { pattern: /^\/cells\/[^/]+$/, crumbs: [{ label: "Celulas", href: "/cells" }, { label: "Detalhe da celula" }] },
+  { pattern: /^\/cells$/, crumbs: [{ label: "Celulas" }] }
 ];
 
 function crumbsFor(pathname: string): readonly Crumb[] {

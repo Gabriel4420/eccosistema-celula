@@ -6,7 +6,11 @@ const NO_CELLS = {
   editCellGeneralData: false,
   editCellSchedule: false,
   changeCellStatus: false,
-  changeCellLeadership: false
+  changeCellLeadership: false,
+  viewMeetings: false,
+  createMeetings: false,
+  editMeetings: false,
+  changeMeetingStatus: false
 };
 
 describe("capabilitiesFor", () => {
@@ -41,7 +45,11 @@ describe("capabilitiesFor", () => {
       editCellGeneralData: true,
       editCellSchedule: true,
       changeCellStatus: true,
-      changeCellLeadership: true
+      changeCellLeadership: true,
+      viewMeetings: true,
+      createMeetings: true,
+      editMeetings: true,
+      changeMeetingStatus: true
     });
   });
 
@@ -55,6 +63,10 @@ describe("capabilitiesFor", () => {
     expect(pastor.createCells).toBe(true);
     expect(pastor.changeCellStatus).toBe(true);
     expect(pastor.changeCellLeadership).toBe(true);
+    expect(pastor.viewMeetings).toBe(true);
+    expect(pastor.createMeetings).toBe(true);
+    expect(pastor.editMeetings).toBe(true);
+    expect(pastor.changeMeetingStatus).toBe(true);
   });
 
   it("treats unknown roles as read-only person viewers", () => {
@@ -72,6 +84,10 @@ describe("capabilitiesFor", () => {
     expect(supervisor.editCellGeneralData).toBe(false);
     expect(supervisor.changeCellStatus).toBe(false);
     expect(supervisor.changeCellLeadership).toBe(false);
+    expect(supervisor.viewMeetings).toBe(true);
+    expect(supervisor.createMeetings).toBe(true);
+    expect(supervisor.editMeetings).toBe(true);
+    expect(supervisor.changeMeetingStatus).toBe(true);
 
     const leader = capabilitiesFor({ userId: "u", churchId: "c", roles: ["LEADER"] });
     expect(leader.viewCells).toBe(true);
@@ -80,5 +96,9 @@ describe("capabilitiesFor", () => {
     expect(leader.editCellGeneralData).toBe(false);
     expect(leader.changeCellStatus).toBe(false);
     expect(leader.changeCellLeadership).toBe(false);
+    expect(leader.viewMeetings).toBe(true);
+    expect(leader.createMeetings).toBe(true);
+    expect(leader.editMeetings).toBe(true);
+    expect(leader.changeMeetingStatus).toBe(true);
   });
 });
