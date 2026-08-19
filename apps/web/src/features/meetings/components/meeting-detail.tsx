@@ -37,7 +37,7 @@ export function MeetingDetail() {
     ttlMs: 20_000
   });
 
-  const { data: reportData } = useRemoteQuery({
+  const { data: reportData, reload: reloadReport } = useRemoteQuery({
     fetcher: () => getMeetingReport(api, cellId, meetingId),
     cacheName: MEETINGS_CACHE,
     cacheKey: `report:${cellId}:${meetingId}`,
@@ -63,17 +63,18 @@ export function MeetingDetail() {
 
   if (error && !meeting) {
     return (
-      <ErrorState title="Nao foi possivel carregar o encontro" onRetry={() => void reload()}>
+      <ErrorState title="Não foi possível carregar o encontro" onRetry={() => void reload()}>
         Tente novamente em instantes.
       </ErrorState>
     );
   }
 
   if (!meeting) {
-    return <EmptyState title="Encontro nao encontrado">O encontro solicitado nao existe.</EmptyState>;
+    return <EmptyState title="Encontro não encontrado">O encontro solicitado não existe.</EmptyState>;
   }
 
   const isEditable = meeting.status === "SCHEDULED";
+  const canEditObs = meeting.status !== "CANCELED";
   const report = reportData?.data;
   const dirtyDate = meetingDate !== "" && meetingDate !== meeting.meetingDate;
   const dirtyObs = observations !== "" && observations !== (report?.observations ?? "");
@@ -85,7 +86,7 @@ export function MeetingDetail() {
     if (!dirtyDate) return;
     const parsed = updateMeetingRequestSchema.safeParse({ meetingDate });
     if (!parsed.success) {
-      setFieldErrors({ meetingDate: "Data invalida." });
+      setFieldErrors({ meetingDate: "Data inválida." });
       return;
     }
     setBusy(true);
@@ -111,10 +112,10 @@ export function MeetingDetail() {
         observations: observations.trim() || null
       });
       cacheStore(MEETINGS_CACHE).invalidatePrefix("report");
-      await reload();
-      setFeedback({ kind: "success", message: "Observacoes salvas." });
+      await reloadReport();
+      setFeedback({ kind: "success", message: "Observações salvas." });
     } catch (cause) {
-      setFeedback({ kind: "error", message: messageForError(cause, "salvar observacoes") });
+      setFeedback({ kind: "error", message: messageForError(cause, "salvar observações") });
     } finally {
       setBusy(false);
     }
@@ -128,7 +129,7 @@ export function MeetingDetail() {
       cacheStore(MEETINGS_CACHE).invalidatePrefix("detail");
       cacheStore(MEETINGS_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({ kind: "success", message: "Encontro concluido." });
+      setFeedback({ kind: "success", message: "Encontro concluído." });
       setConfirmAction("none");
     } catch (cause) {
       setFeedback({ kind: "error", message: messageForError(cause, "concluir o encontro") });
@@ -181,7 +182,7 @@ export function MeetingDetail() {
 
       <div className="detail-list" style={{ marginBottom: "var(--space-5)" }}>
         <div className="detail-list__item">
-          <span className="detail-list__label">Cedula</span>
+          <span className="detail-list__label">Célula</span>
           <span className="detail-list__value">{meeting.cell.name}</span>
         </div>
         <div className="detail-list__item">
@@ -231,23 +232,23 @@ export function MeetingDetail() {
 
       <div className="fieldset" style={{ marginTop: "var(--space-5)" }}>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Observacoes</legend>
+          <legend className="fieldset__legend">Observações</legend>
           <textarea
             className="textarea"
             value={observations === "" ? (report?.observations ?? "") : observations}
             onChange={(event) => setObservations(event.target.value)}
             rows={5}
-            placeholder="Observacoes sobre o encontro..."
-            disabled={!isEditable}
+            placeholder="Observações sobre o encontro..."
+            disabled={!canEditObs}
           />
-          {isEditable ? (
+          {canEditObs ? (
             <Button
               onClick={() => void handleSaveObservations()}
               disabled={!dirtyObs}
               loading={busy}
               loadingLabel="Salvando..."
             >
-              Salvar observacoes
+              Salvar observações
             </Button>
           ) : null}
         </fieldset>
@@ -268,7 +269,7 @@ export function MeetingDetail() {
         open={confirmAction === "complete"}
         onClose={() => setConfirmAction("none")}
         title="Concluir encontro"
-        description="O encontro sera marcado como concluido e nao podera ser editado."
+        description="O encontro será marcado como concluído e não poderá ser editado."
       >
         <div className="dialog-panel__actions">
           <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
@@ -289,7 +290,7 @@ export function MeetingDetail() {
         open={confirmAction === "cancel"}
         onClose={() => setConfirmAction("none")}
         title="Cancelar encontro"
-        description="Informe o motivo do cancelamento. O encontro sera cancelado permanentemente."
+        description="Informe o motivo do cancelamento. O encontro será cancelado permanentemente."
       >
         <textarea
           className="textarea"
@@ -319,18 +320,18 @@ export function MeetingDetail() {
 
 function messageForError(cause: unknown, action: string): string {
   if (!(cause instanceof ApiError)) {
-    return `Nao foi possivel ${action}. Tente novamente.`;
+    return `Não foi possível ${action}. Tente novamente.`;
   }
   switch (cause.code) {
     case "MEETING_NOT_EDITABLE":
-      return "O encontro nao pode ser editado pois ja foi concluido ou cancelado.";
+      return "O encontro não pode ser editado pois já foi concluído ou cancelado.";
     case "MEETING_STATUS_TRANSITION_INVALID":
-      return "A transicao de status nao e permitida neste momento.";
+      return "A transição de status não é permitida neste momento.";
     case "MEETING_REPORT_NOT_EDITABLE":
-      return "Nao e possivel editar observacoes de um encontro cancelado.";
+      return "Não é possível editar observações de um encontro cancelado.";
     case "MEETING_DATE_CONFLICT":
-      return "Ja existe um encontro agendado para esta data.";
+      return "Já existe um encontro agendado para esta data.";
     default:
-      return `Nao foi possivel ${action}. O servidor pode ter recusado por seguranca.`;
+      return `Não foi possível ${action}. O servidor pode ter recusado por segurança.`;
   }
 }

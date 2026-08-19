@@ -90,8 +90,8 @@ export class MeetingsController {
     @CurrentPrincipal() principal: AuthenticatedPrincipal,
     @Param() params: unknown
   ) {
-    const { meetingId } = meetingParamsSchema.parse(params);
-    return presentMeetingItem(await this.queries.get(principal, meetingId));
+    const { cellId, meetingId } = meetingParamsSchema.parse(params);
+    return presentMeetingItem(await this.queries.get(principal, cellId, meetingId));
   }
 
   @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER")
@@ -235,8 +235,8 @@ export class MeetingsController {
     @CurrentPrincipal() principal: AuthenticatedPrincipal,
     @Param() params: unknown
   ) {
-    const { meetingId } = meetingParamsSchema.parse(params);
-    const report = await this.queries.getReport(principal, meetingId);
+    const { cellId, meetingId } = meetingParamsSchema.parse(params);
+    const report = await this.queries.getReport(principal, cellId, meetingId);
     return presentReport(report);
   }
 

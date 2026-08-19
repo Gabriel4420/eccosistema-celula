@@ -26,8 +26,9 @@ export interface IdempotencyRecord {
 }
 
 export interface MeetingsManagementTransaction {
-  findCell(cellId: string): Promise<{ id: string; churchId: string; code: string; name: string } | null>;
+  findCell(cellId: string): Promise<{ id: string; churchId: string; code: string; name: string; status: string } | null>;
   findMeeting(meetingId: string): Promise<ManagedMeeting | null>;
+  findMeetingScope(cellId: string): Promise<{ leaderId: string | null; traineeLeaderId: string | null; supervisorId: string | null } | null>;
   createMeeting(churchId: string, cellId: string, meetingDate: string): Promise<ManagedMeeting>;
   updateMeetingDate(meetingId: string, meetingDate: string): Promise<ManagedMeeting>;
   updateMeetingStatus(

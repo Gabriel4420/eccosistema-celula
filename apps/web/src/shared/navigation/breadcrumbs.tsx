@@ -28,7 +28,17 @@ const ROUTE_LABELS: ReadonlyArray<{ readonly pattern: RegExp; readonly crumbs: r
 
 function crumbsFor(pathname: string): readonly Crumb[] {
   for (const route of ROUTE_LABELS) {
-    if (route.pattern.test(pathname)) return route.crumbs;
+    if (route.pattern.test(pathname)) {
+      return route.crumbs.map((crumb) => {
+        if (crumb.href === "#") {
+          const cellMatch = pathname.match(/\/cells\/([^/]+)\//);
+          if (cellMatch && crumb.label === "Encontros") {
+            return { ...crumb, href: `/cells/${cellMatch[1]}/meetings` };
+          }
+        }
+        return crumb;
+      });
+    }
   }
   return [];
 }

@@ -24,6 +24,32 @@ export function normalizeMeetingDate(value: string): string {
   return value.trim();
 }
 
+export function normalizeMeetingDateRange(
+  from?: string,
+  to?: string
+): { from?: string; to?: string } {
+  const normalizedFrom = from ? normalizeMeetingDate(from) : undefined;
+  const normalizedTo = to ? normalizeMeetingDate(to) : undefined;
+  return { from: normalizedFrom, to: normalizedTo };
+}
+
+export function normalizeOptionalString(value?: string): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+export function normalizeMeetingStatusFilter(
+  value?: string
+): MeetingStatus | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim().toUpperCase();
+  if (trimmed === "SCHEDULED" || trimmed === "COMPLETED" || trimmed === "CANCELED") {
+    return trimmed;
+  }
+  return undefined;
+}
+
 export function canTransitionMeetingStatus(
   from: MeetingStatus,
   to: MeetingStatus

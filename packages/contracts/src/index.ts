@@ -88,6 +88,7 @@ export {
   createMeetingRequestSchema,
   listMeetingsQuerySchema,
   meetingCellParamsSchema,
+  meetingErrorCodeSchema,
   meetingItemEnvelopeSchema,
   meetingParamsSchema,
   meetingReportDraftRequestSchema,
@@ -102,6 +103,7 @@ export {
 export type {
   CreateMeetingRequest,
   ListMeetingsQuery,
+  MeetingErrorCode,
   MeetingItemEnvelope,
   MeetingReportDraftRequest,
   MeetingReportDraftResponse,

@@ -29,19 +29,34 @@ export class MeetingsManagementCommands {
     private readonly authorization: MeetingsManagementAuthorization
   ) {}
 
-  create(
+  async create(
     principal: AuthenticatedPrincipal,
     cellId: string,
     idempotencyKey: string,
     input: MeetingCreateInput
   ): Promise<ManagedMeeting> {
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
-      await this.assertManage(transaction, principal);
+      const requestHash = canonicalHash({ cellId, meetingDate: normalizeMeetingDate(input.meetingDate) });
+      const existing = await transaction.findIdempotencyRequest(principal.userId, idempotencyKey);
+      if (existing) {
+        if (existing.requestHash !== requestHash) {
+          throw new MeetingsManagementError(
+            "IDEMPOTENCY_KEY_CONFLICT",
+            "Idempotency key reused with a different payload"
+          );
+        }
+        if (existing.resourceId) {
+          const meeting = await transaction.findMeeting(existing.resourceId);
+          if (meeting) return meeting;
+        }
+      }
+
+      this.authorization.assertCanEdit(principal);
+      await this.assertEditScope(transaction, principal, cellId);
       const meetingDate = normalizeMeetingDate(input.meetingDate);
-      await this.assertCellExists(transaction, cellId);
+      await this.assertCellActive(transaction, cellId);
       await assertNoDateConflict(transaction, cellId, meetingDate);
       const meeting = await transaction.createMeeting(principal.churchId, cellId, meetingDate);
-      const requestHash = canonicalHash({ cellId, meetingDate });
       await transaction.recordAudit({
         actorId: principal.userId,
         entityId: meeting.id,
@@ -69,7 +84,9 @@ export class MeetingsManagementCommands {
   ): Promise<ManagedMeeting> {
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
       const current = await this.requireMeeting(transaction, meetingId);
-      this.authorization.assertCanEdit(principal, current);
+      this.assertCellMatch(current, cellId);
+      this.authorization.assertCanEdit(principal);
+      await this.assertEditScope(transaction, principal, cellId);
       if (!isMeetingEditable(current.status)) {
         throw new MeetingsManagementError(
           "MEETING_NOT_EDITABLE",
@@ -100,7 +117,9 @@ export class MeetingsManagementCommands {
   ): Promise<ManagedMeeting> {
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
       const current = await this.requireMeeting(transaction, meetingId);
-      this.authorization.assertCanEdit(principal, current);
+      this.assertCellMatch(current, cellId);
+      this.authorization.assertCanEdit(principal);
+      await this.assertEditScope(transaction, principal, cellId);
       if (current.status === status) return current;
       if (!canTransitionMeetingStatus(current.status, status)) {
         throw new MeetingsManagementError(
@@ -117,7 +136,7 @@ export class MeetingsManagementCommands {
         entityId: meetingId,
         action: status === "COMPLETED" ? "MEETING_COMPLETED" : "MEETING_CANCELED",
         before: { status: current.status },
-        after: { status, ...(reason ? { cancellationReason: reason } : {}) }
+        after: { status, ...(reason ? { hasCancellationReason: "true" } : {}) }
       });
       return updated;
     });
@@ -130,7 +149,9 @@ export class MeetingsManagementCommands {
   ): Promise<ManagedMeetingReport | null> {
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
       const meeting = await this.requireMeeting(transaction, meetingId);
-      this.authorization.assertView(principal, meeting);
+      this.assertCellMatch(meeting, cellId);
+      this.authorization.assertView(principal);
+      await this.assertViewScope(transaction, principal, cellId);
       return transaction.findReport(principal.churchId, meetingId);
     });
   }
@@ -143,7 +164,9 @@ export class MeetingsManagementCommands {
   ): Promise<ManagedMeetingReport> {
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
       const meeting = await this.requireMeeting(transaction, meetingId);
-      this.authorization.assertCanEdit(principal, meeting);
+      this.assertCellMatch(meeting, cellId);
+      this.authorization.assertCanEdit(principal);
+      await this.assertEditScope(transaction, principal, cellId);
       if (meeting.status === "CANCELED") {
         throw new MeetingsManagementError(
           "MEETING_REPORT_NOT_EDITABLE",
@@ -152,39 +175,70 @@ export class MeetingsManagementCommands {
       }
       const normalized = observations !== null ? normalizeObservations(observations) : null;
       const report = await transaction.upsertReport(principal.churchId, meetingId, normalized);
+      const isNew = report.createdAt.getTime() === report.updatedAt.getTime();
       await transaction.recordAudit({
         actorId: principal.userId,
         entityId: meetingId,
-        action: report.createdAt.getTime() === report.updatedAt.getTime()
-          ? "MEETING_REPORT_CREATED"
-          : "MEETING_REPORT_UPDATED",
-        after: { meetingId, observations: normalized }
+        action: isNew ? "MEETING_REPORT_DRAFT_CREATED" : "MEETING_REPORT_OBSERVATIONS_CHANGED",
+        after: { meetingId, observationsChanged: "true" }
       });
       return report;
     });
   }
 
-  private async assertManage(
-    _transaction: MeetingsManagementTransaction,
-    principal: AuthenticatedPrincipal
-  ): Promise<void> {
-    const isManager =
-      principal.roles.includes("ADMIN") || principal.roles.includes("PASTOR");
-    if (!isManager) {
-      throw new MeetingsManagementError(
-        "MEETING_ACCESS_DENIED",
-        "ADMIN or PASTOR role required"
-      );
+  private assertCellMatch(meeting: ManagedMeeting, cellId: string): void {
+    if (meeting.cellId !== cellId) {
+      throw new MeetingsManagementError("MEETING_NOT_FOUND", "Meeting not found");
     }
   }
 
-  private async assertCellExists(
+  private async assertEditScope(
+    transaction: MeetingsManagementTransaction,
+    principal: AuthenticatedPrincipal,
+    cellId: string
+  ): Promise<void> {
+    if (
+      principal.roles.includes("ADMIN") ||
+      principal.roles.includes("PASTOR")
+    ) {
+      return;
+    }
+    const scope = await transaction.findMeetingScope(cellId);
+    if (scope) {
+      this.authorization.assertEditScope(principal, scope);
+    }
+  }
+
+  private async assertViewScope(
+    transaction: MeetingsManagementTransaction,
+    principal: AuthenticatedPrincipal,
+    cellId: string
+  ): Promise<void> {
+    if (
+      principal.roles.includes("ADMIN") ||
+      principal.roles.includes("PASTOR")
+    ) {
+      return;
+    }
+    const scope = await transaction.findMeetingScope(cellId);
+    if (scope) {
+      this.authorization.assertViewScope(principal, scope);
+    }
+  }
+
+  private async assertCellActive(
     transaction: MeetingsManagementTransaction,
     cellId: string
   ): Promise<void> {
     const cell = await transaction.findCell(cellId);
     if (!cell) {
       throw new MeetingsManagementError("MEETING_CELL_NOT_FOUND", "Cell not found");
+    }
+    if (cell.status !== "ACTIVE") {
+      throw new MeetingsManagementError(
+        "MEETING_CELL_STATUS_INVALID",
+        "Cell must be ACTIVE to schedule meetings"
+      );
     }
   }
 

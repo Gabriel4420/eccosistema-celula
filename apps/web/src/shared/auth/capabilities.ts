@@ -36,9 +36,9 @@ export function capabilitiesFor(principal: SessionPrincipal | null): Capabilitie
     changeCellStatus: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
     changeCellLeadership: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
     viewMeetings: principal !== null,
-    createMeetings: principal !== null,
-    editMeetings: principal !== null,
-    changeMeetingStatus: principal !== null
+    createMeetings: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),
+    editMeetings: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),
+    changeMeetingStatus: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER")
   };
 }
 

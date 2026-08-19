@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { RuntimeDatabaseClient } from "@mission-atos/database";
 import type { ReportStatus } from "@mission-atos/domain";
 import { DATABASE_CLIENT } from "../../identity/identity.tokens";
+import { MeetingsManagementError } from "../application/meetings-management.error";
 import type {
   IdempotencyRecord,
   MeetingsManagementRepository,
@@ -128,12 +129,21 @@ export class PrismaMeetingsManagementRepository
       } catch (error) {
         if (!isPrismaCode(error, "P2034") || attempt === 3) {
           this.logger.error(JSON.stringify({ operation: "meetings.transaction", result: "rollback", durationMs: Date.now() - startedAt, attempt }));
+          if (attempt === 3 && isPrismaCode(error, "P2034")) {
+            throw new MeetingsManagementError(
+              "MEETING_TRANSACTION_RETRY_EXHAUSTED",
+              "Serializable transaction retry exhausted"
+            );
+          }
           throw error;
         }
         this.logger.warn(JSON.stringify({ operation: "meetings.transaction", result: "retry", attempt }));
       }
     }
-    throw new Error("Serializable transaction retry exhausted");
+    throw new MeetingsManagementError(
+      "MEETING_TRANSACTION_RETRY_EXHAUSTED",
+      "Serializable transaction retry exhausted"
+    );
   }
 }
 
@@ -168,10 +178,10 @@ class PrismaMeetingsManagementTransaction implements MeetingsManagementTransacti
     private readonly churchId: string
   ) {}
 
-  async findCell(cellId: string): Promise<{ id: string; churchId: string; code: string; name: string } | null> {
+  async findCell(cellId: string): Promise<{ id: string; churchId: string; code: string; name: string; status: string } | null> {
     return this.transaction.cell.findFirst({
       where: { id: cellId, churchId: this.churchId, deletedAt: null },
-      select: { id: true, churchId: true, code: true, name: true }
+      select: { id: true, churchId: true, code: true, name: true, status: true }
     });
   }
 
@@ -182,6 +192,31 @@ class PrismaMeetingsManagementTransaction implements MeetingsManagementTransacti
     });
     if (!meeting) return null;
     return mapMeeting(meeting);
+  }
+
+  async findMeetingScope(cellId: string): Promise<{ leaderId: string | null; traineeLeaderId: string | null; supervisorId: string | null } | null> {
+    const cell = await this.transaction.cell.findFirst({
+      where: { id: cellId, churchId: this.churchId, deletedAt: null },
+      select: { leaderId: true, traineeLeaderId: true }
+    });
+    if (!cell) return null;
+    let supervisorId: string | null = null;
+    if (cell.leaderId) {
+      const assignment = await this.transaction.supervisorAssignment.findFirst({
+        where: {
+          churchId: this.churchId,
+          leaderId: cell.leaderId,
+          deletedAt: null
+        },
+        select: { supervisorId: true }
+      });
+      supervisorId = assignment?.supervisorId ?? null;
+    }
+    return {
+      leaderId: cell.leaderId,
+      traineeLeaderId: cell.traineeLeaderId,
+      supervisorId
+    };
   }
 
   async createMeeting(churchId: string, cellId: string, meetingDate: string): Promise<ManagedMeeting> {
@@ -329,13 +364,20 @@ class PrismaMeetingsManagementTransaction implements MeetingsManagementTransacti
   }
 }
 
+function formatDateOnly(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function mapMeeting(meeting: MeetingRow): ManagedMeeting {
   return {
     id: meeting.id,
     churchId: meeting.churchId,
     cellId: meeting.cellId,
     cell: meeting.cell,
-    meetingDate: meeting.meetingDate.toISOString().split("T")[0]!,
+    meetingDate: formatDateOnly(meeting.meetingDate),
     status: meeting.status,
     cancellationReason: meeting.cancellationReason,
     createdAt: meeting.createdAt,

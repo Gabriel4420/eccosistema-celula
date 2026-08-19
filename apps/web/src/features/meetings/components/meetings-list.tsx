@@ -46,7 +46,7 @@ function toQuery(params: MeetingsParams): string {
 }
 
 export function MeetingsList({ cellId }: { readonly cellId: string }) {
-  const { api } = useSession();
+  const { api, capabilities } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = readParams(searchParams);
@@ -94,9 +94,11 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
         <p className="page-description">
           Gerencie os encontros agendados da célula.
         </p>
-        <Link className="button" href={`/cells/${cellId}/meetings/new`}>
-          Novo encontro
-        </Link>
+        {capabilities.createMeetings ? (
+          <Link className="button" href={`/cells/${cellId}/meetings/new`}>
+            Novo encontro
+          </Link>
+        ) : null}
       </div>
 
       <div className="toolbar">
@@ -185,19 +187,14 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
                 render: (meeting) => formatMeetingDate(meeting.meetingDate)
               },
               {
-                key: "cell",
-                header: "Célula",
-                render: (meeting) => meeting.cell.name
-              },
-              {
                 key: "status",
                 header: "Status",
                 render: (meeting) => <MeetingStatusBadge status={meeting.status} />
               },
               {
-                key: "createdAt",
-                header: "Criado em",
-                render: (meeting) => formatMeetingTimestamp(meeting.createdAt)
+                key: "updatedAt",
+                header: "Atualizado em",
+                render: (meeting) => formatMeetingTimestamp(meeting.updatedAt)
               },
               {
                 key: "actions",

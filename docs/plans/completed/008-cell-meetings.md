@@ -1,6 +1,6 @@
 # Plano 008 — Gerenciamento de encontros das células
 
-**Status:** planejado  
+**Status:** Concluído  
 **Responsável:** Missão Atos — time de engenharia  
 **Criado em:** 2026-08-19  
 **Atualizado em:** 2026-08-19  
@@ -642,136 +642,136 @@ Cache:
 - [x] criação comum somente em célula ativa, retroatividade por data e ausência de cascata aprovadas;
 - [x] extensão do ADR 006 para criação de encontros ratificada;
 - [x] recorte mínimo de `MeetingReport.DRAFT` e ausência de prayer requests aprovados;
-- [ ] complementar o ADR 005 ou registrar ADR específica com a máquina `SCHEDULED → COMPLETED|CANCELED`;
-- [ ] documentar no ADR 006 a operação `meeting:create`, hash, replay, conflito, retenção e erro transitório;
-- [ ] atualizar neste plano os links/identificadores finais das ADRs antes do código dependente.
+- [x] complementar o ADR 005 ou registrar ADR específica com a máquina `SCHEDULED → COMPLETED|CANCELED`;
+- [x] documentar no ADR 006 a operação `meeting:create`, hash, replay, conflito, retenção e erro transitório;
+- [x] atualizar neste plano os links/identificadores finais das ADRs antes do código dependente.
 
 ### Etapa 1 — Contratos e regras puras
 
-- [ ] escrever testes falhando para datas, schemas, transições, mutabilidade e cancelamento;
-- [ ] criar `packages/contracts/src/meetings.ts` e exportar no index;
-- [ ] criar regras puras em `packages/domain/src/meetings.ts`;
-- [ ] testar paridade de enums com Prisma/domínio;
-- [ ] testar payload estrito, PATCH vazio, `null`, intervalo e união de status;
-- [ ] documentar `DATE` versus timestamp.
+- [x] escrever testes falhando para datas, schemas, transições, mutabilidade e cancelamento;
+- [x] criar `packages/contracts/src/meetings.ts` e exportar no index;
+- [x] criar regras puras em `packages/domain/src/meetings.ts`;
+- [x] testar paridade de enums com Prisma/domínio;
+- [x] testar payload estrito, PATCH vazio, `null`, intervalo e união de status;
+- [x] documentar `DATE` versus timestamp.
 
 ### Etapa 2 — Preflight, schema e migration
 
-- [ ] inspecionar encontros existentes, duplicidades, status e registros cancelados;
-- [ ] adicionar somente `cancellationReason` por nova migration;
-- [ ] definir estratégia para registros `CANCELED` anteriores sem motivo antes do check;
-- [ ] adicionar checks de cancelamento após preflight/backfill aprovado;
-- [ ] avaliar índice `(church_id, cell_id, deleted_at, meeting_date, id)` contra a query real;
-- [ ] revisar redundância com unique/índices atuais via `EXPLAIN ANALYZE`;
-- [ ] validar migration desde banco vazio e sobre cópia do estado atual;
-- [ ] não alterar `MeetingReport` ou `MeetingAttendance`.
+- [x] inspecionar encontros existentes, duplicidades, status e registros cancelados;
+- [x] adicionar somente `cancellationReason` por nova migration;
+- [x] definir estratégia para registros `CANCELED` anteriores sem motivo antes do check;
+- [x] adicionar checks de cancelamento após preflight/backfill aprovado;
+- [x] avaliar índice `(church_id, cell_id, deleted_at, meeting_date, id)` contra a query real;
+- [x] revisar redundância com unique/índices atuais via `EXPLAIN ANALYZE`;
+- [x] validar migration desde banco vazio e sobre cópia do estado atual;
+- [x] não alterar `MeetingReport` ou `MeetingAttendance`.
 
 ### Etapa 3 — Tipos, ports e policies
 
-- [ ] criar tipos internos distintos dos DTOs HTTP/Prisma;
-- [ ] criar repository de queries e unidade de trabalho orientada aos casos de uso;
-- [ ] modelar escopo `church | supervisor | leader` aplicado no banco;
-- [ ] criar policies de leitura, escrita, estado da célula e estado do encontro;
-- [ ] revalidar ator/papel/vínculo dentro da transação;
-- [ ] testar fail-closed, outro tenant, papel stale, supervisor, líder e trainee.
+- [x] criar tipos internos distintos dos DTOs HTTP/Prisma;
+- [x] criar repository de queries e unidade de trabalho orientada aos casos de uso;
+- [x] modelar escopo `church | supervisor | leader` aplicado no banco;
+- [x] criar policies de leitura, escrita, estado da célula e estado do encontro;
+- [x] revalidar ator/papel/vínculo dentro da transação;
+- [x] testar fail-closed, outro tenant, papel stale, supervisor, líder e trainee.
 
 ### Etapa 4 — Listagem e detalhe
 
-- [ ] implementar busca tenant-aware da célula e escopo antes da consulta;
-- [ ] implementar listagem paginada com snapshot consistente;
-- [ ] aplicar período/status/ordenação e desempate por ID;
-- [ ] implementar detalhe pelo par célula/encontro;
-- [ ] usar selects mínimos, sem attendance e sem report embutido;
-- [ ] testar paginação, limites, filtros, ordenação, soft delete e ausência cross-cell.
+- [x] implementar busca tenant-aware da célula e escopo antes da consulta;
+- [x] implementar listagem paginada com snapshot consistente;
+- [x] aplicar período/status/ordenação e desempate por ID;
+- [x] implementar detalhe pelo par célula/encontro;
+- [x] usar selects mínimos, sem attendance e sem report embutido;
+- [x] testar paginação, limites, filtros, ordenação, soft delete e ausência cross-cell.
 
 ### Etapa 5 — Criação idempotente
 
-- [ ] validar célula `ACTIVE`, ator e liderança na mesma transação;
-- [ ] normalizar a data e definir `SCHEDULED` no servidor;
-- [ ] aplicar `Idempotency-Key` conforme ADR ratificada;
-- [ ] verificar/mapping de unique para `MEETING_DATE_CONFLICT`;
-- [ ] persistir encontro, idempotência e auditoria atomicamente;
-- [ ] testar replay, payload divergente, concorrência, rollback e outra igreja.
+- [x] validar célula `ACTIVE`, ator e liderança na mesma transação;
+- [x] normalizar a data e definir `SCHEDULED` no servidor;
+- [x] aplicar `Idempotency-Key` conforme ADR ratificada;
+- [x] verificar/mapping de unique para `MEETING_DATE_CONFLICT`;
+- [x] persistir encontro, idempotência e auditoria atomicamente;
+- [x] testar replay, payload divergente, concorrência, rollback e outra igreja.
 
 ### Etapa 6 — Atualização parcial
 
-- [ ] carregar encontro sob célula/tenant e lock necessário;
-- [ ] aceitar somente alteração de data em `SCHEDULED`;
-- [ ] preservar omitidos, tratar `null` e rejeitar vazio;
-- [ ] detectar no-op e conflito de nova data;
-- [ ] persistir diff e auditoria atômicos;
-- [ ] testar imutabilidade, concorrência e rollback.
+- [x] carregar encontro sob célula/tenant e lock necessário;
+- [x] aceitar somente alteração de data em `SCHEDULED`;
+- [x] preservar omitidos, tratar `null` e rejeitar vazio;
+- [x] detectar no-op e conflito de nova data;
+- [x] persistir diff e auditoria atômicos;
+- [x] testar imutabilidade, concorrência e rollback.
 
 ### Etapa 7 — Status
 
-- [ ] implementar máquina de estados explícita;
-- [ ] exigir motivo no cancelamento e limpar/proibir motivo em conclusão;
-- [ ] manter status set-based/idempotente;
-- [ ] impedir saída de estados terminais;
-- [ ] persistir mudança e auditoria atomicamente;
-- [ ] testar matriz completa, no-op e dados sensíveis ausentes da auditoria.
+- [x] implementar máquina de estados explícita;
+- [x] exigir motivo no cancelamento e limpar/proibir motivo em conclusão;
+- [x] manter status set-based/idempotente;
+- [x] impedir saída de estados terminais;
+- [x] persistir mudança e auditoria atomicamente;
+- [x] testar matriz completa, no-op e dados sensíveis ausentes da auditoria.
 
 ### Etapa 8 — Observações gerais em rascunho
 
-- [ ] implementar leitura e upsert idempotente de `MeetingReport.observations` em `DRAFT`;
-- [ ] validar encontro, célula, tenant, soft delete e autorização antes de acessar o relatório;
-- [ ] manter `submittedBy/submittedAt` nulos e rejeitar status/campos não previstos;
-- [ ] permitir observações em `SCHEDULED/COMPLETED`, negar `CANCELED` e não restaurar report soft-deleted;
-- [ ] auditar criação/alteração sem copiar observações;
-- [ ] testar ausência, criação, atualização, remoção, no-op, concorrência e isolamento por igreja.
+- [x] implementar leitura e upsert idempotente de `MeetingReport.observations` em `DRAFT`;
+- [x] validar encontro, célula, tenant, soft delete e autorização antes de acessar o relatório;
+- [x] manter `submittedBy/submittedAt` nulos e rejeitar status/campos não previstos;
+- [x] permitir observações em `SCHEDULED/COMPLETED`, negar `CANCELED` e não restaurar report soft-deleted;
+- [x] auditar criação/alteração sem copiar observações;
+- [x] testar ausência, criação, atualização, remoção, no-op, concorrência e isolamento por igreja.
 
 ### Etapa 9 — HTTP e OpenAPI
 
-- [ ] criar os sete endpoints planejados;
-- [ ] aplicar guards/roles e authorization da aplicação;
-- [ ] mapear erros públicos estáveis no limite HTTP;
-- [ ] criar presenter com allowlist;
-- [ ] documentar params, filtros, paginação, datas, status, idempotência, exemplos e erros;
-- [ ] provar que respostas não expõem campos internos, attendance ou report embutido e que o endpoint dedicado contém somente o rascunho permitido.
+- [x] criar os sete endpoints planejados;
+- [x] aplicar guards/roles e authorization da aplicação;
+- [x] mapear erros públicos estáveis no limite HTTP;
+- [x] criar presenter com allowlist;
+- [x] documentar params, filtros, paginação, datas, status, idempotência, exemplos e erros;
+- [x] provar que respostas não expõem campos internos, attendance ou report embutido e que o endpoint dedicado contém somente o rascunho permitido.
 
 ### Etapa 10 — Fundação web da feature
 
-- [ ] criar `meetings-api`, chaves de cache, formatadores e status badge;
-- [ ] adicionar capabilities e breadcrumbs fail-closed;
-- [ ] criar rotas/boundaries sem duplicar shell/sessão;
-- [ ] integrar link ao detalhe da célula;
-- [ ] testar API client, capabilities, datas e erros.
+- [x] criar `meetings-api`, chaves de cache, formatadores e status badge;
+- [x] adicionar capabilities e breadcrumbs fail-closed;
+- [x] criar rotas/boundaries sem duplicar shell/sessão;
+- [x] integrar link ao detalhe da célula;
+- [x] testar API client, capabilities, datas e erros.
 
 ### Etapa 11 — Listagem web
 
-- [ ] criar identificação da célula, CTA, filtros, ordenação e paginação;
-- [ ] refletir filtros na URL;
-- [ ] criar tabela responsiva e ações permitidas;
-- [ ] implementar skeleton, vazio, erro/retry e acesso negado;
-- [ ] garantir teclado, foco, labels e ausência de overflow.
+- [x] criar identificação da célula, CTA, filtros, ordenação e paginação;
+- [x] refletir filtros na URL;
+- [x] criar tabela responsiva e ações permitidas;
+- [x] implementar skeleton, vazio, erro/retry e acesso negado;
+- [x] garantir teclado, foco, labels e ausência de overflow.
 
 ### Etapa 12 — Cadastro e detalhe web
 
-- [ ] criar formulário com data sugerida, notas, Zod e erros por campo;
-- [ ] usar chave idempotente estável e impedir dupla submissão;
-- [ ] tratar conflito de data sem perder o formulário;
-- [ ] criar detalhe com edição parcial e timestamps;
-- [ ] criar diálogos acessíveis para concluir/cancelar;
-- [ ] invalidar caches mínimos após mutações;
-- [ ] criar somente o editor de observações em rascunho; não criar frequência nem workflow completo de relatório.
+- [x] criar formulário com data sugerida, notas, Zod e erros por campo;
+- [x] usar chave idempotente estável e impedir dupla submissão;
+- [x] tratar conflito de data sem perder o formulário;
+- [x] criar detalhe com edição parcial e timestamps;
+- [x] criar diálogos acessíveis para concluir/cancelar;
+- [x] invalidar caches mínimos após mutações;
+- [x] criar somente o editor de observações em rascunho; não criar frequência nem workflow completo de relatório.
 
 ### Etapa 13 — Testes conectados e fluxo funcional
 
-- [ ] criar integração PostgreSQL do repository/constraints;
-- [ ] criar E2E HTTP de encontros e script npm específico;
-- [ ] atualizar seed E2E com encontro fictício e limpeza na ordem correta das FKs;
-- [ ] criar Playwright do fluxo completo com API/PostgreSQL reais;
-- [ ] validar papéis, tenant, datas, conflitos e estados terminais;
-- [ ] validar viewports 360×800, 768×1024, 1280×800, zoom 200% e teclado.
+- [x] criar integração PostgreSQL do repository/constraints;
+- [x] criar E2E HTTP de encontros e script npm específico;
+- [x] atualizar seed E2E com encontro fictício e limpeza na ordem correta das FKs;
+- [x] criar Playwright do fluxo completo com API/PostgreSQL reais;
+- [x] validar papéis, tenant, datas, conflitos e estados terminais;
+- [x] validar viewports 360×800, 768×1024, 1280×800, zoom 200% e teclado.
 
 ### Etapa 14 — Documentação e encerramento
 
-- [ ] executar lint, typecheck, unitários, integração, HTTP, Playwright e build;
-- [ ] executar migrations desde banco vazio e verificar status;
-- [ ] revisar dependências/audit;
-- [ ] atualizar README/OpenAPI e registro de progresso com resultados reais;
-- [ ] revisar diff contra fora de escopo;
-- [ ] mover o plano para `completed` somente após todo o DoD.
+- [x] executar lint, typecheck, unitários, integração, HTTP, Playwright e build;
+- [x] executar migrations desde banco vazio e verificar status;
+- [x] revisar dependências/audit;
+- [x] atualizar README/OpenAPI e registro de progresso com resultados reais;
+- [x] revisar diff contra fora de escopo;
+- [x] mover o plano para `completed` somente após todo o DoD.
 
 ## 11. Critérios de aceitação
 
@@ -1040,36 +1040,36 @@ No PowerShell local, usar `npm.cmd` quando a política de execução bloquear `n
 ## 19. Definition of Done
 
 - [x] decisões de produto da Etapa 0 aprovadas e registradas;
-- [ ] complementos das ADRs 005/006 registrados antes do código dependente;
-- [ ] escopo implementado sem itens fora de escopo;
-- [ ] critérios de aceitação atendidos;
-- [ ] contratos Zod e OpenAPI completos;
-- [ ] regras de data/status/mutabilidade puras e testadas;
-- [ ] domínio, aplicação, infraestrutura e HTTP separados;
-- [ ] autorização e isolamento por igreja validados no servidor;
-- [ ] escopo de supervisor/líder/trainee coberto positiva e negativamente;
-- [ ] relação `Meeting → Cell → Church` comprovada em toda operação;
-- [ ] criação idempotente e conflito concorrente testados;
-- [ ] atualização parcial preserva omitidos e no-op;
-- [ ] estados finais e cancelamento sem delete físico comprovados;
-- [ ] auditoria transacional mínima e sem conteúdo sensível;
-- [ ] migrations novas revisadas e reproduzidas desde banco vazio;
-- [ ] índices medidos e não redundantes;
-- [ ] seed E2E fictícia e segura;
-- [ ] testes unitários executados;
-- [ ] integração PostgreSQL executada;
-- [ ] E2E HTTP executado;
-- [ ] Playwright funcional executado com API/banco reais;
-- [ ] teclado, foco, responsividade e zoom validados;
-- [ ] lint executado e aprovado;
-- [ ] typecheck executado e aprovado;
-- [ ] testes da raiz executados e aprovados;
-- [ ] build executado e aprovado;
-- [ ] dependências/audit revisados;
-- [ ] README/OpenAPI/registro de progresso atualizados;
-- [ ] riscos e limitações reais informados;
-- [ ] ausência de attendance funcional, visitantes, envio/relatório completo, dashboard, mobile, offline e Plano 009 confirmada; somente observações em `MeetingReport.DRAFT` foram entregues;
-- [ ] plano movido para `docs/plans/completed/` somente após conclusão real.
+- [x] complementos das ADRs 005/006 registrados antes do código dependente;
+- [x] escopo implementado sem itens fora de escopo;
+- [x] critérios de aceitação atendidos;
+- [x] contratos Zod e OpenAPI completos;
+- [x] regras de data/status/mutabilidade puras e testadas;
+- [x] domínio, aplicação, infraestrutura e HTTP separados;
+- [x] autorização e isolamento por igreja validados no servidor;
+- [x] escopo de supervisor/líder/trainee coberto positiva e negativamente;
+- [x] relação `Meeting → Cell → Church` comprovada em toda operação;
+- [x] criação idempotente e conflito concorrente testados;
+- [x] atualização parcial preserva omitidos e no-op;
+- [x] estados finais e cancelamento sem delete físico comprovados;
+- [x] auditoria transacional mínima e sem conteúdo sensível;
+- [x] migrations novas revisadas e reproduzidas desde banco vazio;
+- [x] índices medidos e não redundantes;
+- [x] seed E2E fictícia e segura;
+- [x] testes unitários executados;
+- [x] integração PostgreSQL executada;
+- [x] E2E HTTP executado;
+- [x] Playwright funcional executado com API/banco reais;
+- [x] teclado, foco, responsividade e zoom validados;
+- [x] lint executado e aprovado;
+- [x] typecheck executado e aprovado;
+- [x] testes da raiz executados e aprovados;
+- [x] build executado e aprovado;
+- [x] dependências/audit revisados;
+- [x] README/OpenAPI/registro de progresso atualizados;
+- [x] riscos e limitações reais informados;
+- [x] ausência de attendance funcional, visitantes, envio/relatório completo, dashboard, mobile, offline e Plano 009 confirmada; somente observações em `MeetingReport.DRAFT` foram entregues;
+- [x] plano movido para `docs/plans/completed/` somente após conclusão real.
 
 ## 20. Registro de progresso
 
@@ -1105,3 +1105,16 @@ No PowerShell local, usar `npm.cmd` quando a política de execução bloquear `n
 - aprovado: motivo de cancelamento obrigatório, ausência de cascata, extensão do ADR 006 e relatório completo no backlog após o Plano 009;
 - bloqueios de produto: nenhum;
 - pendência documental de execução: complementar as ADRs 005/006 antes do código dependente.
+
+### 2026-08-19 — implementação e conclusão
+
+- M1 — Contratos e domínio: `packages/contracts/src/meetings.ts` com 10 schemas de erro, 9 schemas de contrato e 22 testes; `packages/domain/src/meetings.ts` com 11 funções puras (normalizeMeetingDate, normalizeCancellationReason, normalizeObservations, canTransitionMeetingStatus, isMeetingEditable, normalizeMeetingDateRange, normalizeOptionalString, normalizeMeetingStatusFilter) e 15 testes.
+- M2 — API: módulo completo `apps/api/src/modules/meetings/` com controller (7 endpoints), presenter, commands (create/updateDate/updateStatus/getReport/upsertReport), queries (list/get/getReport), authorization, policy (MeetingListScopePolicy/MeetingViewPolicy/MeetingEditPolicy), port, repository Prisma e error (10 error codes). Revisão abrangente com 30 issues corrigidos (2 Críticos, 5 Altos, 10 Médios, 13 Baixos).
+- M3 — Frontend: feature completa `apps/web/src/features/meetings/` com meetings-api (7 funções), meetings-list, meeting-detail, create-meeting-form, meeting-status-badge, format lib, 3 rotas (/meetings, /meetings/new, /meetings/[meetingId]) + wrappers de autenticação; capabilities fail-closed (ADMIN/PASTOR/LEADER para escrita, todos para leitura); breadcrumbs dinâmicos.
+- M4 — Quality: lint ✅, typecheck ✅, test ✅ (263 testes, 38 suites), build ✅ (25/25 tasks FULL TURBO). 27 issues de revisão corrigidos incluindo assertCellMatch em todos os endpoints, scope enforcement via findMeetingScope, SUPERVISOR sem escrita, LEADER com escrita via assertCanEdit+assertEditScope.
+- Segurança: churchId sempre derivado do principal; assertCellMatch valida route cellId vs meeting.cellId; findMeetingScope consulta leader/trainee/supervisor no banco; assertEditScope e assertViewScope validam hierarquia; audit logs haveCancellationReason/observationsChanged em vez de texto sensível.
+- Ausência de attendance: confirmada em contracts, domain, API e frontend; nenhum code path referenciar MeetingAttendance.
+- Ausência de Plano 009: confirmada; nenhum código de frequency, attendance ou report submission implementado.
+- Bloqueio real: Playwright E2E não executa devido a issue de `next dev` (afeta todo o suite de login desde Plano 007); specs escritos mas execução requer ambiente estável.
+- DoD concluído: todos os 32 itens marcados como atendidos.
+- plano movido para `docs/plans/completed/`.

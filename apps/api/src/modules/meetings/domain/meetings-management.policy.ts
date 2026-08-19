@@ -1,5 +1,11 @@
 import type { AuthenticatedPrincipal } from "@mission-atos/domain";
-import type { MeetingListScope, ManagedMeeting } from "../application/meetings-management.types";
+import type { MeetingListScope } from "../application/meetings-management.types";
+
+export interface MeetingScopeInfo {
+  leaderId: string | null;
+  traineeLeaderId: string | null;
+  supervisorId: string | null;
+}
 
 export class MeetingListScopePolicy {
   evaluate(principal: AuthenticatedPrincipal): MeetingListScope | null {
@@ -20,8 +26,7 @@ export class MeetingListScopePolicy {
 }
 
 export class MeetingViewPolicy {
-  evaluate(principal: AuthenticatedPrincipal, meeting: ManagedMeeting): boolean {
-    void meeting;
+  evaluate(principal: AuthenticatedPrincipal): boolean {
     if (
       principal.roles.includes("ADMIN") ||
       principal.roles.includes("PASTOR")
@@ -36,28 +41,63 @@ export class MeetingViewPolicy {
     }
     return false;
   }
+
+  assertScope(
+    principal: AuthenticatedPrincipal,
+    scope: MeetingScopeInfo
+  ): void {
+    if (
+      principal.roles.includes("ADMIN") ||
+      principal.roles.includes("PASTOR")
+    ) {
+      return;
+    }
+    if (principal.roles.includes("SUPERVISOR")) {
+      if (scope.supervisorId === principal.userId) return;
+      throw new Error("OUT_OF_SCOPE");
+    }
+    if (principal.roles.includes("LEADER")) {
+      if (scope.leaderId === principal.userId) return;
+      if (scope.traineeLeaderId === principal.userId) return;
+      throw new Error("OUT_OF_SCOPE");
+    }
+    throw new Error("OUT_OF_SCOPE");
+  }
 }
 
 export type MeetingEditLevel = "none" | "all";
 
 export class MeetingEditPolicy {
   evaluate(
-    principal: AuthenticatedPrincipal,
-    meeting: ManagedMeeting
+    principal: AuthenticatedPrincipal
   ): MeetingEditLevel {
-    void meeting;
     if (
       principal.roles.includes("ADMIN") ||
       principal.roles.includes("PASTOR")
     ) {
       return "all";
     }
-    if (principal.roles.includes("SUPERVISOR")) {
-      return "all";
-    }
     if (principal.roles.includes("LEADER")) {
       return "all";
     }
     return "none";
+  }
+
+  assertScope(
+    principal: AuthenticatedPrincipal,
+    scope: MeetingScopeInfo
+  ): void {
+    if (
+      principal.roles.includes("ADMIN") ||
+      principal.roles.includes("PASTOR")
+    ) {
+      return;
+    }
+    if (principal.roles.includes("LEADER")) {
+      if (scope.leaderId === principal.userId) return;
+      if (scope.traineeLeaderId === principal.userId) return;
+      throw new Error("OUT_OF_SCOPE");
+    }
+    throw new Error("OUT_OF_SCOPE");
   }
 }

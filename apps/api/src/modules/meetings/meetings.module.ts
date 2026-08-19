@@ -37,11 +37,12 @@ import { MeetingsController } from "./presentation/meetings.controller";
     },
     {
       provide: MeetingsManagementQueries,
-      inject: [MEETINGS_MANAGEMENT_REPOSITORY, MeetingsManagementAuthorization],
+      inject: [MEETINGS_MANAGEMENT_REPOSITORY, MeetingsManagementAuthorization, MEETINGS_MANAGEMENT_UNIT_OF_WORK],
       useFactory: (
         repository: MeetingsManagementRepository,
-        authorization: MeetingsManagementAuthorization
-      ) => new MeetingsManagementQueries(repository, authorization)
+        authorization: MeetingsManagementAuthorization,
+        unitOfWork: MeetingsManagementUnitOfWork
+      ) => new MeetingsManagementQueries(repository, authorization, unitOfWork)
     },
     {
       provide: MeetingsManagementCommands,

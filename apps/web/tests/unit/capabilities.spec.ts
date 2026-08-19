@@ -85,9 +85,9 @@ describe("capabilitiesFor", () => {
     expect(supervisor.changeCellStatus).toBe(false);
     expect(supervisor.changeCellLeadership).toBe(false);
     expect(supervisor.viewMeetings).toBe(true);
-    expect(supervisor.createMeetings).toBe(true);
-    expect(supervisor.editMeetings).toBe(true);
-    expect(supervisor.changeMeetingStatus).toBe(true);
+    expect(supervisor.createMeetings).toBe(false);
+    expect(supervisor.editMeetings).toBe(false);
+    expect(supervisor.changeMeetingStatus).toBe(false);
 
     const leader = capabilitiesFor({ userId: "u", churchId: "c", roles: ["LEADER"] });
     expect(leader.viewCells).toBe(true);

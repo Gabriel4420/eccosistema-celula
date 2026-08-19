@@ -4,6 +4,22 @@ const meetingStatuses = ["SCHEDULED", "COMPLETED", "CANCELED"] as const;
 const sortOrders = ["asc", "desc"] as const;
 const meetingDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
+const meetingErrorCodeValues = [
+  "MEETING_ACCESS_DENIED",
+  "MEETING_NOT_FOUND",
+  "MEETING_CELL_NOT_FOUND",
+  "MEETING_CELL_STATUS_INVALID",
+  "MEETING_DATE_CONFLICT",
+  "MEETING_STATUS_TRANSITION_INVALID",
+  "MEETING_NOT_EDITABLE",
+  "MEETING_REPORT_NOT_EDITABLE",
+  "IDEMPOTENCY_KEY_CONFLICT",
+  "MEETING_TRANSACTION_RETRY_EXHAUSTED"
+] as const;
+
+export const meetingErrorCodeSchema = z.enum(meetingErrorCodeValues);
+export type MeetingErrorCode = z.infer<typeof meetingErrorCodeSchema>;
+
 function normalizeMeetingDate(value: string): string {
   return value.trim();
 }
@@ -154,7 +170,7 @@ export const meetingsErrorEnvelopeSchema = z
   .object({
     error: z
       .object({
-        code: z.string(),
+        code: meetingErrorCodeSchema,
         message: z.string(),
         details: z.record(z.string(), z.unknown())
       })
