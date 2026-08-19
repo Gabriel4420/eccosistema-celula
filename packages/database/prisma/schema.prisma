@@ -275,14 +275,15 @@ model CellMembership {
 }
 
 model Meeting {
-  id          String              @id @default(uuid()) @db.Uuid
-  churchId    String              @map("church_id") @db.Uuid
-  cellId      String              @map("cell_id") @db.Uuid
-  meetingDate DateTime            @map("meeting_date") @db.Date
-  status      MeetingStatus
-  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt   DateTime?           @map("deleted_at") @db.Timestamptz(3)
+  id                 String              @id @default(uuid()) @db.Uuid
+  churchId           String              @map("church_id") @db.Uuid
+  cellId             String              @map("cell_id") @db.Uuid
+  meetingDate        DateTime            @map("meeting_date") @db.Date
+  status             MeetingStatus
+  cancellationReason String?             @map("cancellation_reason") @db.VarChar(1000)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt          DateTime?           @map("deleted_at") @db.Timestamptz(3)
   church      Church              @relation(fields: [churchId], references: [id], onDelete: Restrict)
   cell        Cell                @relation(fields: [cellId, churchId], references: [id, churchId], onDelete: Restrict)
   attendances MeetingAttendance[]
