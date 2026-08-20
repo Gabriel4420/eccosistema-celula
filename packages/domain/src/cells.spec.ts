@@ -59,8 +59,8 @@ describe("domain cell rules", () => {
       expect(canTransitionCellStatus("ACTIVE", "SUSPENDED")).toBe(true);
     });
 
-    it("rejects transitions from closed and to closed", () => {
-      expect(canTransitionCellStatus("CLOSED", "ACTIVE")).toBe(false);
+    it("allows reactivation from closed but rejects other closed transitions", () => {
+      expect(canTransitionCellStatus("CLOSED", "ACTIVE")).toBe(true);
       expect(canTransitionCellStatus("CLOSED", "SUSPENDED")).toBe(false);
       expect(canTransitionCellStatus("ACTIVE", "CLOSED")).toBe(false);
       expect(canTransitionCellStatus("FORMING", "CLOSED")).toBe(false);

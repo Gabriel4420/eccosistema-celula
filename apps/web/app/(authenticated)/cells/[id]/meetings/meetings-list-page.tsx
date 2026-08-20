@@ -4,6 +4,6 @@ import { useParams } from "next/navigation";
 import { MeetingsList } from "@/src/features/meetings/components/meetings-list";
 
 export function MeetingsListPage() {
-  const params = useParams<{ cellId: string }>();
-  return <MeetingsList cellId={params.cellId} />;
+  const params = useParams<{ id: string }>();
+  return <MeetingsList cellId={params.id} />;
 }

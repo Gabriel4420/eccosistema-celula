@@ -39,7 +39,7 @@ export function canTransitionCellStatus(from: CellStatus, to: CellStatus): boole
     return true;
   }
   if (from === "CLOSED") {
-    return false;
+    return to === "ACTIVE";
   }
   return isWritableCellStatus(to);
 }

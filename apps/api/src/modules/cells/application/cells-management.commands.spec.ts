@@ -570,7 +570,7 @@ describe("cells management commands", () => {
       mocks.findCell.mockResolvedValue(baseCell({ status: "CLOSED" }));
 
       await expect(
-        commands(transaction).updateStatus(manager, "cell-1", "ACTIVE")
+        commands(transaction).updateStatus(manager, "cell-1", "SUSPENDED")
       ).rejects.toEqual(
         new CellsManagementError("CELL_STATUS_TRANSITION_INVALID", "Status transition is not allowed")
       );

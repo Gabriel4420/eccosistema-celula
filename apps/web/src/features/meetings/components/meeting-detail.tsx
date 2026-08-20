@@ -26,8 +26,8 @@ type ConfirmAction = "none" | "complete" | "cancel";
 
 export function MeetingDetail() {
   const { api } = useSession();
-  const params = useParams<{ cellId: string; meetingId: string }>();
-  const cellId = params.cellId;
+  const params = useParams<{ id: string; meetingId: string }>();
+  const cellId = params.id;
   const meetingId = params.meetingId;
 
   const { data: meeting, loading, error, reload } = useRemoteQuery({
