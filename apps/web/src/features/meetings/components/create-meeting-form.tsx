@@ -118,6 +118,18 @@ function messageForError(cause: unknown): string {
       return "Já existe um encontro agendado para esta célula nesta data.";
     case "MEETING_CELL_NOT_FOUND":
       return "A célula informada não foi encontrada.";
+    case "MEETING_CELL_STATUS_INVALID":
+      return "A célula precisa estar ativa para agendar encontros.";
+    case "MEETING_ACCESS_DENIED":
+      return "Você não tem permissão para criar encontros nesta célula.";
+    case "MEETING_STATUS_TRANSITION_INVALID":
+      return "Transição de status não permitida para este encontro.";
+    case "MEETING_NOT_EDITABLE":
+      return "Este encontro não pode mais ser editado.";
+    case "MEETING_REPORT_NOT_EDITABLE":
+      return "Não é possível editar o relatório de um encontro cancelado.";
+    case "MEETING_TRANSACTION_RETRY_EXHAUSTED":
+      return "Muitas tentativas simultâneas. Aguarde um momento e tente novamente.";
     case "IDEMPOTENCY_KEY_CONFLICT":
       return "A tentativa anterior conflitou com outra. Tente novamente.";
     default:
