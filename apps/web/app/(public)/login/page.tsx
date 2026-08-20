@@ -80,6 +80,9 @@ export default function LoginPage() {
   return (
     <div className="auth-shell">
       <div className="auth-card">
+        <div className="auth-card__brand">
+          <span className="auth-card__brand-mark" aria-hidden="true">EC</span>
+        </div>
         <h1 className="auth-card__title">Ecossistema de Células</h1>
         <p className="auth-card__description">Entre com sua conta para continuar.</p>
         {formError ? <Alert variant="error" title="Não foi possível entrar">{formError}</Alert> : null}
