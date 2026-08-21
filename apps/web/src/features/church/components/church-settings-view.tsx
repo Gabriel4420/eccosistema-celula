@@ -80,9 +80,21 @@ export function ChurchSettingsView() {
       ["state", String(formData.get("state") ?? "").trim()],
       ["postalCode", String(formData.get("postalCode") ?? "").trim()]
     ];
+    const addressPayloadKeys: Record<string, string> = {
+      line: "addressLine",
+      number: "addressNumber",
+      complement: "addressComplement",
+      neighborhood: "neighborhood",
+      city: "city",
+      state: "state",
+      postalCode: "postalCode"
+    };
     for (const [key, value] of addressFields) {
       const original = church.address[key as keyof typeof church.address];
-      if (value !== (original ?? "")) payload[`address${capitalize(key)}`] = value === "" ? null : value;
+      if (value !== (original ?? "")) {
+        const payloadKey = addressPayloadKeys[key] ?? key;
+        payload[payloadKey] = value === "" ? null : value;
+      }
     }
 
     if (Object.keys(payload).length === 0) {
@@ -206,8 +218,4 @@ export function ChurchSettingsView() {
       </form>
     </section>
   );
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

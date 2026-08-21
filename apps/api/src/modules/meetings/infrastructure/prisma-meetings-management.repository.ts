@@ -127,15 +127,31 @@ export class PrismaMeetingsManagementRepository
         this.logger.log(JSON.stringify({ operation: "meetings.transaction", result: "success", durationMs: Date.now() - startedAt, attempt }));
         return result;
       } catch (error) {
+        const errorName = error instanceof Error ? error.name : "Unknown";
+        const errorCode = (typeof error === "object" && error !== null && "code" in error) ? String((error as { code: unknown }).code) : undefined;
         if (!isPrismaCode(error, "P2034") || attempt === 3) {
-          this.logger.error(JSON.stringify({ operation: "meetings.transaction", result: "rollback", durationMs: Date.now() - startedAt, attempt }));
+          this.logger.error(JSON.stringify({
+            operation: "meetings.transaction",
+            result: "rollback",
+            durationMs: Date.now() - startedAt,
+            attempt,
+            errorName,
+            errorCode,
+            errorMessage: error instanceof Error ? error.message : String(error)
+          }));
           if (attempt === 3 && isPrismaCode(error, "P2034")) {
             throw new MeetingsManagementError(
               "MEETING_TRANSACTION_RETRY_EXHAUSTED",
               "Serializable transaction retry exhausted"
             );
           }
-          throw error;
+          if (error instanceof MeetingsManagementError) {
+            throw error;
+          }
+          throw new MeetingsManagementError(
+            "MEETING_TRANSACTION_RETRY_EXHAUSTED",
+            "Transaction failed: " + (error instanceof Error ? error.message : "unknown error")
+          );
         }
         this.logger.warn(JSON.stringify({ operation: "meetings.transaction", result: "retry", attempt }));
       }
