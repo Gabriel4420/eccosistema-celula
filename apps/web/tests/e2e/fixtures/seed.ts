@@ -2,6 +2,8 @@ import { createRuntimeClient } from "@mission-atos/database";
 import { hash } from "argon2";
 
 const E2E_CHURCH_ID = "11111111-1111-4111-8111-111111111111";
+const E2E_PERSON_ID = "11111111-1111-4111-8111-111111111121";
+const E2E_MEETING_ID = "11111111-1111-4111-8111-111111111131";
 export const E2E_PASSWORD = "e2e-password-1234";
 
 const MANAGED_ROLE_NAMES = ["ADMIN", "PASTOR", "SUPERVISOR", "LEADER"] as const;
@@ -34,6 +36,9 @@ export async function seedDatabase(): Promise<void> {
   const database = createRuntimeClient({ DATABASE_URL: databaseUrl });
 
   try {
+    for (const table of ["idempotency_requests", "meeting_visitors", "meeting_attendances", "meeting_reports", "meetings", "cell_memberships"]) {
+      await database.$executeRawUnsafe(`DELETE FROM "${table}" WHERE "church_id" = $1::uuid`, E2E_CHURCH_ID);
+    }
     await database.$executeRawUnsafe(
       'DELETE FROM "sessions" WHERE "church_id" = $1::uuid',
       E2E_CHURCH_ID
@@ -141,7 +146,7 @@ export async function seedDatabase(): Promise<void> {
       }
     });
 
-    await database.cell.create({
+    const cell = await database.cell.create({
       data: {
         churchId: E2E_CHURCH_ID,
         code: "CEL-E2E-001",
@@ -154,8 +159,9 @@ export async function seedDatabase(): Promise<void> {
       }
     });
 
-    await database.person.create({
+    const activePerson = await database.person.create({
       data: {
+        id: E2E_PERSON_ID,
         churchId: E2E_CHURCH_ID,
         fullName: "Maria E2E Ativa",
         phone: "+5511990000001",
@@ -172,6 +178,13 @@ export async function seedDatabase(): Promise<void> {
         phone: "+5511990000002",
         deletedAt: new Date()
       }
+    });
+
+    await database.cellMembership.create({
+      data: { churchId: E2E_CHURCH_ID, cellId: cell.id, personId: activePerson.id, status: "ACTIVE", joinedAt: new Date("2026-01-01T03:00:00Z") }
+    });
+    await database.meeting.create({
+      data: { id: E2E_MEETING_ID, churchId: E2E_CHURCH_ID, cellId: cell.id, meetingDate: new Date("2026-08-22"), status: "SCHEDULED" }
     });
 
     console.info(

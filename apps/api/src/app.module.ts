@@ -10,6 +10,7 @@ import { PermissionsModule } from "./modules/permissions/permissions.module";
 import { UsersModule } from "./modules/users/users.module";
 import { ChurchesModule } from "./modules/churches/churches.module";
 import { PeopleModule } from "./modules/people/people.module";
+import { AttendanceModule } from "./modules/attendance/attendance.module";
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { PeopleModule } from "./modules/people/people.module";
     ChurchesModule,
     PeopleModule,
     CellsModule,
-    MeetingsModule
+    MeetingsModule,
+    AttendanceModule
   ],
   controllers: [HealthController],
   providers: [

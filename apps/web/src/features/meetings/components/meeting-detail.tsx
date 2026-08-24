@@ -209,6 +209,12 @@ export function MeetingDetail() {
         </div>
       </div>
 
+      <div className="toolbar">
+        <Link className="button" href={`/cells/${cellId}/meetings/${meetingId}/attendance`}>
+          Abrir frequência
+        </Link>
+      </div>
+
       {isEditable ? (
         <form className="fieldset" onSubmit={(event) => void handleSaveDate(event)}>
           <fieldset className="fieldset">

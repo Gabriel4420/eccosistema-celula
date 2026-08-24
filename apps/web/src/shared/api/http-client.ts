@@ -1,7 +1,7 @@
 import type { ApiError } from "./api-error";
 import { toApiError } from "./api-error";
 
-export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT";
+export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
 export interface HttpRequestConfig {
   readonly method: HttpMethod;

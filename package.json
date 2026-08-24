@@ -38,6 +38,7 @@
     "test:users:e2e": "npm run test:users:e2e --workspace @mission-atos/api",
     "test:churches:e2e": "npm run test:churches:e2e --workspace @mission-atos/api",
     "test:people:e2e": "npm run test:people:e2e --workspace @mission-atos/api",
+    "test:attendance:e2e": "npm run test:attendance:e2e --workspace @mission-atos/api",
     "test:e2e": "turbo run test:e2e",
     "test:integration": "npm run test:integration --workspace @mission-atos/database",
     "typecheck": "turbo run typecheck"
