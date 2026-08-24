@@ -5,6 +5,7 @@ import { Breadcrumbs } from "./breadcrumbs";
 import { Sidebar } from "./sidebar";
 import { SkipLink } from "./skip-link";
 import { UserMenu } from "./user-menu";
+import { ThemeToggle } from "@/src/shared/theme/theme-toggle";
 
 export function AppShell({ children }: { readonly children: ReactNode }) {
   return (
@@ -12,14 +13,18 @@ export function AppShell({ children }: { readonly children: ReactNode }) {
       <SkipLink />
       <div className="shell__body">
         <Sidebar />
-        <div className="shell__content">
+        <div className="shell__workspace">
           <header className="header">
-            <Breadcrumbs />
+            <div className="header__context">
+              <span className="header__section">Gestão de células</span>
+              <Breadcrumbs />
+            </div>
             <div className="header__actions">
+              <ThemeToggle />
               <UserMenu />
             </div>
           </header>
-          <main id="main-content">{children}</main>
+          <main className="shell__content" id="main-content">{children}</main>
         </div>
       </div>
     </div>

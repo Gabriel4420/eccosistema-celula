@@ -76,17 +76,27 @@ export default function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-title">
       <div className="dashboard-hero">
-        <p className="dashboard-hero__eyebrow">Ecossistema de Células</p>
-        <h1 className="dashboard-hero__title" id="dashboard-title">
-          Painel
-        </h1>
-        <p className="dashboard-hero__description">
-          Bem-vindo ao ecossistema de gestão de células. Escolha um atalho para
-          começar.
-        </p>
-        {roleLabel ? (
-          <span className="dashboard-hero__role">{roleLabel}</span>
-        ) : null}
+        <div className="dashboard-hero__content">
+          <p className="dashboard-hero__eyebrow">Visão geral</p>
+          <h1 className="dashboard-hero__title dark:text-white" id="dashboard-title">Painel</h1>
+          <p className="dashboard-hero__description">
+            Organize pessoas, acompanhe células e mantenha a liderança conectada.
+          </p>
+          {roleLabel ? <span className="dashboard-hero__role">Acesso: {roleLabel}</span> : null}
+        </div>
+        <div className="dashboard-hero__network" aria-hidden="true">
+          <span className="network-node network-node--center" />
+          <span className="network-node network-node--one" />
+          <span className="network-node network-node--two" />
+          <span className="network-node network-node--three" />
+          <span className="network-line network-line--one" />
+          <span className="network-line network-line--two" />
+          <span className="network-line network-line--three" />
+        </div>
+      </div>
+      <div className="dashboard-section-heading">
+        <div><p className="dashboard-section-heading__eyebrow">Acesso rápido</p><h2>O que você quer fazer?</h2></div>
+        <p>Escolha uma área para continuar.</p>
       </div>
       <div className="dashboard-grid">
         {SHORTCUTS.map((shortcut, index) => (

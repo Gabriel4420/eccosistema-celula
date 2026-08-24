@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Can } from "@/src/shared/auth/guards";
@@ -38,14 +39,29 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <p className="sidebar__brand">
-        <span className="sidebar__brand-mark" aria-hidden="true">
-          EC
-        </span>
-        <span>Ecossistema de Células</span>
+        <Image
+          className="sidebar__logo"
+          src="/brand/missao-atos-logo.png"
+          alt="Missão Atos — Igreja em Células"
+          width={1254}
+          height={1254}
+          priority
+        />
       </p>
+      <p className="sidebar__label">Workspace</p>
       <nav aria-label="Navegação principal" className="sidebar__nav">
         {links}
       </nav>
+      <a
+        className="sidebar__footer"
+        href="https://wa.me/5517991203993?text=Ol%C3%A1%20miss%C3%A3o%20atos%2C%20preciso%20de%20ajuda%20..."
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Precisa de ajuda? Conversar pelo WhatsApp (abre em nova aba)"
+      >
+        <span className="sidebar__footer-mark" aria-hidden="true">?</span>
+        <span><strong>Precisa de ajuda?</strong><small>Fale pelo WhatsApp</small></span>
+      </a>
     </aside>
   );
 }

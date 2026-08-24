@@ -1,6 +1,7 @@
 "use client";
 
 import { loginRequestSchema } from "@mission-atos/contracts";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -79,12 +80,28 @@ export default function LoginPage() {
 
   return (
     <div className="auth-shell">
+      <aside className="auth-showcase" aria-label="Apresentação do Ecossistema de Células">
+        <Image
+          className="auth-showcase__logo"
+          src="/brand/missao-atos-logo.png"
+          alt="Missão Atos — Igreja em Células"
+          width={1254}
+          height={1254}
+          priority
+        />
+        <div className="auth-showcase__message">
+          <p>Gestão que aproxima.</p>
+          <h2>Uma visão clara para cuidar de cada célula.</h2>
+          <span>Organize pessoas, encontros e liderança em um só lugar.</span>
+        </div>
+      </aside>
       <div className="auth-card">
         <div className="auth-card__brand">
           <span className="auth-card__brand-mark" aria-hidden="true">EC</span>
         </div>
+        <p className="auth-card__eyebrow">Acesse sua conta</p>
         <h1 className="auth-card__title">Ecossistema de Células</h1>
-        <p className="auth-card__description">Entre com sua conta para continuar.</p>
+        <p className="auth-card__description">Use seus dados para entrar no Ecossistema de Células.</p>
         {formError ? <Alert variant="error" title="Não foi possível entrar">{formError}</Alert> : null}
         <form className="fieldset" onSubmit={(event) => void handleSubmit(event)} noValidate>
           <TextField

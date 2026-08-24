@@ -1,8 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Button, Pagination, Alert, FieldError, EmptyState, ErrorState, Skeleton } from "@/src/shared/components";
+import { ThemeToggle } from "@/src/shared/theme/theme-toggle";
 
 describe("Button", () => {
+  it("supports a compact accessible touch target variant", () => {
+    render(<Button size="sm">Remover</Button>);
+    expect(screen.getByRole("button", { name: "Remover" })).toHaveClass("button--sm");
+  });
   it("disables and shows loading state while busy", () => {
     render(<Button loading>Salvar</Button>);
     const button = screen.getByRole("button");
@@ -14,6 +19,25 @@ describe("Button", () => {
     render(<Button loading loadingLabel="Salvando…">Salvar</Button>);
     expect(screen.getByText("Salvando…")).toBeInTheDocument();
     expect(screen.queryByText("Salvar")).not.toBeInTheDocument();
+  });
+});
+
+describe("ThemeToggle", () => {
+  beforeEach(() => {
+    document.documentElement.dataset.theme = "light";
+    localStorage.clear();
+  });
+
+  it("switches theme, updates the accessible name and persists the choice", async () => {
+    const user = userEvent.setup();
+    render(<ThemeToggle />);
+
+    const toggle = screen.getByRole("button", { name: "Ativar tema escuro" });
+    await user.click(toggle);
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(localStorage.getItem("mission-atos-theme")).toBe("dark");
+    expect(toggle).toHaveAccessibleName("Ativar tema claro");
   });
 });
 

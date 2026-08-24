@@ -2,10 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { getMyProfile } from "@/src/features/profile/api/profile-api";
 import { useSession } from "@/src/providers/session-provider";
+import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
+import { formatUserMenuIdentity } from "./user-menu-presentation";
 
 export function UserMenu() {
-  const { logout } = useSession();
+  const { api, logout } = useSession();
+  const { data: profile } = useRemoteQuery({
+    fetcher: () => getMyProfile(api),
+    cacheName: "profile",
+    cacheKey: "me",
+    ttlMs: 15_000
+  });
   const [open, setOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -37,6 +46,10 @@ export function UserMenu() {
     await logout();
   };
 
+  const identity = profile
+    ? formatUserMenuIdentity(profile.firstName, profile.lastName)
+    : { displayName: "Usuário", initials: "U" };
+
   return (
     <div className="user-menu" ref={menuRef}>
       <button
@@ -47,7 +60,9 @@ export function UserMenu() {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        Minha conta
+        <span className="user-menu__avatar" aria-hidden="true">{identity.initials}</span>
+        <span className="user-menu__copy"><strong>{identity.displayName}</strong><small>Ver perfil</small></span>
+        <span className="user-menu__chevron" aria-hidden="true">⌄</span>
       </button>
       {open ? (
         <div className="user-menu__menu" role="menu" aria-label="Menu da conta">
