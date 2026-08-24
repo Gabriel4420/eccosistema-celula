@@ -9,6 +9,7 @@ const softDeletableModels = new Set([
   "CellMembership",
   "Meeting",
   "MeetingAttendance",
+  "MeetingVisitor",
   "MeetingReport"
 ]);
 

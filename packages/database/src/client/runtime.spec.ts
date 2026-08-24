@@ -5,6 +5,9 @@ describe("runtime database safety", () => {
     expect(() => assertRuntimeOperationAllowed("Church", "deleteMany")).toThrow(
       "Physical deletion is disabled"
     );
+    expect(() => assertRuntimeOperationAllowed("MeetingVisitor", "deleteMany")).toThrow(
+      "Physical deletion is disabled"
+    );
   });
 
   it("rejects mutations of audit records", () => {

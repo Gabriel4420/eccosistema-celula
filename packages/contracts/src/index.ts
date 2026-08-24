@@ -148,3 +148,12 @@ export type {
   UpdateCellRequest,
   UpdateCellTraineeLeaderRequest
 } from "./cells";
+export {
+  attendanceEnvelopeSchema,
+  attendanceParamsSchema,
+  attendanceSnapshotSchema,
+  attendanceVisitorParamsSchema,
+  createMeetingVisitorRequestSchema,
+  saveAttendanceRequestSchema
+} from "./attendance";
+export type { AttendanceEnvelope, AttendanceSnapshot, CreateMeetingVisitorRequest, SaveAttendanceRequest } from "./attendance";

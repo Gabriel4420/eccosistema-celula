@@ -92,6 +92,7 @@ model Church {
   cellMemberships       CellMembership[]
   meetings              Meeting[]
   meetingAttendances    MeetingAttendance[]
+  meetingVisitors       MeetingVisitor[]
   meetingReports        MeetingReport[]
   auditLogs             AuditLog[]
   sessions              Session[]
@@ -239,6 +240,8 @@ model Person {
   church             Church              @relation(fields: [churchId], references: [id], onDelete: Restrict)
   memberships        CellMembership[]
   meetingAttendances MeetingAttendance[]
+  meetingVisits      MeetingVisitor[]    @relation("MeetingVisitorPerson")
+  invitedVisits      MeetingVisitor[]    @relation("MeetingVisitorInviter")
 
   @@unique([id, churchId], map: "people_id_church_id_key")
   @@index([churchId, phone], map: "people_church_id_phone_idx")
@@ -281,13 +284,15 @@ model Meeting {
   meetingDate        DateTime            @map("meeting_date") @db.Date
   status             MeetingStatus
   cancellationReason String?             @map("cancellation_reason") @db.VarChar(1000)
+  attendanceRevision Int                 @default(0) @map("attendance_revision")
   createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt          DateTime?           @map("deleted_at") @db.Timestamptz(3)
-  church      Church              @relation(fields: [churchId], references: [id], onDelete: Restrict)
-  cell        Cell                @relation(fields: [cellId, churchId], references: [id, churchId], onDelete: Restrict)
-  attendances MeetingAttendance[]
-  report      MeetingReport?
+  church             Church              @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  cell               Cell                @relation(fields: [cellId, churchId], references: [id, churchId], onDelete: Restrict)
+  attendances        MeetingAttendance[]
+  visitors           MeetingVisitor[]
+  report             MeetingReport?
 
   @@unique([id, churchId], map: "meetings_id_church_id_key")
   @@unique([churchId, cellId, meetingDate], map: "meetings_church_cell_date_key")
@@ -308,12 +313,36 @@ model MeetingAttendance {
   church           Church           @relation(fields: [churchId], references: [id], onDelete: Restrict)
   meeting          Meeting          @relation(fields: [meetingId, churchId], references: [id, churchId], onDelete: Restrict)
   person           Person           @relation(fields: [personId, churchId], references: [id, churchId], onDelete: Restrict)
+  visitor          MeetingVisitor?
 
   @@unique([churchId, meetingId, personId], map: "meeting_attendances_church_meeting_person_key")
   @@index([churchId, meetingId, attendanceStatus], map: "meeting_attendances_church_meeting_status_idx")
   @@index([personId], map: "meeting_attendances_person_id_idx")
   @@index([churchId, deletedAt], map: "meeting_attendances_church_deleted_at_idx")
   @@map("meeting_attendances")
+}
+
+model MeetingVisitor {
+  id                String            @id @default(uuid()) @db.Uuid
+  churchId          String            @map("church_id") @db.Uuid
+  meetingId         String            @map("meeting_id") @db.Uuid
+  personId          String            @map("person_id") @db.Uuid
+  invitedByPersonId String?           @map("invited_by_person_id") @db.Uuid
+  observation       String?           @db.VarChar(500)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(3)
+  church            Church            @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  meeting           Meeting           @relation(fields: [meetingId, churchId], references: [id, churchId], onDelete: Restrict)
+  person            Person            @relation("MeetingVisitorPerson", fields: [personId, churchId], references: [id, churchId], onDelete: Restrict)
+  invitedBy         Person?           @relation("MeetingVisitorInviter", fields: [invitedByPersonId, churchId], references: [id, churchId], onDelete: Restrict)
+  attendance        MeetingAttendance @relation(fields: [churchId, meetingId, personId], references: [churchId, meetingId, personId], onDelete: Restrict)
+
+  @@unique([churchId, meetingId, personId], map: "meeting_visitors_church_meeting_person_key")
+  @@index([churchId, meetingId, deletedAt], map: "meeting_visitors_church_meeting_deleted_idx")
+  @@index([churchId, personId], map: "meeting_visitors_church_person_idx")
+  @@index([churchId, invitedByPersonId], map: "meeting_visitors_church_inviter_idx")
+  @@map("meeting_visitors")
 }
 
 model MeetingReport {
