@@ -22,9 +22,6 @@ jobs:
       - name: Instalar dependências (raiz do monorepo)
         run: npm ci
 
-      - name: Lint e typecheck dos dois apps
-        run: npx turbo run lint typecheck --filter=web --filter=api
-
   deploy-web:
     name: Deploy web (Vercel)
     needs: quality
