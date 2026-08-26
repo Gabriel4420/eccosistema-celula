@@ -30,6 +30,8 @@
     "db:migrate:status": "npm run db:migrate:status --workspace @mission-atos/database",
     "db:seed": "npm run db:seed --workspace @mission-atos/database",
     "db:validate": "npm run db:validate --workspace @mission-atos/database",
+    "deploy:render": "node --env-file-if-exists=.env scripts/deploy-render.mjs",
+    "deploy:vercel": "npx --yes vercel@latest --cwd apps/web deploy --prod",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
