@@ -42,6 +42,34 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      - name: Validar acesso ao projeto Vercel
+        shell: bash
+        run: |
+          if [[ ! "$VERCEL_PROJECT_ID" =~ ^prj_ ]] || [[ ! "$VERCEL_ORG_ID" =~ ^(team_|org_) ]]; then
+            echo "::error::VERCEL_PROJECT_ID ou VERCEL_ORG_ID possui formato inválido."
+            exit 1
+          fi
+
+          status="$(
+            curl --silent --show-error --output /dev/null --write-out "%{http_code}" +              --header "Authorization: Bearer $VERCEL_TOKEN" +              "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID"
+          )"
+
+          case "$status" in
+            200) echo "Token autorizado para o projeto Vercel." ;;
+            401|403)
+              echo "::error::VERCEL_TOKEN inválido, expirado ou sem acesso ao time do projeto (HTTP $status)."
+              exit 1
+              ;;
+            404)
+              echo "::error::VERCEL_PROJECT_ID não pertence ao VERCEL_ORG_ID informado, ou o token não pode visualizar esse projeto (HTTP 404)."
+              exit 1
+              ;;
+            *)
+              echo "::error::A API da Vercel retornou HTTP $status ao consultar o projeto."
+              exit 1
+              ;;
+          esac
+
       - name: Baixar envs de produção do projeto
         working-directory: apps/web
         run: npx --yes vercel pull --yes --environment=production --token=$VERCEL_TOKEN
