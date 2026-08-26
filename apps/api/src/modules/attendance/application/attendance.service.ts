@@ -27,45 +27,52 @@ export class AttendanceService {
   }
 
   async save(principal: AuthenticatedPrincipal, cellId: string, meetingId: string, input: SaveAttendanceRequest): Promise<AttendanceSnapshot> {
-    const changed = await this.database.$transaction(async (transaction) => {
-      const context = await this.loadContext(transaction, principal, cellId, meetingId, true);
-      this.assertEditable(context.status);
-      const eligible = await this.listEligible(transaction, context);
-      const eligibleIds = new Set(eligible.map((item) => item.id));
-      for (const item of input.attendance) if (!eligibleIds.has(item.personId)) throw new AttendanceError("PERSON_NOT_ELIGIBLE", "Person is not eligible for this meeting");
-      const visitors = await transaction.meetingVisitor.findMany({ where: { churchId: principal.churchId, meetingId, deletedAt: null }, select: { personId: true } });
-      const visitorIds = new Set(visitors.map((item) => item.personId));
-      const existing = await transaction.meetingAttendance.findMany({ where: { churchId: principal.churchId, meetingId, personId: { in: [...eligibleIds] } }, select: { personId: true, attendanceStatus: true, deletedAt: true } });
-      const desired = new Map(input.attendance.map((item) => [item.personId, item.status]));
-      const current = new Map(existing.filter((item) => item.deletedAt === null && !visitorIds.has(item.personId)).map((item) => [item.personId, item.attendanceStatus]));
-      if (sameMap(current, desired)) return false;
-      const acquired = await transaction.meeting.updateMany({ where: { id: meetingId, churchId: principal.churchId, attendanceRevision: input.expectedRevision }, data: { attendanceRevision: { increment: 1 } } });
-      if (acquired.count !== 1) {
-        const refreshed = await transaction.meetingAttendance.findMany({ where: { churchId: principal.churchId, meetingId, deletedAt: null, personId: { in: [...eligibleIds] } }, select: { personId: true, attendanceStatus: true } });
-        const canonical = new Map(refreshed.filter((item) => !visitorIds.has(item.personId)).map((item) => [item.personId, item.attendanceStatus]));
-        if (sameMap(canonical, desired)) return false;
-        throw new AttendanceError("ATTENDANCE_REVISION_CONFLICT", "Attendance was changed by another request");
-      }
-      const changedPeople: Array<{ personId: string; before: string; after: string }> = [];
-      for (const personId of eligibleIds) {
-        const next = desired.get(personId);
-        const before = current.get(personId) ?? "UNMARKED";
-        if (next) {
-          await transaction.meetingAttendance.upsert({
-            where: { churchId_meetingId_personId: { churchId: principal.churchId, meetingId, personId } },
-            create: { churchId: principal.churchId, meetingId, personId, attendanceStatus: next },
-            update: { attendanceStatus: next, deletedAt: null }
-          });
-          if (before !== next) changedPeople.push({ personId, before, after: next });
-        } else if (before !== "UNMARKED") {
-          await transaction.meetingAttendance.update({ where: { churchId_meetingId_personId: { churchId: principal.churchId, meetingId, personId } }, data: { deletedAt: new Date() } });
-          changedPeople.push({ personId, before, after: "UNMARKED" });
+    try {
+      await this.database.$transaction(async (transaction) => {
+        const context = await this.loadContext(transaction, principal, cellId, meetingId, true);
+        this.assertEditable(context.status);
+        const eligible = await this.listEligible(transaction, context);
+        const eligibleIds = new Set(eligible.map((item) => item.id));
+        for (const item of input.attendance) if (!eligibleIds.has(item.personId)) throw new AttendanceError("PERSON_NOT_ELIGIBLE", "Person is not eligible for this meeting");
+        const visitors = await transaction.meetingVisitor.findMany({ where: { churchId: principal.churchId, meetingId, deletedAt: null }, select: { personId: true } });
+        const visitorIds = new Set(visitors.map((item) => item.personId));
+        const existing = await transaction.meetingAttendance.findMany({ where: { churchId: principal.churchId, meetingId, personId: { in: [...eligibleIds] } }, select: { personId: true, attendanceStatus: true, deletedAt: true } });
+        const desired = new Map(input.attendance.map((item) => [item.personId, item.status]));
+        const current = new Map(existing.filter((item) => item.deletedAt === null && !visitorIds.has(item.personId)).map((item) => [item.personId, item.attendanceStatus]));
+        if (sameMap(current, desired)) return;
+        const acquired = await transaction.meeting.updateMany({ where: { id: meetingId, churchId: principal.churchId, attendanceRevision: input.expectedRevision }, data: { attendanceRevision: { increment: 1 } } });
+        if (acquired.count !== 1) {
+          const refreshed = await transaction.meetingAttendance.findMany({ where: { churchId: principal.churchId, meetingId, deletedAt: null, personId: { in: [...eligibleIds] } }, select: { personId: true, attendanceStatus: true } });
+          const canonical = new Map(refreshed.filter((item) => !visitorIds.has(item.personId)).map((item) => [item.personId, item.attendanceStatus]));
+          if (sameMap(canonical, desired)) return;
+          throw new AttendanceError("ATTENDANCE_REVISION_CONFLICT", "Attendance was changed by another request");
         }
-      }
-      await transaction.auditLog.create({ data: { churchId: principal.churchId, userId: principal.userId, entity: "Meeting", entityId: meetingId, action: "MEETING_ATTENDANCE_UPDATED", after: auditPayload(changedPeople) as never } });
-      return true;
-    }, { isolationLevel: "Serializable" });
-    void changed;
+        const changedPeople: Array<{ personId: string; before: string; after: string }> = [];
+        for (const personId of eligibleIds) {
+          const next = desired.get(personId);
+          const before = current.get(personId) ?? "UNMARKED";
+          if (next) {
+            await transaction.meetingAttendance.upsert({
+              where: { churchId_meetingId_personId: { churchId: principal.churchId, meetingId, personId } },
+              create: { churchId: principal.churchId, meetingId, personId, attendanceStatus: next },
+              update: { attendanceStatus: next, deletedAt: null }
+            });
+            if (before !== next) changedPeople.push({ personId, before, after: next });
+          } else if (before !== "UNMARKED") {
+            await transaction.meetingAttendance.update({ where: { churchId_meetingId_personId: { churchId: principal.churchId, meetingId, personId } }, data: { deletedAt: new Date() } });
+            changedPeople.push({ personId, before, after: "UNMARKED" });
+          }
+        }
+        await transaction.auditLog.create({ data: { churchId: principal.churchId, userId: principal.userId, entity: "Meeting", entityId: meetingId, action: "MEETING_ATTENDANCE_UPDATED", after: auditPayload(changedPeople) as never } });
+      }, { isolationLevel: "Serializable" });
+    } catch (cause) {
+      if (!isSerializationConflict(cause)) throw cause;
+      const snapshot = await this.get(principal, cellId, meetingId);
+      const current = new Map(snapshot.participants.filter((item) => item.status !== "UNMARKED").map((item) => [item.personId, item.status]));
+      const desired = new Map(input.attendance.map((item) => [item.personId, item.status]));
+      if (sameMap(current, desired)) return snapshot;
+      throw new AttendanceError("ATTENDANCE_REVISION_CONFLICT", "Attendance was changed by another request");
+    }
     return this.get(principal, cellId, meetingId);
   }
 
@@ -169,6 +176,7 @@ export class AttendanceService {
 }
 
 function sameMap(left: ReadonlyMap<string, string>, right: ReadonlyMap<string, string>): boolean { if (left.size !== right.size) return false; for (const [key, value] of left) if (right.get(key) !== value) return false; return true; }
+function isSerializationConflict(cause: unknown): cause is { code: "P2034" } { return typeof cause === "object" && cause !== null && "code" in cause && cause.code === "P2034"; }
 function auditPayload(changes: Array<{ personId: string; before: string; after: string }>): Record<string, unknown> { return changes.length <= 100 ? { changedCount: changes.length, changes } : { changedCount: changes.length, changeHash: createHash("sha256").update(JSON.stringify(changes)).digest("hex") }; }
 function formatDateOnly(date: Date): string { return date.toISOString().slice(0, 10); }
 function civilDayBounds(date: string, timezone: string): { start: Date; end: Date } { const start = zonedMidnight(date, timezone); const next = new Date(`${date}T00:00:00.000Z`); next.setUTCDate(next.getUTCDate() + 1); return { start, end: zonedMidnight(next.toISOString().slice(0, 10), timezone) }; }

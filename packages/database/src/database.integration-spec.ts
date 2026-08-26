@@ -169,7 +169,11 @@ describe("database foundation", () => {
       SELECT indexname
       FROM pg_indexes
       WHERE schemaname = 'public'
-        AND indexname = 'cell_memberships_one_open_per_person_key'
+        AND indexname IN (
+          'cell_memberships_one_active_per_person_idx',
+          'cell_memberships_one_open_per_person_key'
+        )
+      ORDER BY indexname
     `;
     const columns = await admin.$queryRaw<Array<{ data_type: string }>>`
       SELECT data_type
@@ -179,7 +183,9 @@ describe("database foundation", () => {
         AND column_name = 'meeting_date'
     `;
 
-    expect(indexes).toHaveLength(1);
+    expect(indexes).toEqual([
+      { indexname: "cell_memberships_one_active_per_person_idx" }
+    ]);
     expect(columns).toEqual([{ data_type: "date" }]);
   });
 
