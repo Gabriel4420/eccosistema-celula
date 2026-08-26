@@ -37,7 +37,7 @@
     "@mission-atos/typescript-config": "*",
     "@types/pg": "^8.0.0",
     "dotenv": "^17.0.0",
-    "prisma": "^7.0.0",
+    "prisma": "^7.10.0",
     "tsx": "^4.0.0"
   }
 }
