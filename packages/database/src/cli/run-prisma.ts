@@ -1,6 +1,10 @@
 import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
 
 import { parseDatabaseEnvironment } from "@mission-atos/config/server";
+import { config } from "dotenv";
+
+config({ path: resolve(__dirname, "../../../../.env"), quiet: true });
 
 parseDatabaseEnvironment(process.env);
 
