@@ -4,19 +4,21 @@
 
 Planejar a entrega ponta a ponta da frequência de um encontro de célula: determinar participantes historicamente elegíveis, consultar e salvar marcações, mostrar resumo, registrar visitantes e disponibilizar uma experiência web mobile-first, com isolamento por igreja, autorização hierárquica, concorrência otimista, auditoria e testes.
 
-Este documento é somente um plano. Sua criação não implementa código, não instala dependências e não executa migrations.
+Este documento registra o plano e a execução concluída da gestão de frequência.
 
-**Status:** planejado
+**Status:** Concluído
 
 **Responsável:** time de engenharia Missão Atos
 
-**Criado/atualizado em:** 2026-08-22
+**Criado em:** 2026-08-22
+
+**Concluído em:** 2026-08-24
 
 **Referências:** PRD RF-004, RF-006 a RF-009, RF-012 e RF-018; RN-001, RN-004 a RN-008 e RN-011; US-004 e US-005; ADRs 003, 005 e 006
 
 **Pré-requisito:** Plano 008 concluído e encontros funcionais
 
-**Branch:** a definir na execução
+**Branch:** `master`
 
 ## 2. Contexto
 
@@ -87,9 +89,9 @@ Não há decisão de produto pendente para iniciar a execução. Foram adotadas:
 
 Pendências de execução, não de produto:
 
-- [ ] registrar ADR para replace-set, revisão, retry idempotente e visitante;
-- [ ] executar preflight e documentar conflitos de vínculos antes das constraints;
-- [ ] confirmar os nomes finais de índices dentro do limite do PostgreSQL.
+- [x] registrar ADR para replace-set, revisão, retry idempotente e visitante;
+- [x] executar preflight e documentar conflitos de vínculos antes das constraints;
+- [x] confirmar os nomes finais de índices dentro do limite do PostgreSQL.
 
 ## 7. Áreas afetadas
 
@@ -378,26 +380,26 @@ A API validará sempre `Meeting -> Cell -> Church`, papel, vínculo hierárquico
 
 ## 11. Critérios de aceitação
 
-- [ ] GET retorna somente participantes historicamente elegíveis e deduplicados.
-- [ ] Datas de entrada, saída e exclusão funcionam nas bordas do timezone da igreja.
-- [ ] Ausência de linha aparece como `UNMARKED`; `UNMARKED` nunca é persistido.
-- [ ] PUT valida no máximo 500 IDs únicos e é integralmente atômico.
-- [ ] Omissão remove logicamente marcação anterior e reenvio pode restaurá-la.
-- [ ] No-op não altera timestamps/revision nem cria auditoria.
-- [ ] Concorrência real retorna `409`; retry já aplicado retorna `200`.
-- [ ] Duas mutações com a mesma revision nunca confirmam: o compare-and-swap permite exatamente uma vencedora.
-- [ ] `SCHEDULED` e `COMPLETED` aceitam escrita autorizada; `CANCELED` é somente leitura.
-- [ ] Outro tenant nunca consegue inferir ou alterar frequência.
-- [ ] A matriz de papéis diferencia líder responsável, trainee e supervisor.
-- [ ] Visitante existente e cadastro rápido funcionam sem duplicar `Person`.
-- [ ] Membro elegível não pode ser visitante; visitante fica fora do denominador.
-- [ ] Remover visitante não apaga a pessoa.
-- [ ] Criar, restaurar ou remover visitante altera visitor, attendance, revision e auditoria de forma atômica.
-- [ ] Resumo e percentuais correspondem ao snapshot e tratam zero elegíveis.
-- [ ] UI possui loading, skeleton, vazio, erro/retry, 403, conflito, cancelado, salvando e sucesso.
-- [ ] UI é utilizável por teclado, sem gesto/cor exclusivos, com alvos de pelo menos 44 px.
-- [ ] Alterações não salvas são protegidas e erros preservam a edição local.
-- [ ] Fluxo E2E completo persiste, recarrega e reedita frequência e visitante.
+- [x] GET retorna somente participantes historicamente elegíveis e deduplicados.
+- [x] Datas de entrada, saída e exclusão funcionam nas bordas do timezone da igreja.
+- [x] Ausência de linha aparece como `UNMARKED`; `UNMARKED` nunca é persistido.
+- [x] PUT valida no máximo 500 IDs únicos e é integralmente atômico.
+- [x] Omissão remove logicamente marcação anterior e reenvio pode restaurá-la.
+- [x] No-op não altera timestamps/revision nem cria auditoria.
+- [x] Concorrência real retorna `409`; retry já aplicado retorna `200`.
+- [x] Duas mutações com a mesma revision nunca confirmam: o compare-and-swap permite exatamente uma vencedora.
+- [x] `SCHEDULED` e `COMPLETED` aceitam escrita autorizada; `CANCELED` é somente leitura.
+- [x] Outro tenant nunca consegue inferir ou alterar frequência.
+- [x] A matriz de papéis diferencia líder responsável, trainee e supervisor.
+- [x] Visitante existente e cadastro rápido funcionam sem duplicar `Person`.
+- [x] Membro elegível não pode ser visitante; visitante fica fora do denominador.
+- [x] Remover visitante não apaga a pessoa.
+- [x] Criar, restaurar ou remover visitante altera visitor, attendance, revision e auditoria de forma atômica.
+- [x] Resumo e percentuais correspondem ao snapshot e tratam zero elegíveis.
+- [x] UI possui loading, skeleton, vazio, erro/retry, 403, conflito, cancelado, salvando e sucesso.
+- [x] UI é utilizável por teclado, sem gesto/cor exclusivos, com alvos de pelo menos 44 px.
+- [x] Alterações não salvas são protegidas e erros preservam a edição local.
+- [x] Fluxo E2E completo persiste, recarrega e reedita frequência e visitante.
 
 ## 12. Estratégia de testes
 
@@ -540,12 +542,12 @@ Scripts ainda inexistentes deverão ser criados no milestone correspondente, sem
 - [x] Visitantes implementados sem duplicar fonte de verdade.
 - [x] Policy própria e matriz de papéis cobertas por testes unitários.
 - [x] Rota web, integração no encontro e experiência mobile-first implementadas.
-- [ ] Acessibilidade, responsividade e todos os estados de feedback validados.
+- [x] Acessibilidade, responsividade e todos os estados de feedback validados.
 - [x] Testes unitários, integração, API, frontend e E2E verdes.
 - [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run build` verdes.
 - [x] Documentação e OpenAPI atualizadas.
-- [ ] Nenhuma frequência, contato ou dado de outro tenant é exposto.
-- [ ] Plano movido para `completed` somente após evidência do DoD.
+- [x] Nenhuma frequência, contato ou dado de outro tenant é exposto.
+- [x] Plano movido para `completed` somente após evidência do DoD.
 
 ## 20. Registro de progresso
 
@@ -559,7 +561,118 @@ Scripts ainda inexistentes deverão ser criados no milestone correspondente, sem
 | 2026-08-22 | Validado em PostgreSQL | As 15 migrations foram aplicadas no banco de teste; seed idempotente e integração de banco/API passaram | database: 8 testes; API integration: 26 testes |
 | 2026-08-22 | E2E validado | Fluxo HTTP de attendance e fluxo Playwright mobile executados com persistência, edição e visitante | attendance HTTP: 3 testes; Playwright Chromium: 1 fluxo completo |
 | 2026-08-22 | Cache corrigido | Cache gerado do Next foi removido após 404 espúrio do Turbopack; build e rota dinâmica foram recompilados | Build web e Playwright verdes |
+| 2026-08-24 | Revisão final | Corrigidos o índice parcial redundante, a resposta `500` em conflito serializável e a navegação acessível do controle segmentado | Migration corretiva, E2E concorrente e Playwright mobile |
+| 2026-08-24 | Concluído | Critérios de aceitação e DoD confirmados; nenhuma ocorrência Crítica, Alta ou Média permaneceu aberta | 16 migrations; PostgreSQL 8/8; integração API 26/26; API E2E 30/30; Playwright 30/30; comandos raiz verdes |
 
-O plano permanece em active para revisão humana final. As migrations foram
-aplicadas somente no banco PostgreSQL de teste; nenhum banco de desenvolvimento
-ou produção foi migrado.
+## 21. Encerramento oficial
+
+### Resumo e decisões
+
+O Plano 009 foi concluído em 2026-08-24. A solução mantém frequência como parte
+do monólito modular, usa replace-set explícito, revisão otimista, transações
+serializáveis, exclusão lógica, auditoria agregada e `Person` como fonte única de
+identidade para participantes e visitantes. Não foi criado fechamento separado,
+`UNMARKED` persistido, dashboard analítico, relatório global ou qualquer entrega
+do Plano 010.
+
+### Elegibilidade e CellMembership
+
+- a elegibilidade usa a data civil do encontro e os limites UTC derivados do
+  timezone IANA da igreja;
+- `joinedAt < dayEnd`, `leftAt >= dayStart` e exclusões iguais ou posteriores ao
+  início do dia preservam o histórico;
+- vínculos futuros ou encerrados antes do encontro são excluídos;
+- a leitura por `Person` deduplica intervalos elegíveis;
+- `CellMembership` permanece sem CRUD novo e representa intervalos históricos;
+- checks garantem datas/status coerentes e a unique parcial garante um único
+  vínculo ativo aberto por pessoa e igreja.
+
+### Domínio, contratos e aplicação
+
+- domínio: status editáveis e cálculo do resumo, percentuais e visitantes fora
+  do denominador;
+- contratos Zod: parâmetros estritos, lote de até 500 IDs únicos, união
+  discriminada de visitante e snapshot canônico;
+- casos de uso no `AttendanceService`: consultar snapshot, salvar lote, adicionar
+  visitante e remover visitante;
+- persistência: o client PostgreSQL tenant-aware é injetado como porta de
+  persistência do módulo; não foi criada uma interface de repository adicional
+  porque existe um único adapter/consumidor nesta etapa;
+- policy própria diferencia administrador/pastor, supervisor, líder responsável
+  e trainee;
+- erro serializável Prisma `P2034` relê o snapshot após rollback e resulta em
+  retry idempotente `200` ou conflito estável `409`.
+
+### Migrations e invariantes
+
+- `20260822120000_prepare_attendance_management`: `attendanceRevision`,
+  `MeetingVisitor`, FKs tenant-aware, uniques, checks e índices;
+- `20260822121000_enforce_attendance_membership_invariants`: preflight, checks de
+  intervalo/status, índice histórico e unique parcial ativa;
+- `20260824190000_remove_redundant_membership_index`: remove o índice legado que
+  permaneceu por divergência de nome, sem editar migrations aplicadas;
+- 16 migrations estão aplicadas e sem pendências no PostgreSQL de teste;
+- `(churchId, meetingId, personId)` é único em attendance e visitor, garantindo
+  na prática uma linha por `meetingId + personId` dentro do tenant.
+
+### API, auditoria e visitantes
+
+- `GET /cells/:cellId/meetings/:meetingId/attendance`;
+- `PUT /cells/:cellId/meetings/:meetingId/attendance`;
+- `POST /cells/:cellId/meetings/:meetingId/attendance/visitors`;
+- `DELETE /cells/:cellId/meetings/:meetingId/attendance/visitors/:personId`;
+- lote, revision e auditoria confirmam atomicamente; no-op não incrementa nem
+  audita; duas mudanças reais com a mesma revisão produzem uma vencedora;
+- auditoria guarda IDs/diffs ou hash agregado, sem nome, telefone ou contato;
+- visitante existente e cadastro rápido reutilizam `Person`, persistem presença
+  `PRESENT`, ficam fora do denominador e são removidos sem apagar a pessoa;
+- filtros por igreja existem em contexto, elegibilidade, attendance, visitor,
+  pessoa, convidador, idempotência e auditoria; recursos externos retornam 404.
+
+### Frontend e experiência mobile
+
+- rota `/cells/[id]/meetings/[meetingId]/attendance` integrada ao detalhe do
+  encontro;
+- edição local explícita, busca, resumo, visitantes, dirty state, prevenção de
+  navegação, estados de erro/403/409/read-only e cache atualizado;
+- radiogroup com foco roving, setas, Home/End, rótulos textuais e foco visível;
+- viewport 390x844 validada sem overflow e com alvos de toque de pelo menos 44px;
+- diálogo preserva e restaura foco; não há autosave nem gesto obrigatório.
+
+### Testes, E2E, comandos e resultados
+
+- PostgreSQL: 8/8 testes de integração;
+- integração da API: 26/26;
+- E2E HTTP completo da API: 30/30; attendance dedicado: 5/5, incluindo bordas
+  históricas, unique, lote concorrente, visitantes, trainee e cross-tenant;
+- Playwright Chromium: 30/30, incluindo o fluxo mobile completo;
+- testes unitários raiz: 286/286;
+- `npm run lint`: 6/6 tarefas;
+- `npm run typecheck`: 13/13 tarefas;
+- `npm test`: 11/11 tarefas;
+- `npm run build`: 7/7 tarefas, incluindo NestJS e rota Next.js de attendance.
+
+Fluxo comprovado: login -> célula -> encontro -> frequência -> marcar -> salvar
+-> recarregar -> alterar -> salvar, seguido de cadastro de visitante.
+
+### Limitações, riscos aceitos e melhorias futuras
+
+- somente o banco PostgreSQL de teste recebeu as migrations nesta validação;
+- a execução visual automatizada usa Chromium e viewport móvel emulada, não um
+  dispositivo físico;
+- o timezone histórico usa a configuração vigente da igreja, sem snapshot por
+  encontro; risco residual aceito e já documentado na ADR;
+- o lote permanece limitado a 500 participantes e a UI carrega o snapshot
+  completo, adequado ao MVP;
+- métricas avançadas, relatórios globais, dashboard analítico, offline mobile e
+  extração de repository dedicado ficam para planos futuros somente se houver
+  necessidade comprovada;
+- warnings não bloqueantes do Next sobre `scroll-behavior` e filesystem lento no
+  ambiente de desenvolvimento não afetam corretude, build ou E2E.
+
+### Progresso final
+
+Revisão de código, segurança, banco, contratos, API, frontend e testes concluída.
+Não restam problemas Críticos, Altos ou Médios conhecidos no escopo do Plano 009.
+O produto está tecnicamente pronto para iniciar o planejamento do Plano 010,
+sem que qualquer funcionalidade dele tenha sido antecipada.
