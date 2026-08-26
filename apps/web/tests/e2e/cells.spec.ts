@@ -24,7 +24,10 @@ test.describe("cells management", () => {
     await expect(page.getByRole("heading", { name: "Nova célula" })).toBeVisible();
 
     await page.getByLabel("Código").fill("CEL-E2E-002");
-    await page.getByLabel("Nome", { exact: true }).fill("Célula E2E Nova");
+    await page.getByRole("textbox", { name: /^Nome/ }).fill("Célula E2E Nova");
+    await page.getByRole("combobox", { name: "Supervisor" }).fill("Sofia");
+    await page.getByRole("option", { name: /Sofia Supervisora/ }).click();
+    await page.getByRole("textbox", { name: /^Endereço/ }).fill("Rua E2E, 200");
     await page.getByRole("button", { name: "Criar célula" }).click();
 
     await expect(page).toHaveURL(/\/cells\/[0-9a-f-]{36}/);

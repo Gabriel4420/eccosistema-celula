@@ -32,7 +32,7 @@ test.describe("authentication flow", () => {
     await page.getByRole("textbox", { name: "Senha", exact: true }).fill("e2e-password-1234");
     await page.getByRole("button", { name: "Entrar" }).click();
     await expect(page).toHaveURL(/\/dashboard/);
-    await page.getByRole("button", { name: "Minha conta" }).click();
+    await page.getByRole("button", { name: /Ver perfil/ }).click();
     await page.getByRole("menuitem", { name: "Sair" }).click();
     await expect(page).toHaveURL(/\/login/);
     await expect(

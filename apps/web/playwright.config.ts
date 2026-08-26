@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const webPort = process.env.E2E_WEB_PORT ?? "3000";
+const baseURL = `http://127.0.0.1:${webPort}`;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   globalSetup: "./tests/e2e/global-setup.ts",
@@ -9,7 +12,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 1,
   reporter: "html",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL,
     trace: "on-first-retry"
   },
   projects: [
@@ -22,6 +25,6 @@ export default defineConfig({
     command: "node tests/e2e/start-stack.mjs",
     reuseExistingServer: false,
     timeout: 180_000,
-    url: "http://127.0.0.1:3000/login"
+    url: `${baseURL}/login`
   }
 });

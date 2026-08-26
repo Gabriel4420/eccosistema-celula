@@ -6,6 +6,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const webRoot = resolve(root, "apps/web");
 
 const E2E_CHURCH_ID = "11111111-1111-4111-8111-111111111111";
+const webPort = process.env.E2E_WEB_PORT ?? "3000";
+const apiPort = process.env.E2E_API_PORT ?? "3001";
+const webUrl = `http://127.0.0.1:${webPort}`;
+const apiUrl = `http://127.0.0.1:${apiPort}`;
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 if (!testDatabaseUrl || !new URL(testDatabaseUrl).pathname.toLowerCase().includes("test")) {
@@ -15,7 +19,7 @@ if (!testDatabaseUrl || !new URL(testDatabaseUrl).pathname.toLowerCase().include
 const apiEnvironment = {
   ...process.env,
   NODE_ENV: "test",
-  PORT: "3001",
+  PORT: apiPort,
   DATABASE_URL: testDatabaseUrl,
   AUTH_CHURCH_ID: E2E_CHURCH_ID,
   JWT_ACCESS_SECRET: "e2e-access-secret-that-is-at-least-32-characters",
@@ -23,12 +27,12 @@ const apiEnvironment = {
   AUTH_LOGIN_IP_LIMIT: "100",
   AUTH_LOGIN_ACCOUNT_LIMIT: "100",
   AUTH_COOKIE_SECURE: "false",
-  CORS_ORIGINS: "http://127.0.0.1:3000"
+  CORS_ORIGINS: webUrl
 };
 
 const webEnvironment = {
   ...process.env,
-  NEXT_PUBLIC_API_URL: "http://127.0.0.1:3001"
+  NEXT_PUBLIC_API_URL: apiUrl
 };
 
 function spawnServer(command, args, environment, name) {
@@ -55,7 +59,7 @@ const api = spawnServer(
 );
 const web = spawnServer(
   process.execPath,
-  [resolve(root, "node_modules/next/dist/bin/next"), "dev", "--port", "3000"],
+  [resolve(root, "node_modules/next/dist/bin/next"), "dev", "--port", webPort],
   webEnvironment,
   "web"
 );
