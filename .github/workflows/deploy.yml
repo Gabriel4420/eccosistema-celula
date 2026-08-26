@@ -1,0 +1,67 @@
+name: Deploy Monorepo (Next + Nest)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências (raiz do monorepo)
+        run: npm ci
+
+      - name: Lint e typecheck dos dois apps
+        run: npx turbo run lint typecheck --filter=web --filter=api
+
+  deploy-web:
+    name: Deploy web (Vercel)
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Baixar envs de produção do projeto
+        working-directory: apps/web
+        run: npx --yes vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build
+        working-directory: apps/web
+        run: npx --yes vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy
+        working-directory: apps/web
+        run: npx --yes vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+  deploy-api:
+    name: Deploy api (Render)
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Disparar deploy na Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
