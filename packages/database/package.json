@@ -18,6 +18,7 @@
     "db:migrate:create": "tsx src/cli/run-prisma.ts migrate dev --create-only",
     "db:migrate:deploy": "tsx src/cli/run-prisma.ts migrate deploy",
     "db:migrate:status": "tsx src/cli/run-prisma.ts migrate status",
+    "db:bootstrap:production": "tsx src/cli/bootstrap-production.ts",
     "db:seed": "prisma db seed",
     "db:seed:full": "tsx prisma/seed-full.ts",
     "db:validate": "prisma validate",
@@ -30,7 +31,9 @@
     "@mission-atos/config": "*",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
-    "pg": "^8.0.0"
+    "argon2": "^0.44.0",
+    "pg": "^8.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@mission-atos/eslint-config": "*",
