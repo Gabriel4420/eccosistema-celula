@@ -387,7 +387,17 @@ body {
 
 .profile-avatar--md { width: 2.25rem; height: 2.25rem; }
 .profile-avatar--lg { width: 7rem; height: 7rem; font-size: 2rem; }
-.profile-avatar__image { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar__image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: center;
+}
 .profile-avatar__edit {
   position: absolute;
   right: 0;
@@ -1187,7 +1197,7 @@ body {
     position: relative;
   }
 
-  .user-menu > .profile-avatar { border: 2px solid var(--color-surface); box-shadow: 0 0 0 2px var(--color-primary); transition: transform 160ms ease, box-shadow 160ms ease; }
+  .user-menu > .profile-avatar { border: 0; box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary); transition: transform 160ms ease, box-shadow 160ms ease; }
   .user-menu > .profile-avatar:hover { transform: scale(1.05); }
   .user-menu > .profile-avatar:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
 
