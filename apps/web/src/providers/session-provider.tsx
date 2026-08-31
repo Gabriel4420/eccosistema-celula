@@ -37,10 +37,13 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
   const [principal, setPrincipal] = useState<SessionPrincipal | null>(null);
 
   const baseUrl = useMemo(
-    () =>
-      parseWebPublicEnvironment({
+    () => {
+      if (process.env.NODE_ENV === "production") return "/api";
+      const configured = parseWebPublicEnvironment({
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL
-      }).NEXT_PUBLIC_API_URL,
+      }).NEXT_PUBLIC_API_URL;
+      return configured;
+    },
     []
   );
 

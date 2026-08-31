@@ -46,7 +46,7 @@ export class RefreshCookieService {
       httpOnly: true,
       secure: this.environment.AUTH_COOKIE_SECURE,
       sameSite: "strict",
-      path: "/auth",
+      path: this.environment.AUTH_COOKIE_SECURE ? "/api/auth" : "/auth",
       maxAge: this.environment.REFRESH_TOKEN_TTL_SECONDS * 1000
     };
   }
