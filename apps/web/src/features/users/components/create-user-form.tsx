@@ -10,8 +10,9 @@ import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { createUser, getManagedRoles } from "@/src/features/users/api/users-api";
+import { evaluatePasswordStrength } from "@mission-atos/contracts";
+import { PasswordStrengthMeter } from "./password-strength-meter";
 
-const PASSWORD_MIN = 12;
 const USERS_CACHE = "users";
 const ROLES_CACHE = "managedRoles";
 
@@ -48,10 +49,10 @@ export function CreateUserForm() {
       setFieldErrors((errors) => ({ ...errors, roles: "Selecione ao menos um papel." }));
       return;
     }
-    if (initialPassword.length < PASSWORD_MIN) {
+    if (!evaluatePasswordStrength(initialPassword).isValid) {
       setFieldErrors((errors) => ({
         ...errors,
-        initialPassword: `A senha inicial deve ter ao menos ${PASSWORD_MIN} caracteres.`
+        initialPassword: "Use uma senha que cumpra todos os requisitos de segurança."
       }));
       return;
     }
@@ -149,10 +150,11 @@ export function CreateUserForm() {
             autoComplete="new-password"
             value={initialPassword}
             onChange={(event) => setInitialPassword(event.target.value)}
-            hint={`Ao menos ${PASSWORD_MIN} caracteres. Compartilhe com o usuário em um canal seguro.`}
+            hint="Compartilhe a senha inicial com o usuário por um canal seguro."
             error={fieldErrors.initialPassword}
             required
           />
+          <PasswordStrengthMeter password={initialPassword} />
         </fieldset>
 
         <fieldset className="fieldset">
