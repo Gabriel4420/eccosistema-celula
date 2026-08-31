@@ -60,7 +60,7 @@ export const profilePhotoRequestSchema = z.object({
 
 export const profilePhotoResponseSchema = profilePhotoRequestSchema;
 export const profilePhotoEnvelopeSchema = z.object({
-  data: profilePhotoResponseSchema,
+  data: profilePhotoResponseSchema.nullable(),
   meta: z.object({}).strict()
 }).strict();
 

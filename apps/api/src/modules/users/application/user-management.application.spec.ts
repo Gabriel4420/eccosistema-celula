@@ -102,6 +102,15 @@ describe("user management application", () => {
     }));
   });
 
+  it("treats an absent own profile photo as a normal empty result", async () => {
+    const repository = repositoryMock();
+    const { unitOfWork } = unitOfWorkMock();
+    const { queries } = application(repository, unitOfWork, passwordMock());
+
+    await expect(queries.getOwnProfilePhoto(principal)).resolves.toBeNull();
+    expect(repository.getProfilePhoto).toHaveBeenCalledWith(principal.churchId, principal.userId);
+  });
+
   it("applies the resource policy to the user actually loaded", async () => {
     const repository = repositoryMock();
     repository.find.mockResolvedValue(

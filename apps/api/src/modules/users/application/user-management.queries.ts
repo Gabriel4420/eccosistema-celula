@@ -55,10 +55,8 @@ export class UserManagementQueries {
     return this.findOrThrow(principal.churchId, principal.userId);
   }
 
-  async getOwnProfilePhoto(principal: AuthenticatedPrincipal): Promise<ProfilePhoto> {
-    const photo = await this.users.getProfilePhoto(principal.churchId, principal.userId);
-    if (!photo) throw new UserManagementError("USER_PROFILE_PHOTO_NOT_FOUND", "Profile photo not found");
-    return photo;
+  getOwnProfilePhoto(principal: AuthenticatedPrincipal): Promise<ProfilePhoto | null> {
+    return this.users.getProfilePhoto(principal.churchId, principal.userId);
   }
 
   private async findOrThrow(

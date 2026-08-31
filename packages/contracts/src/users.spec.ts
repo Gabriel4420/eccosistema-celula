@@ -5,6 +5,7 @@ import {
   managedRoleSchema,
   managedRolesEnvelopeSchema,
   profilePhotoRequestSchema,
+  profilePhotoEnvelopeSchema,
   replaceUserRolesRequestSchema,
   resetUserPasswordRequestSchema,
   updateUserRequestSchema,
@@ -122,5 +123,6 @@ describe("user contracts", () => {
       contentType: "image/jpeg", base64: "/9j/AA=="
     });
     expect(() => profilePhotoRequestSchema.parse({ contentType: "image/svg+xml", base64: "PHN2Zz4=" })).toThrow();
+    expect(profilePhotoEnvelopeSchema.parse({ data: null, meta: {} }).data).toBeNull();
   });
 });

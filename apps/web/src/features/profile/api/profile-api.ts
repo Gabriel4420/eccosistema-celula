@@ -19,12 +19,14 @@ export async function getMyProfile(api: ApiClient): Promise<UserResponse> {
   return envelope.data;
 }
 
-export async function getMyProfilePhoto(api: ApiClient): Promise<string> {
+export async function getMyProfilePhoto(api: ApiClient): Promise<string | null> {
   const envelope = await api.request({
     method: "GET", path: "/users/me/profile-photo", bearer: true,
     allowRetry: true, schema: profilePhotoEnvelopeSchema
   });
-  return `data:${envelope.data.contentType};base64,${envelope.data.base64}`;
+  return envelope.data
+    ? `data:${envelope.data.contentType};base64,${envelope.data.base64}`
+    : null;
 }
 
 export async function updateMyProfilePhoto(api: ApiClient, input: ProfilePhotoRequest): Promise<UserResponse> {

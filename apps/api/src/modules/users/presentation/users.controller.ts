@@ -77,7 +77,12 @@ export class UsersController {
   @Get("me/profile-photo")
   async getOwnProfilePhoto(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
     const photo = await this.queries.getOwnProfilePhoto(principal);
-    return { data: { contentType: photo.contentType, base64: Buffer.from(photo.data).toString("base64") }, meta: {} };
+    return {
+      data: photo
+        ? { contentType: photo.contentType, base64: Buffer.from(photo.data).toString("base64") }
+        : null,
+      meta: {}
+    };
   }
 
   @Put("me/profile-photo")
