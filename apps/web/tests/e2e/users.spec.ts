@@ -27,7 +27,7 @@ test.describe("users management (ADMIN)", () => {
     await page.locator('input[name="firstName"]').fill("Carla");
     await page.getByLabel("Sobrenome").fill("Cadastro");
     await page.getByLabel("E-mail").fill("carla.cadastro@e2e.test");
-    await page.getByLabel("Senha inicial").fill("nova-senha-1234");
+    await page.getByLabel("Senha inicial").fill("Nova-senha-1234!");
     await page.getByLabel("PASTOR").check();
     await page.getByRole("button", { name: "Criar usuário" }).click();
 
