@@ -316,7 +316,13 @@ function createUserBodySchema() {
     additionalProperties: false,
     properties: {
       ...updateUserBodySchema().properties,
-      initialPassword: { type: "string", minLength: 12, maxLength: 128 },
+      initialPassword: {
+        type: "string",
+        minLength: 12,
+        maxLength: 128,
+        pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9\\\\s]).+$",
+        description: "Must contain uppercase, lowercase, number and special character"
+      },
       roleIds: roleIdsBodySchema().properties.roleIds
     }
   };

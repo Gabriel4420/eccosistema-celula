@@ -188,7 +188,7 @@ describe("user management HTTP flow", () => {
         firstName: "New",
         lastName: "Leader",
         email: ` NEW-${adminId}@EXAMPLE.TEST `,
-        initialPassword: "new-user-password-123",
+        initialPassword: "New-user-password-123!",
         roleIds: [leaderRoleId],
       })
       .expect(201);
@@ -202,7 +202,7 @@ describe("user management HTTP flow", () => {
         firstName: "Duplicate",
         lastName: "Leader",
         email: `NEW-${adminId}@EXAMPLE.TEST`,
-        initialPassword: "duplicate-password-123",
+        initialPassword: "Duplicate-password-123!",
         roleIds: [],
       })
       .expect(409);

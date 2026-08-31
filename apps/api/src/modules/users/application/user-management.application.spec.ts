@@ -27,7 +27,7 @@ describe("user management application", () => {
       firstName: "Ana",
       lastName: "Silva",
       email: "ana@example.com",
-      initialPassword: "safe-password-123",
+      initialPassword: "Safe-password-123!",
       roleIds: []
     });
     expect(transaction.createUser).toHaveBeenCalledWith(
