@@ -10,6 +10,7 @@ import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { getChurch, getChurchSettings, updateChurch, updateChurchSettings } from "@/src/features/church/api/church-api";
+import { ChurchAddressFields } from "@/src/features/church/components/church-address-fields";
 
 const CHURCH_CACHE = "church";
 
@@ -175,14 +176,7 @@ export function ChurchSettingsView() {
 
         <fieldset className="fieldset">
           <legend className="fieldset__legend">Endereço</legend>
-          <TextField label="Logradouro" name="addressLine" defaultValue={church.address.line ?? ""} />
-          <TextField label="Número" name="addressNumber" defaultValue={church.address.number ?? ""} />
-          <TextField label="Complemento" name="addressComplement" defaultValue={church.address.complement ?? ""} />
-          <TextField label="Bairro" name="neighborhood" defaultValue={church.address.neighborhood ?? ""} />
-          <TextField label="Cidade" name="city" defaultValue={church.address.city ?? ""} />
-          <TextField label="Estado (UF)" name="state" defaultValue={church.address.state ?? ""} maxLength={2} />
-          <TextField label="CEP" name="postalCode" defaultValue={church.address.postalCode ?? ""} maxLength={8} />
-          <TextField label="País" name="country" defaultValue={church.address.country} disabled />
+          <ChurchAddressFields address={church.address} />
         </fieldset>
 
         <Can capability="editChurch">
