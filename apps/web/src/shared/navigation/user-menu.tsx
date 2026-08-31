@@ -53,36 +53,30 @@ export function UserMenu() {
 
   return (
     <div className="user-menu" ref={menuRef}>
-      {profile ? <ProfilePhoto profile={profile} /> : <span className="user-menu__avatar" aria-hidden="true">{identity.initials}</span>}
-      <button
-        ref={buttonRef}
-        type="button"
-        className="button button--secondary button--sm"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span className="user-menu__copy"><strong>{identity.displayName}</strong><small>Ver perfil</small></span>
-        <span className="user-menu__chevron" aria-hidden="true">⌄</span>
-      </button>
+      {profile ? <ProfilePhoto profile={profile} buttonRef={buttonRef} expanded={open} onClick={() => setOpen((value) => !value)} /> : (
+        <button ref={buttonRef} type="button" className="profile-avatar profile-avatar--md" aria-label="Abrir menu da conta" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((value) => !value)}><span aria-hidden="true">{identity.initials}</span></button>
+      )}
       {open ? (
-        <div className="user-menu__menu" role="menu" aria-label="Menu da conta">
+        <div className="user-menu__menu" role="dialog" aria-label="Conta do usuário">
+          <button type="button" className="user-menu__close" aria-label="Fechar menu da conta" onClick={() => { setOpen(false); buttonRef.current?.focus(); }}>×</button>
+          <div className="user-menu__account">
+            {profile ? <ProfilePhoto profile={profile} size="lg" /> : null}
+            <div className="user-menu__identity"><strong>{profile ? `${profile.firstName} ${profile.lastName}`.trim() : identity.displayName}</strong>{profile ? <span>{profile.email}</span> : null}<small>Clique na foto para alterar</small></div>
+          </div>
           <Link
             className="user-menu__item"
-            role="menuitem"
             href="/profile"
             onClick={() => setOpen(false)}
           >
-            Meu perfil
+            <span className="user-menu__item-icon" aria-hidden="true">◎</span><span><strong>Meu perfil</strong><small>Dados pessoais e foto</small></span>
           </Link>
           <button
             type="button"
             className="user-menu__item"
-            role="menuitem"
             disabled={leaving}
             onClick={() => void handleLogout()}
           >
-            {leaving ? "Saindo…" : "Sair"}
+            <span className="user-menu__item-icon" aria-hidden="true">↪</span><span><strong>{leaving ? "Saindo…" : "Sair"}</strong><small>Encerrar esta sessão</small></span>
           </button>
         </div>
       ) : null}

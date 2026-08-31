@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { UserResponse } from "@mission-atos/contracts";
@@ -14,7 +14,9 @@ import { cacheStore } from "@/src/shared/cache/cache";
 const PHOTO_UPDATED_EVENT = "mission-atos:profile-photo-updated";
 const MAX_SOURCE_BYTES = 8_000_000;
 
-export function ProfilePhoto({ profile, size = "md" }: { readonly profile: UserResponse; readonly size?: "md" | "lg" }) {
+type ProfilePhotoProps = { readonly profile: UserResponse; readonly size?: "md" | "lg"; readonly onClick?: () => void; readonly buttonRef?: RefObject<HTMLButtonElement | null>; readonly expanded?: boolean; };
+
+export function ProfilePhoto({ profile, size = "md", onClick, buttonRef, expanded }: ProfilePhotoProps) {
   const { api } = useSession();
   const [open, setOpen] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(profile.hasProfilePhoto);
@@ -39,11 +41,11 @@ export function ProfilePhoto({ profile, size = "md" }: { readonly profile: UserR
   }, [reload]);
 
   return <>
-    <button type="button" className={`profile-avatar profile-avatar--${size}`} onClick={() => setOpen(true)} aria-label="Alterar foto de perfil">
+    <button ref={buttonRef} type="button" className={`profile-avatar profile-avatar--${size}`} onClick={onClick ?? (() => setOpen(true))} aria-label={onClick ? "Abrir menu da conta" : "Alterar foto de perfil"} aria-haspopup={onClick ? "dialog" : undefined} aria-expanded={onClick ? expanded : undefined}>
       {source ? <Image src={source} alt="" width={112} height={112} unoptimized className="profile-avatar__image" /> : <span aria-hidden="true">{identity.initials}</span>}
-      <span className="profile-avatar__edit" aria-hidden="true">✎</span>
+      {!onClick ? <span className="profile-avatar__edit" aria-hidden="true">✎</span> : null}
     </button>
-    <ProfilePhotoDialog open={open} onClose={() => setOpen(false)} profile={profile} hasPhoto={hasPhoto} currentSource={source ?? null} />
+    {!onClick ? <ProfilePhotoDialog open={open} onClose={() => setOpen(false)} profile={profile} hasPhoto={hasPhoto} currentSource={source ?? null} /> : null}
   </>;
 }
 
