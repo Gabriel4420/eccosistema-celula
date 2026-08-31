@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   Inject,
   Param,
@@ -75,6 +76,7 @@ export class UsersController {
   }
 
   @Get("me/profile-photo")
+  @Header("Cache-Control", "private, no-store")
   async getOwnProfilePhoto(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
     const photo = await this.queries.getOwnProfilePhoto(principal);
     return {

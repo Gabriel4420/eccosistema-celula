@@ -35,6 +35,7 @@ export async function httpRequest<T>(config: HttpRequestConfig): Promise<HttpRes
       },
       body: config.body !== undefined ? JSON.stringify(config.body) : undefined,
       credentials: "include",
+      cache: "no-store",
       signal: controller.signal
     });
   } catch (error) {

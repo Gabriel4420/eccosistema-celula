@@ -50,6 +50,7 @@ describe("ApiClient", () => {
     const [, init] = fetchMock.mock.calls[0];
     expect(init.headers.authorization).toBe("Bearer token");
     expect(init.credentials).toBe("include");
+    expect(init.cache).toBe("no-store");
     api.clearAccessToken();
   });
 
