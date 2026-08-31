@@ -69,7 +69,10 @@ function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }:
     if (!candidate) return;
     setBusy(true); setError(null);
     try {
-      await updateMyProfilePhoto(api, candidate);
+      await updateMyProfilePhoto(api, {
+        contentType: candidate.contentType,
+        base64: candidate.base64
+      });
       window.dispatchEvent(new CustomEvent(PHOTO_UPDATED_EVENT, { detail: true }));
       onClose();
     } catch { setError("Não foi possível salvar a foto. Tente novamente."); }

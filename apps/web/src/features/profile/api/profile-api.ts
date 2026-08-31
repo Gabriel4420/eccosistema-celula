@@ -30,7 +30,10 @@ export async function getMyProfilePhoto(api: ApiClient): Promise<string | null> 
 }
 
 export async function updateMyProfilePhoto(api: ApiClient, input: ProfilePhotoRequest): Promise<UserResponse> {
-  const payload = profilePhotoRequestSchema.parse(input);
+  const payload = profilePhotoRequestSchema.parse({
+    contentType: input.contentType,
+    base64: input.base64
+  });
   const envelope = await api.request({
     method: "PUT", path: "/users/me/profile-photo", body: payload,
     bearer: true, schema: userItemEnvelopeSchema
