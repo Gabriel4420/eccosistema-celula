@@ -36,7 +36,7 @@ describe("user contracts", () => {
         firstName: " Ana ",
         lastName: " Silva ",
         email: " ANA@EXAMPLE.COM ",
-        initialPassword: "safe-password-123",
+        initialPassword: "Safe-password-123!",
         roleIds: []
       }).email
     ).toBe("ana@example.com");
@@ -70,6 +70,17 @@ describe("user contracts", () => {
         churchId: "00000000-0000-4000-8000-000000000001"
       })
     ).toThrow();
+  });
+
+  it("requires a strong initial password for a new user", () => {
+    const input = {
+      firstName: "Ana",
+      lastName: "Silva",
+      email: "ana@example.com",
+      roleIds: []
+    };
+    expect(() => createUserRequestSchema.parse({ ...input, initialPassword: "long-password-123" })).toThrow();
+    expect(createUserRequestSchema.parse({ ...input, initialPassword: "Strong-password-123!" }).initialPassword).toBe("Strong-password-123!");
   });
 
   it("parses a single user response with presenter parity", () => {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { evaluatePasswordStrength } from "./password";
 
 export const managedRoleNames = [
   "ADMIN",
@@ -9,6 +10,10 @@ export const managedRoleNames = [
 
 const name = z.string().trim().min(1).max(100);
 const password = z.string().min(12).max(128);
+const initialPassword = password.refine(
+  (value) => evaluatePasswordStrength(value).isValid,
+  "Password must contain uppercase, lowercase, number and special character"
+);
 const roleIds = z.array(z.uuid()).max(4).refine(
   (values) => new Set(values).size === values.length,
   "Role identifiers must be unique"
@@ -29,7 +34,7 @@ export const createUserRequestSchema = z
     firstName: name,
     lastName: name,
     email: z.string().trim().toLowerCase().pipe(z.email().max(320)),
-    initialPassword: password,
+    initialPassword,
     roleIds
   })
   .strict();

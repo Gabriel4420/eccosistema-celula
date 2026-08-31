@@ -8,6 +8,8 @@ export type {
   ChangePasswordRequest,
   LoginRequest
 } from "./auth";
+export { evaluatePasswordStrength, PASSWORD_MIN_LENGTH } from "./password";
+export type { PasswordStrength } from "./password";
 export {
   createUserRequestSchema,
   listUsersQuerySchema,
