@@ -12,5 +12,10 @@
     "**/*.ts",
     "**/*.tsx"
   ],
-  "exclude": ["node_modules", "playwright-report", "test-results"]
+  "exclude": [
+    "node_modules",
+    "playwright-report",
+    "test-results",
+    "tests/e2e"
+  ]
 }
