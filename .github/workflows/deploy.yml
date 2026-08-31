@@ -29,67 +29,16 @@ jobs:
     name: Deploy web (Vercel)
     needs: quality
     runs-on: ubuntu-latest
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Instalar dependências
-        run: npm ci
-
-      - name: Validar acesso ao projeto Vercel
-        shell: bash
+      - name: Disparar deploy na Vercel
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
         run: |
-          if [[ ! "$VERCEL_PROJECT_ID" =~ ^prj_ ]] || [[ ! "$VERCEL_ORG_ID" =~ ^(team_|org_) ]]; then
-            echo "::error::VERCEL_PROJECT_ID ou VERCEL_ORG_ID possui formato inválido."
+          if [ -z "${VERCEL_DEPLOY_HOOK_URL:-}" ]; then
+            echo "::error::O secret VERCEL_DEPLOY_HOOK_URL não está configurado."
             exit 1
           fi
-
-          status="$(
-            curl --silent --show-error --output /dev/null --write-out "%{http_code}" --header "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID"
-          )"
-
-          case "$status" in
-            200) echo "Token autorizado para o projeto Vercel." ;;
-            401|403)
-              echo "::error::VERCEL_TOKEN inválido, expirado ou sem acesso ao time do projeto (HTTP $status)."
-              exit 1
-              ;;
-            404)
-              echo "::error::VERCEL_PROJECT_ID não pertence ao VERCEL_ORG_ID informado, ou o token não pode visualizar esse projeto (HTTP 404)."
-              exit 1
-              ;;
-            *)
-              echo "::error::A API da Vercel retornou HTTP $status ao consultar o projeto."
-              exit 1
-              ;;
-          esac
-
-      - name: Vincular projeto Vercel ao diretório web
-        working-directory: apps/web
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          node -e 'const fs = require("node:fs"); fs.mkdirSync(".vercel", { recursive: true }); fs.writeFileSync(".vercel/project.json", JSON.stringify({ orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID }));'
-
-      - name: Baixar envs de produção do projeto
-        working-directory: apps/web
-        run: npx --yes vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-
-      - name: Build
-        working-directory: apps/web
-        run: npx --yes vercel build --prod --token="$VERCEL_TOKEN"
-
-      - name: Deploy
-        working-directory: apps/web
-        run: npx --yes vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
 
   deploy-api:
     name: Deploy api (Render)
