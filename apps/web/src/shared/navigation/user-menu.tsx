@@ -6,6 +6,7 @@ import { getMyProfile } from "@/src/features/profile/api/profile-api";
 import { useSession } from "@/src/providers/session-provider";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { formatUserMenuIdentity } from "./user-menu-presentation";
+import { ProfilePhoto } from "@/src/features/profile/components/profile-photo";
 
 export function UserMenu() {
   const { api, logout } = useSession();
@@ -52,6 +53,7 @@ export function UserMenu() {
 
   return (
     <div className="user-menu" ref={menuRef}>
+      {profile ? <ProfilePhoto profile={profile} /> : <span className="user-menu__avatar" aria-hidden="true">{identity.initials}</span>}
       <button
         ref={buttonRef}
         type="button"
@@ -60,7 +62,6 @@ export function UserMenu() {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="user-menu__avatar" aria-hidden="true">{identity.initials}</span>
         <span className="user-menu__copy"><strong>{identity.displayName}</strong><small>Ver perfil</small></span>
         <span className="user-menu__chevron" aria-hidden="true">⌄</span>
       </button>

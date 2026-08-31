@@ -81,6 +81,27 @@ describe("user management application", () => {
     });
   });
 
+  it("updates only the authenticated user's photo and audits metadata", async () => {
+    const repository = repositoryMock();
+    const { unitOfWork, transaction } = unitOfWorkMock();
+    transaction.updateProfilePhoto.mockResolvedValue(managedUser({
+      hasProfilePhoto: true,
+      profilePhotoUpdatedAt: new Date()
+    }));
+    const { commands } = application(repository, unitOfWork, passwordMock());
+    const photo = { contentType: "image/jpeg" as const, data: new Uint8Array([0xff, 0xd8, 0xff]) };
+
+    await commands.updateOwnProfilePhoto(principal, photo);
+
+    expect(transaction.updateProfilePhoto).toHaveBeenCalledWith({ userId: principal.userId, photo });
+    expect(transaction.recordAudit).toHaveBeenCalledWith(expect.objectContaining({
+      actorId: principal.userId,
+      entityId: principal.userId,
+      action: "USER_PROFILE_PHOTO_UPDATED",
+      after: { hasProfilePhoto: true }
+    }));
+  });
+
   it("applies the resource policy to the user actually loaded", async () => {
     const repository = repositoryMock();
     repository.find.mockResolvedValue(
@@ -225,6 +246,8 @@ function repositoryMock(): jest.Mocked<UserManagementRepository> {
     lastName: "Silva",
     email: "ana@example.com",
     status: "ACTIVE" as const,
+    hasProfilePhoto: false,
+    profilePhotoUpdatedAt: null,
     roles: [],
     createdAt: new Date(),
     updatedAt: new Date()
@@ -234,7 +257,8 @@ function repositoryMock(): jest.Mocked<UserManagementRepository> {
     managedRoles: jest.fn().mockResolvedValue([]),
     list: jest.fn().mockResolvedValue({ items: [], totalItems: 0 }),
     listCellAssignmentOptions: jest.fn().mockResolvedValue({ items: [], totalItems: 0 }),
-    find: jest.fn().mockResolvedValue(user)
+    find: jest.fn().mockResolvedValue(user),
+    getProfilePhoto: jest.fn().mockResolvedValue(null)
   };
 }
 
@@ -254,6 +278,7 @@ function unitOfWorkMock(): {
     updateStatus: jest.fn().mockResolvedValue(managedUser({ status: "BLOCKED" })),
     replaceRoles: jest.fn().mockResolvedValue(user),
     updatePassword: jest.fn().mockResolvedValue(undefined),
+    updateProfilePhoto: jest.fn().mockResolvedValue(user),
     revokeSessions: jest.fn().mockResolvedValue(1),
     recordAudit: jest.fn().mockResolvedValue(undefined)
   };
@@ -278,6 +303,8 @@ function managedUser(overrides: Partial<ManagedUser> = {}): ManagedUser {
     lastName: "Silva",
     email: "ana@example.com",
     status: "ACTIVE" as const,
+    hasProfilePhoto: false,
+    profilePhotoUpdatedAt: null,
     roles: [],
     createdAt: new Date(),
     updatedAt: new Date(),

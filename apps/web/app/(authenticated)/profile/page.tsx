@@ -20,6 +20,7 @@ import {
   getMyProfile,
   updateMyProfile
 } from "@/src/features/profile/api/profile-api";
+import { ProfilePhoto } from "@/src/features/profile/components/profile-photo";
 
 const PASSWORD_MIN = 12;
 const PROFILE_CACHE = "profile";
@@ -153,6 +154,11 @@ export default function ProfilePage() {
           Seus dados foram salvos.
         </Alert>
       ) : null}
+
+      <div className="profile-photo-section">
+        <ProfilePhoto profile={profile} size="lg" />
+        <div><strong>{profile.firstName} {profile.lastName}</strong><p className="page-description">Clique na foto para alterar.</p></div>
+      </div>
 
       <div className="detail-list" style={{ marginBottom: "var(--space-5)" }}>
         <div className="detail-list__item">

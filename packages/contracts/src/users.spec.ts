@@ -4,6 +4,7 @@ import {
   managedRoleNames,
   managedRoleSchema,
   managedRolesEnvelopeSchema,
+  profilePhotoRequestSchema,
   replaceUserRolesRequestSchema,
   resetUserPasswordRequestSchema,
   updateUserRequestSchema,
@@ -19,6 +20,8 @@ const baseUser = {
   lastName: "Silva",
   email: "ana@example.com",
   status: "ACTIVE",
+  hasProfilePhoto: false,
+  profilePhotoUpdatedAt: null,
   roles: [{ id: "00000000-0000-4000-8000-000000000002", name: "LEADER" }],
   createdAt: "2026-08-03T12:00:00.000Z",
   updatedAt: "2026-08-03T12:00:00.000Z"
@@ -112,5 +115,12 @@ describe("user contracts", () => {
     expect(
       managedRolesEnvelopeSchema.parse({ data: [role], meta: {} }).data
     ).toEqual([role]);
+  });
+
+  it("accepts supported profile photos and rejects oversized payloads", () => {
+    expect(profilePhotoRequestSchema.parse({ contentType: "image/jpeg", base64: "/9j/AA==" })).toEqual({
+      contentType: "image/jpeg", base64: "/9j/AA=="
+    });
+    expect(() => profilePhotoRequestSchema.parse({ contentType: "image/svg+xml", base64: "PHN2Zz4=" })).toThrow();
   });
 });

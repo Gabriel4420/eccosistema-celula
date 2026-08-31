@@ -370,6 +370,53 @@ body {
   font-size: 0.7rem;
   font-weight: 800;
 }
+
+.profile-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.profile-avatar--md { width: 2.25rem; height: 2.25rem; }
+.profile-avatar--lg { width: 7rem; height: 7rem; font-size: 2rem; }
+.profile-avatar__image { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar__edit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  font-size: .75rem;
+}
+.profile-photo-section { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-5); }
+.profile-photo-dialog { display: grid; justify-items: center; gap: var(--space-4); }
+.profile-photo-dialog__preview {
+  display: grid;
+  place-items: center;
+  width: min(14rem, 65vw);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  font-size: 3rem;
+  font-weight: 700;
+}
+.profile-photo-dialog__preview img { width: 100%; height: 100%; object-fit: cover; }
 .user-menu__copy {
   text-align: left;
 }

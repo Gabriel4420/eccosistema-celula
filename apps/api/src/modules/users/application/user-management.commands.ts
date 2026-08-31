@@ -11,6 +11,7 @@ import type {
   UpdateOwnProfileInput,
   UpdateUserInput
 } from "./user-management.types";
+import type { ProfilePhoto } from "./user-management.types";
 import type { UserManagementAuthorization } from "./user-management.authorization";
 import { UserManagementError } from "./user-management.error";
 import {
@@ -100,6 +101,24 @@ export class UserManagementCommands {
           ...changes
         });
       }
+      return user;
+    });
+  }
+
+  async updateOwnProfilePhoto(
+    principal: AuthenticatedPrincipal,
+    photo: ProfilePhoto | null
+  ): Promise<ManagedUser> {
+    return this.unitOfWork.execute(principal.churchId, async (transaction) => {
+      const before = await this.requireUser(transaction, principal.userId);
+      const user = await transaction.updateProfilePhoto({ userId: principal.userId, photo });
+      await transaction.recordAudit({
+        actorId: principal.userId,
+        entityId: principal.userId,
+        action: photo ? "USER_PROFILE_PHOTO_UPDATED" : "USER_PROFILE_PHOTO_REMOVED",
+        before: { hasProfilePhoto: before.hasProfilePhoto },
+        after: { hasProfilePhoto: user.hasProfilePhoto }
+      });
       return user;
     });
   }

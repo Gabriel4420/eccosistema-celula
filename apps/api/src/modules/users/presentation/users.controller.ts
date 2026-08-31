@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  Delete,
   Query
 } from "@nestjs/common";
 import {
@@ -31,10 +32,12 @@ import {
   updateUserStatusRequestSchema,
   userIdParamsSchema
 } from "@mission-atos/contracts";
+import { profilePhotoRequestSchema } from "@mission-atos/contracts";
 import type { AuthenticatedPrincipal } from "@mission-atos/domain";
 import { CurrentPrincipal } from "../../permissions/presentation/decorators/current-principal.decorator";
 import { Roles } from "../../permissions/presentation/decorators/roles.decorator";
 import { UserManagementCommands } from "../application/user-management.commands";
+import { UserManagementError } from "../application/user-management.error";
 import { UserManagementQueries } from "../application/user-management.queries";
 import { presentUser, presentUserPage } from "./user.presenter";
 
@@ -69,6 +72,27 @@ export class UsersController {
       data: presentUser(await this.commands.updateOwn(principal, input)),
       meta: {}
     };
+  }
+
+  @Get("me/profile-photo")
+  async getOwnProfilePhoto(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
+    const photo = await this.queries.getOwnProfilePhoto(principal);
+    return { data: { contentType: photo.contentType, base64: Buffer.from(photo.data).toString("base64") }, meta: {} };
+  }
+
+  @Put("me/profile-photo")
+  async updateOwnProfilePhoto(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: unknown) {
+    const input = profilePhotoRequestSchema.parse(body);
+    const data = Buffer.from(input.base64, "base64");
+    if (data.byteLength > 512_000 || !matchesImageSignature(data, input.contentType)) {
+      throw new UserManagementError("INVALID_PROFILE_PHOTO", "Invalid profile photo");
+    }
+    return { data: presentUser(await this.commands.updateOwnProfilePhoto(principal, { contentType: input.contentType, data })), meta: {} };
+  }
+
+  @Delete("me/profile-photo")
+  async removeOwnProfilePhoto(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
+    return { data: presentUser(await this.commands.updateOwnProfilePhoto(principal, null)), meta: {} };
   }
 
   @Roles("ADMIN")
@@ -413,4 +437,10 @@ function errorEnvelopeSchema() {
       }
     }
   };
+}
+
+function matchesImageSignature(data: Uint8Array, contentType: string): boolean {
+  if (contentType === "image/jpeg") return data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff;
+  if (contentType === "image/png") return data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4e && data[3] === 0x47;
+  return contentType === "image/webp" && Buffer.from(data.subarray(0, 4)).toString("ascii") === "RIFF" && Buffer.from(data.subarray(8, 12)).toString("ascii") === "WEBP";
 }

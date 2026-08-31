@@ -19,6 +19,7 @@ import type {
   ManagedUser,
   UserPage
 } from "../application/user-management.types";
+import type { ProfilePhoto } from "../application/user-management.types";
 
 const publicInclude = {
   userRoles: {
@@ -110,6 +111,15 @@ export class PrismaUserManagementRepository
       include: publicInclude
     });
     return user ? mapUser(user) : null;
+  }
+
+  async getProfilePhoto(churchId: string, userId: string): Promise<ProfilePhoto | null> {
+    const user = await this.database.user.findFirst({
+      where: { id: userId, churchId, deletedAt: null },
+      select: { profilePhoto: true, profilePhotoContentType: true }
+    });
+    if (!user?.profilePhoto || !isProfilePhotoContentType(user.profilePhotoContentType)) return null;
+    return { contentType: user.profilePhotoContentType, data: user.profilePhoto };
   }
 
   async listCellAssignmentOptions(
@@ -384,6 +394,18 @@ class PrismaUserManagementTransaction implements UserManagementTransaction {
     });
   }
 
+  async updateProfilePhoto(input: { userId: string; photo: ProfilePhoto | null }): Promise<ManagedUser> {
+    await this.requireUser(input.userId);
+    const now = new Date();
+    return mapUser(await this.transaction.user.update({
+      where: { id_churchId: { id: input.userId, churchId: this.churchId } },
+      data: input.photo
+        ? { profilePhoto: Buffer.from(input.photo.data), profilePhotoContentType: input.photo.contentType, profilePhotoUpdatedAt: now }
+        : { profilePhoto: null, profilePhotoContentType: null, profilePhotoUpdatedAt: null },
+      include: publicInclude
+    }));
+  }
+
   revokeSessions(input: {
     userId: string;
     reason: "PASSWORD_CHANGED" | "USER_INACTIVE";
@@ -438,6 +460,8 @@ function mapUser(user: {
   status: UserStatus;
   createdAt: Date;
   updatedAt: Date;
+  profilePhotoContentType: string | null;
+  profilePhotoUpdatedAt: Date | null;
   userRoles: Array<{ role: { id: string; name: string } }>;
 }): ManagedUser {
   return {
@@ -447,10 +471,16 @@ function mapUser(user: {
     lastName: user.lastName,
     email: user.email,
     status: user.status,
+    hasProfilePhoto: user.profilePhotoContentType !== null,
+    profilePhotoUpdatedAt: user.profilePhotoUpdatedAt,
     roles: user.userRoles.map(({ role }) => ({ id: role.id, name: role.name })),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   };
+}
+
+function isProfilePhotoContentType(value: string | null): value is ProfilePhoto["contentType"] {
+  return value === "image/jpeg" || value === "image/png" || value === "image/webp";
 }
 
 function fullName(user: { firstName: string; lastName: string }): string {

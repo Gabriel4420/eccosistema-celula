@@ -53,12 +53,25 @@ export const resetUserPasswordRequestSchema = z
   .object({ newPassword: password })
   .strict();
 
+export const profilePhotoRequestSchema = z.object({
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  base64: z.string().min(1).max(700_000).regex(/^[A-Za-z0-9+/]+={0,2}$/)
+}).strict();
+
+export const profilePhotoResponseSchema = profilePhotoRequestSchema;
+export const profilePhotoEnvelopeSchema = z.object({
+  data: profilePhotoResponseSchema,
+  meta: z.object({}).strict()
+}).strict();
+
 export const userResponseSchema = z.object({
   id: z.uuid(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.string(),
   status: z.enum(["ACTIVE", "BLOCKED"]),
+  hasProfilePhoto: z.boolean().default(false),
+  profilePhotoUpdatedAt: z.iso.datetime().nullable().default(null),
   roles: z.array(z.object({ id: z.uuid(), name: z.string() }).strict()),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime()
@@ -100,4 +113,5 @@ export type UserItemEnvelope = z.infer<typeof userItemEnvelopeSchema>;
 export type UserPageEnvelope = z.infer<typeof userPageEnvelopeSchema>;
 export type ManagedRole = z.infer<typeof managedRoleSchema>;
 export type ManagedRolesEnvelope = z.infer<typeof managedRolesEnvelopeSchema>;
-
+export type ProfilePhotoRequest = z.infer<typeof profilePhotoRequestSchema>;
+export type ProfilePhotoResponse = z.infer<typeof profilePhotoResponseSchema>;

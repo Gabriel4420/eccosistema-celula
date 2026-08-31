@@ -9,6 +9,7 @@ import type {
   ManagedUser,
   UserPage
 } from "./user-management.types";
+import type { ProfilePhoto } from "./user-management.types";
 import type { UserManagementAuthorization } from "./user-management.authorization";
 
 export class UserManagementQueries {
@@ -52,6 +53,12 @@ export class UserManagementQueries {
 
   getOwn(principal: AuthenticatedPrincipal): Promise<ManagedUser> {
     return this.findOrThrow(principal.churchId, principal.userId);
+  }
+
+  async getOwnProfilePhoto(principal: AuthenticatedPrincipal): Promise<ProfilePhoto> {
+    const photo = await this.users.getProfilePhoto(principal.churchId, principal.userId);
+    if (!photo) throw new UserManagementError("USER_PROFILE_PHOTO_NOT_FOUND", "Profile photo not found");
+    return photo;
   }
 
   private async findOrThrow(

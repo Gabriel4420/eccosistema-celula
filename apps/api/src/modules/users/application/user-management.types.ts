@@ -12,9 +12,16 @@ export interface ManagedUser {
   lastName: string;
   email: string;
   status: UserStatus;
+  hasProfilePhoto: boolean;
+  profilePhotoUpdatedAt: Date | null;
   roles: ManagedRole[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface ProfilePhoto {
+  contentType: "image/jpeg" | "image/png" | "image/webp";
+  data: Uint8Array;
 }
 
 export interface UserPage {

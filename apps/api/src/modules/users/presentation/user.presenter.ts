@@ -7,6 +7,8 @@ export function presentUser(user: ManagedUser) {
     lastName: user.lastName,
     email: user.email,
     status: user.status,
+    hasProfilePhoto: user.hasProfilePhoto,
+    profilePhotoUpdatedAt: user.profilePhotoUpdatedAt?.toISOString() ?? null,
     roles: user.roles.map((role) => ({ id: role.id, name: role.name })),
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString()
@@ -24,4 +26,3 @@ export function presentUserPage(page: UserPage, pageNumber: number, pageSize: nu
     }
   };
 }
-

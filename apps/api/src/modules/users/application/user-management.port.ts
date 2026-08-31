@@ -6,6 +6,7 @@ import type {
   ManagedRole,
   UserPage
 } from "./user-management.types";
+import type { ProfilePhoto } from "./user-management.types";
 
 export const USER_MANAGEMENT_REPOSITORY = Symbol("USER_MANAGEMENT_REPOSITORY");
 export const USER_MANAGEMENT_UNIT_OF_WORK = Symbol("USER_MANAGEMENT_UNIT_OF_WORK");
@@ -27,6 +28,7 @@ export interface UserManagementRepository {
     input: ListCellAssignmentOptionsInput
   ): Promise<CellAssignmentOptionsPage>;
   find(churchId: string, userId: string): Promise<ManagedUser | null>;
+  getProfilePhoto(churchId: string, userId: string): Promise<ProfilePhoto | null>;
 }
 
 export interface UserManagementTransaction {
@@ -59,6 +61,7 @@ export interface UserManagementTransaction {
     userId: string;
     passwordHash: string;
   }): Promise<void>;
+  updateProfilePhoto(input: { userId: string; photo: ProfilePhoto | null }): Promise<ManagedUser>;
   revokeSessions(input: {
     userId: string;
     reason: "PASSWORD_CHANGED" | "USER_INACTIVE";
