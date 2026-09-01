@@ -19,8 +19,8 @@ const nextConfig: NextConfig = {
   async headers() {
     const production = process.env.NODE_ENV === "production";
     const connectSrc = production
-      ? "'self'"
-      : "'self' http://localhost:3001 ws://localhost:3001";
+      ? "'self' https://viacep.com.br"
+      : "'self' http://localhost:3001 ws://localhost:3001 https://viacep.com.br";
     const onVercel = Boolean(process.env.VERCEL_ENV);
     const vercelLive = onVercel
       ? {
