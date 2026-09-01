@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
       : { script: "", connect: "", img: "", frame: "" };
     const directives = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${vercelLive.script}`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval'${vercelLive.script}`,
       "style-src 'self' 'unsafe-inline'",
       `img-src 'self' blob: data:${vercelLive.img}`,
       "font-src 'self' data:",
