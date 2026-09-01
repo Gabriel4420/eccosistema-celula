@@ -71,4 +71,61 @@ describe("environment configuration", () => {
       })
     ).toThrow("Authentication secrets must be distinct");
   });
+
+  it("rejects placeholder authentication secrets", () => {
+    const valid = {
+      DATABASE_URL: "postgresql://localhost/example",
+      AUTH_CHURCH_ID: "00000000-0000-4000-8000-000000000001",
+      JWT_ACCESS_SECRET: "a".repeat(32),
+      REFRESH_TOKEN_PEPPER: "b".repeat(32)
+    };
+    expect(() =>
+      parseAuthenticationEnvironment({
+        ...valid,
+        JWT_ACCESS_SECRET: "replace-with-some-secret-value-here"
+      })
+    ).toThrow("JWT_ACCESS_SECRET must not be a placeholder value");
+    expect(() =>
+      parseAuthenticationEnvironment({
+        ...valid,
+        REFRESH_TOKEN_PEPPER: "replace-with-a-different-secret-here"
+      })
+    ).toThrow("REFRESH_TOKEN_PEPPER must not be a placeholder value");
+    expect(() =>
+      parseAuthenticationEnvironment({
+        ...valid,
+        AUTH_CHURCH_ID: "replace-with-a-church-id-uuid"
+      })
+    ).toThrow("AUTH_CHURCH_ID must not be a placeholder value");
+  });
+
+  it("forces secure auth cookies in production", () => {
+    const valid = {
+      DATABASE_URL: "postgresql://localhost/example",
+      AUTH_CHURCH_ID: "00000000-0000-4000-8000-000000000001",
+      JWT_ACCESS_SECRET: "a".repeat(32),
+      REFRESH_TOKEN_PEPPER: "b".repeat(32)
+    };
+    expect(() =>
+      parseAuthenticationEnvironment({
+        ...valid,
+        NODE_ENV: "production",
+        AUTH_COOKIE_SECURE: "false"
+      })
+    ).toThrow("AUTH_COOKIE_SECURE must be true in production");
+    expect(
+      parseAuthenticationEnvironment({
+        ...valid,
+        NODE_ENV: "production",
+        AUTH_COOKIE_SECURE: "true"
+      }).AUTH_COOKIE_SECURE
+    ).toBe(true);
+    expect(
+      parseAuthenticationEnvironment({
+        ...valid,
+        NODE_ENV: "development",
+        AUTH_COOKIE_SECURE: "false"
+      }).AUTH_COOKIE_SECURE
+    ).toBe(false);
+  });
 });

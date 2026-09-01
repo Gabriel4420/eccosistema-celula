@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+const nonPlaceholderSecret = (message: string) =>
+  z
+    .string()
+    .min(32)
+    .refine((value) => !value.startsWith("replace-with-"), {
+      message
+    });
+
 const serverEnvironmentSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -7,14 +15,23 @@ const serverEnvironmentSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
   DATABASE_URL: z.url().startsWith("postgresql://").optional(),
   TEST_DATABASE_URL: z.url().startsWith("postgresql://").optional(),
-  AUTH_CHURCH_ID: z.uuid().optional(),
-  JWT_ACCESS_SECRET: z.string().min(32).optional(),
+  AUTH_CHURCH_ID: z
+    .uuid()
+    .refine((value) => !value.startsWith("replace-with-"), {
+      message: "AUTH_CHURCH_ID must not be a placeholder value"
+    })
+    .optional(),
+  JWT_ACCESS_SECRET: nonPlaceholderSecret(
+    "JWT_ACCESS_SECRET must not be a placeholder value"
+  ).optional(),
   JWT_ISSUER: z.string().min(1).default("mission-atos-api"),
   JWT_AUDIENCE: z.string().min(1).default("mission-atos-clients"),
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(600),
   AUTH_LOGIN_IP_LIMIT: z.coerce.number().int().min(1).max(10_000).default(10),
   AUTH_LOGIN_ACCOUNT_LIMIT: z.coerce.number().int().min(1).max(10_000).default(5),
-  REFRESH_TOKEN_PEPPER: z.string().min(32).optional(),
+  REFRESH_TOKEN_PEPPER: nonPlaceholderSecret(
+    "REFRESH_TOKEN_PEPPER must not be a placeholder value"
+  ).optional(),
   REFRESH_TOKEN_TTL_SECONDS: z.coerce
     .number()
     .int()
@@ -26,6 +43,14 @@ const serverEnvironmentSchema = z.object({
     .default("false")
     .transform((value) => value === "true"),
   CORS_ORIGINS: z.string().default("http://localhost:3000")
+}).superRefine((value, context) => {
+  if (value.NODE_ENV === "production" && value.AUTH_COOKIE_SECURE === false) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["AUTH_COOKIE_SECURE"],
+      message: "AUTH_COOKIE_SECURE must be true in production"
+    });
+  }
 });
 
 const authenticationEnvironmentSchema = serverEnvironmentSchema.required({
