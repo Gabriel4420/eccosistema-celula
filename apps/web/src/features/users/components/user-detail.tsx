@@ -4,12 +4,29 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Alert, Button, Dialog, EmptyState, ErrorState, Skeleton, StatusBadge, TextField } from "@/src/shared/components";
+import {
+  Alert,
+  Button,
+  Dialog,
+  EmptyState,
+  ErrorState,
+  Skeleton,
+  StatusBadge,
+  TextField,
+} from "@/src/shared/components";
 import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
-import { getManagedRoles, getUser, replaceUserRoles, resetUserPassword, updateUser, updateUserStatus } from "@/src/features/users/api/users-api";
+import {
+  getManagedRoles,
+  getUser,
+  replaceUserRoles,
+  resetUserPassword,
+  updateUser,
+  updateUserStatus,
+} from "@/src/features/users/api/users-api";
+import { roleLabel } from "@/src/shared/auth/session";
 
 const PASSWORD_MIN = 12;
 const USERS_CACHE = "users";
@@ -22,18 +39,23 @@ export function UserDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { data: user, loading, error, reload } = useRemoteQuery({
+  const {
+    data: user,
+    loading,
+    error,
+    reload,
+  } = useRemoteQuery({
     fetcher: () => getUser(api, id),
     cacheName: USERS_CACHE,
     cacheKey: `detail:${id}`,
-    ttlMs: 20_000
+    ttlMs: 20_000,
   });
 
   const { data: managedRoles } = useRemoteQuery({
     fetcher: () => getManagedRoles(api),
     cacheName: ROLES_CACHE,
     cacheKey: "catalog",
-    ttlMs: 60_000
+    ttlMs: 60_000,
   });
 
   const [firstName, setFirstName] = useState("");
@@ -43,7 +65,10 @@ export function UserDetail() {
   const [resetPassword, setResetPassword] = useState("");
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>("none");
   const [busy, setBusy] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    kind: "success" | "error";
+    message: string;
+  } | null>(null);
 
   if (loading && !user) {
     return (
@@ -56,14 +81,21 @@ export function UserDetail() {
 
   if (error && !user) {
     return (
-      <ErrorState title="Não foi possível carregar o usuário" onRetry={() => void reload()}>
+      <ErrorState
+        title="Não foi possível carregar o usuário"
+        onRetry={() => void reload()}
+      >
         Tente novamente em instantes.
       </ErrorState>
     );
   }
 
   if (!user) {
-    return <EmptyState title="Usuário não encontrado">O usuário solicitado não existe.</EmptyState>;
+    return (
+      <EmptyState title="Usuário não encontrado">
+        O usuário solicitado não existe.
+      </EmptyState>
+    );
   }
 
   const dirtyName = firstName !== "" && firstName !== user.firstName;
@@ -99,7 +131,11 @@ export function UserDetail() {
       setEmail("");
       setFeedback({ kind: "success", message: "Usuário atualizado." });
     } catch {
-      setFeedback({ kind: "error", message: "Não foi possível salvar as alterações. Verifique os dados e tente novamente." });
+      setFeedback({
+        kind: "error",
+        message:
+          "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
+      });
     } finally {
       setBusy(false);
     }
@@ -112,14 +148,22 @@ export function UserDetail() {
       if (confirmAction === "status") {
         const next = user.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
         await updateUserStatus(api, id, next);
-        setFeedback({ kind: "success", message: next === "ACTIVE" ? "Usuário ativado." : "Usuário bloqueado." });
+        setFeedback({
+          kind: "success",
+          message:
+            next === "ACTIVE" ? "Usuário ativado." : "Usuário bloqueado.",
+        });
       } else if (confirmAction === "roles") {
         await replaceUserRoles(api, id, { roleIds: currentRoleIds });
         setFeedback({ kind: "success", message: "Papéis atualizados." });
       } else if (confirmAction === "reset") {
         await resetUserPassword(api, id, resetPassword);
         setResetPassword("");
-        setFeedback({ kind: "success", message: "Senha redefinida. Compartilhe a nova senha com o usuário em um canal seguro." });
+        setFeedback({
+          kind: "success",
+          message:
+            "Senha redefinida. Compartilhe a nova senha com o usuário em um canal seguro.",
+        });
       }
       cacheStore(USERS_CACHE).invalidatePrefix("detail");
       cacheStore(USERS_CACHE).invalidatePrefix("page");
@@ -167,7 +211,7 @@ export function UserDetail() {
 
   return (
     <section aria-labelledby="user-title">
-      <div className="page-header">
+      <div className="page-header flex-col">
         <h1 className="page-title" id="user-title">
           {user.firstName} {user.lastName}
         </h1>
@@ -177,7 +221,10 @@ export function UserDetail() {
       </div>
 
       {feedback ? (
-        <Alert variant={feedback.kind} title={feedback.kind === "success" ? "Sucesso" : "Falha"}>
+        <Alert
+          variant={feedback.kind}
+          title={feedback.kind === "success" ? "Sucesso" : "Falha"}
+        >
           {feedback.message}
         </Alert>
       ) : null}
@@ -193,11 +240,16 @@ export function UserDetail() {
         </div>
         <div className="detail-list__item">
           <span className="detail-list__label">Papéis</span>
-          <span className="detail-list__value">{user.roles.map((role) => role.name).join(", ")}</span>
+          <span className="detail-list__value">
+            {user.roles.map((role) => roleLabel(role.name)).join(", ")}
+          </span>
         </div>
       </div>
 
-      <form className="fieldset" onSubmit={(event) => void handleSaveEdits(event)}>
+      <form
+        className="fieldset"
+        onSubmit={(event) => void handleSaveEdits(event)}
+      >
         <fieldset className="fieldset">
           <legend className="fieldset__legend">Editar dados</legend>
           <TextField
@@ -223,7 +275,12 @@ export function UserDetail() {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
-          <Button type="submit" disabled={!hasEdits} loading={busy} loadingLabel="Salvando…">
+          <Button
+            type="submit"
+            disabled={!hasEdits}
+            loading={busy}
+            loadingLabel="Salvando…"
+          >
             Salvar alterações
           </Button>
         </fieldset>
@@ -239,11 +296,22 @@ export function UserDetail() {
       >
         <fieldset className="fieldset">
           <legend className="fieldset__legend">Papéis</legend>
-          <p className="page-description">A alteração exige confirmação e pode afetar permissões.</p>
+          <p className="page-description">
+            A alteração exige confirmação e pode afetar permissões.
+          </p>
           {(managedRoles ?? []).map((role) => {
             const isSelected = currentRoleIds.includes(role.id);
             return (
-              <label key={role.id} className="field__label" style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", fontWeight: 500 }}>
+              <label
+                key={role.id}
+                className="field__label"
+                style={{
+                  display: "flex",
+                  gap: "var(--space-2)",
+                  alignItems: "center",
+                  fontWeight: 500,
+                }}
+              >
                 <input
                   type="checkbox"
                   name="roleIds"
@@ -251,7 +319,7 @@ export function UserDetail() {
                   checked={isSelected}
                   onChange={() => toggleRole(role.id)}
                 />
-                {role.name}
+                {roleLabel(role.name)}
               </label>
             );
           })}
@@ -267,7 +335,10 @@ export function UserDetail() {
             Bloquear usuário
           </Button>
         ) : (
-          <Button variant="secondary" onClick={() => setConfirmAction("status")}>
+          <Button
+            variant="secondary"
+            onClick={() => setConfirmAction("status")}
+          >
             Ativar usuário
           </Button>
         )}
@@ -295,12 +366,22 @@ export function UserDetail() {
           />
         ) : null}
         <div className="dialog-panel__actions">
-          <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
+          <Button
+            variant="secondary"
+            onClick={() => setConfirmAction("none")}
+            disabled={busy}
+          >
             Cancelar
           </Button>
           <Button
-            variant={confirmAction === "status" && user.status === "ACTIVE" ? "danger" : "primary"}
-            disabled={confirmAction === "reset" && resetPassword.length < PASSWORD_MIN}
+            variant={
+              confirmAction === "status" && user.status === "ACTIVE"
+                ? "danger"
+                : "primary"
+            }
+            disabled={
+              confirmAction === "reset" && resetPassword.length < PASSWORD_MIN
+            }
             loading={busy}
             loadingLabel="Confirmando…"
             onClick={() => void runConfirm()}

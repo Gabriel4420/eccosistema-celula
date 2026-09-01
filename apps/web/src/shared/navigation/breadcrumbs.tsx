@@ -14,7 +14,7 @@ const ROUTE_LABELS: ReadonlyArray<{ readonly pattern: RegExp; readonly crumbs: r
   { pattern: /^\/users\/new$/, crumbs: [{ label: "Usuarios", href: "/users" }, { label: "Novo usuario" }] },
   { pattern: /^\/users\/[^/]+$/, crumbs: [{ label: "Usuarios", href: "/users" }, { label: "Detalhe do usuario" }] },
   { pattern: /^\/users$/, crumbs: [{ label: "Usuarios" }] },
-  { pattern: /^\/church\/settings$/, crumbs: [{ label: "Igreja", href: "/dashboard" }, { label: "Configuracoes" }] },
+  { pattern: /^\/church\/settings$/, crumbs: [{ label: "Igreja", href: "/dashboard" }, { label: "Configurações" }] },
   { pattern: /^\/people\/new$/, crumbs: [{ label: "Pessoas", href: "/people" }, { label: "Nova pessoa" }] },
   { pattern: /^\/people\/[^/]+$/, crumbs: [{ label: "Pessoas", href: "/people" }, { label: "Detalhe da pessoa" }] },
   { pattern: /^\/people$/, crumbs: [{ label: "Pessoas" }] },

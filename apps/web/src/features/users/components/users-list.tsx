@@ -3,10 +3,22 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Button, EmptyState, ErrorState, Pagination, SelectField, Skeleton, StatusBadge, Table, TextField } from "@/src/shared/components";
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  Pagination,
+  SelectField,
+  Skeleton,
+  StatusBadge,
+  Table,
+  TextField,
+} from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { getManagedRoles, listUsers } from "@/src/features/users/api/users-api";
+import { UserDetailModal } from "@/src/features/users/components/user-detail-modal";
+import { roleLabel } from "@/src/shared/auth/session";
 import type { UserResponse } from "@mission-atos/contracts";
 
 const PAGE_SIZE = 20;
@@ -24,10 +36,11 @@ function readParams(searchParams: URLSearchParams): UsersParams {
   const status = searchParams.get("status");
   const requestedPage = Number(searchParams.get("page") ?? "1");
   return {
-    page: Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
+    page:
+      Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
     search: searchParams.get("search") ?? "",
     status: status === "ACTIVE" || status === "BLOCKED" ? status : "",
-    roleId: searchParams.get("roleId") ?? ""
+    roleId: searchParams.get("roleId") ?? "",
   };
 }
 
@@ -47,28 +60,41 @@ export function UsersList() {
   const searchParams = useSearchParams();
   const params = readParams(searchParams);
 
-  const { data: page, loading, error, reload } = useRemoteQuery({
-    fetcher: () => listUsers(api, { page: params.page, pageSize: PAGE_SIZE, search: params.search || undefined, status: params.status || undefined, roleId: params.roleId || undefined }),
+  const {
+    data: page,
+    loading,
+    error,
+    reload,
+  } = useRemoteQuery({
+    fetcher: () =>
+      listUsers(api, {
+        page: params.page,
+        pageSize: PAGE_SIZE,
+        search: params.search || undefined,
+        status: params.status || undefined,
+        roleId: params.roleId || undefined,
+      }),
     cacheName: USERS_CACHE,
     cacheKey: `page:${params.page}:search:${params.search}:status:${params.status}:roleId:${params.roleId}`,
-    ttlMs: 20_000
+    ttlMs: 20_000,
   });
 
   const { data: managedRoles } = useRemoteQuery({
     fetcher: () => getManagedRoles(api),
     cacheName: ROLES_CACHE,
     cacheKey: "catalog",
-    ttlMs: 60_000
+    ttlMs: 60_000,
   });
 
   const [searchInput, setSearchInput] = useState(params.search);
   const searchTimer = useRef<number | null>(null);
+  const [detailUser, setDetailUser] = useState<UserResponse | null>(null);
 
   useEffect(
     () => () => {
       if (searchTimer.current) window.clearTimeout(searchTimer.current);
     },
-    []
+    [],
   );
 
   const navigate = (next: Partial<UsersParams>) => {
@@ -79,14 +105,16 @@ export function UsersList() {
 
   return (
     <section aria-labelledby="users-title">
-      <div className="page-header">
-        <h1 className="page-title" id="users-title">
-          Usuários
-        </h1>
-        <p className="page-description">
-          Gerencie contas, papéis e acesso dos usuários da sua igreja.
-        </p>
-        <Link className="button" href="/users/new">
+      <div className="page-header w-full">
+        <div className="flex flex-col gap-2">
+          <h1 className="page-title" id="users-title">
+            Usuários
+          </h1>
+          <p className="page-description">
+            Gerencie contas, papéis e acesso dos usuários da sua igreja.
+          </p>
+        </div>
+        <Link className="button h-8" href="/users/new">
           Novo usuário
         </Link>
       </div>
@@ -110,21 +138,31 @@ export function UsersList() {
           label="Status"
           name="status"
           value={params.status}
-          onChange={(event) => navigate({ status: event.target.value as UsersParams["status"], page: 1 })}
+          onChange={(event) =>
+            navigate({
+              status: event.target.value as UsersParams["status"],
+              page: 1,
+            })
+          }
           options={[
             { value: "", label: "Todos" },
             { value: "ACTIVE", label: "Ativo" },
-            { value: "BLOCKED", label: "Bloqueado" }
+            { value: "BLOCKED", label: "Bloqueado" },
           ]}
         />
         <SelectField
           label="Papel"
           name="roleId"
           value={params.roleId}
-          onChange={(event) => navigate({ roleId: event.target.value, page: 1 })}
+          onChange={(event) =>
+            navigate({ roleId: event.target.value, page: 1 })
+          }
           options={[
             { value: "", label: "Todos" },
-            ...(managedRoles ?? []).map((role) => ({ value: role.id, label: role.name }))
+            ...(managedRoles ?? []).map((role) => ({
+              value: role.id,
+              label: roleLabel(role.name),
+            })),
           ]}
         />
         <Button
@@ -139,7 +177,10 @@ export function UsersList() {
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar os usuários" onRetry={() => void reload()}>
+        <ErrorState
+          title="Não foi possível carregar os usuários"
+          onRetry={() => void reload()}
+        >
           Tente novamente em instantes.
         </ErrorState>
       ) : null}
@@ -170,26 +211,35 @@ export function UsersList() {
                   <Link href={`/users/${user.id}`}>
                     {user.firstName} {user.lastName}
                   </Link>
-                )
+                ),
               },
               { key: "email", header: "E-mail", render: (user) => user.email },
               {
                 key: "roles",
                 header: "Papéis",
-                render: (user) => user.roles.map((role) => role.name).join(", ")
+                render: (user) =>
+                  user.roles.map((role) => roleLabel(role.name)).join(", "),
               },
-              { key: "status", header: "Status", render: (user) => <StatusBadge status={user.status} /> },
+              {
+                key: "status",
+                header: "Status",
+                render: (user) => <StatusBadge status={user.status} />,
+              },
               {
                 key: "actions",
                 header: "Ações",
                 render: (user) => (
                   <span className="table__actions">
-                    <Link className="button button--secondary button--sm" href={`/users/${user.id}`}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setDetailUser(user)}
+                    >
                       Ver detalhes
-                    </Link>
+                    </Button>
                   </span>
-                )
-              }
+                ),
+              },
             ]}
             rows={rows}
           />
@@ -201,6 +251,14 @@ export function UsersList() {
             onPageChange={(nextPage) => navigate({ page: nextPage })}
           />
         </>
+      ) : null}
+
+      {detailUser ? (
+        <UserDetailModal
+          user={detailUser}
+          open
+          onClose={() => setDetailUser(null)}
+        />
       ) : null}
     </section>
   );

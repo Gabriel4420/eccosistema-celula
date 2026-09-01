@@ -10,6 +10,7 @@ import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { createUser, getManagedRoles } from "@/src/features/users/api/users-api";
+import { roleLabel } from "@/src/shared/auth/session";
 import { evaluatePasswordStrength } from "@mission-atos/contracts";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 
@@ -175,7 +176,7 @@ export function CreateUserForm() {
                     checked={selectedRoleIds.includes(role.id)}
                     onChange={() => toggleRole(role.id)}
                   />
-                  {role.name}
+                  {roleLabel(role.name)}
                 </label>
               ))}
             </div>
