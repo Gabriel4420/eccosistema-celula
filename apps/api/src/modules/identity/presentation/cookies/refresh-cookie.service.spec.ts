@@ -3,30 +3,36 @@ import type { AuthEnvironment } from "../../identity.tokens";
 import { RefreshCookieService } from "./refresh-cookie.service";
 
 describe("RefreshCookieService", () => {
-  it("keeps a strict secure cookie scoped to the same-site production proxy", () => {
+  it("keeps a name-prefixed secure cookie scoped to the same-site production proxy", () => {
     const response = { cookie: jest.fn() } as unknown as Response;
     new RefreshCookieService(environment(true)).write(response, "token");
 
     expect(response.cookie).toHaveBeenCalledWith(
-      "mission_atos_refresh",
+      "__Secure-mission_atos_refresh",
       "token",
       expect.objectContaining({
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "lax",
+        partitioned: true,
         path: "/api/auth"
       })
     );
   });
 
-  it("keeps the direct auth path for local development", () => {
+  it("keeps the plain cookie and direct auth path for local development", () => {
     const response = { cookie: jest.fn() } as unknown as Response;
     new RefreshCookieService(environment(false)).write(response, "token");
 
     expect(response.cookie).toHaveBeenCalledWith(
       "mission_atos_refresh",
       "token",
-      expect.objectContaining({ secure: false, sameSite: "strict", path: "/auth" })
+      expect.objectContaining({
+        secure: false,
+        sameSite: "lax",
+        partitioned: true,
+        path: "/auth"
+      })
     );
   });
 });

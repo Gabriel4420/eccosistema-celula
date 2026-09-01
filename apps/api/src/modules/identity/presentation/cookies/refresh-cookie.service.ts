@@ -6,7 +6,8 @@ import {
 } from "../../identity.tokens";
 import { AuthError } from "../../domain/auth-error";
 
-const COOKIE_NAME = "mission_atos_refresh";
+const COOKIE_NAME_PREFIX = "__Secure-mission_atos_refresh";
+const COOKIE_NAME_PLAIN = "mission_atos_refresh";
 
 @Injectable()
 export class RefreshCookieService {
@@ -18,16 +19,16 @@ export class RefreshCookieService {
   read(request: Request): string | undefined {
     const cookies: unknown = request.cookies;
     if (!isStringRecord(cookies)) return undefined;
-    const value = cookies[COOKIE_NAME];
+    const value = cookies[this.cookieName];
     return typeof value === "string" ? value : undefined;
   }
 
   write(response: Response, token: string): void {
-    response.cookie(COOKIE_NAME, token, this.options());
+    response.cookie(this.cookieName, token, this.options());
   }
 
   clear(response: Response): void {
-    response.clearCookie(COOKIE_NAME, this.options());
+    response.clearCookie(this.cookieName, this.options());
   }
 
   assertAllowedOrigin(request: Request): void {
@@ -41,12 +42,20 @@ export class RefreshCookieService {
     }
   }
 
+  private get cookieName(): string {
+    return this.environment.AUTH_COOKIE_SECURE
+      ? COOKIE_NAME_PREFIX
+      : COOKIE_NAME_PLAIN;
+  }
+
   private options(): CookieOptions {
+    const secure = this.environment.AUTH_COOKIE_SECURE;
     return {
       httpOnly: true,
-      secure: this.environment.AUTH_COOKIE_SECURE,
-      sameSite: "strict",
-      path: this.environment.AUTH_COOKIE_SECURE ? "/api/auth" : "/auth",
+      secure,
+      sameSite: "lax",
+      path: secure ? "/api/auth" : "/auth",
+      partitioned: true,
       maxAge: this.environment.REFRESH_TOKEN_TTL_SECONDS * 1000
     };
   }
