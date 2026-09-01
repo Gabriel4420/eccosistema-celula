@@ -53,6 +53,22 @@ test.describe("accessibility and responsive navigation", () => {
     });
   }
 
+  test("opens and closes the mobile drawer with the hamburger", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await login(page, FIXTURES.admin.email);
+
+    const toggle = page.getByRole("button", { name: "Abrir menu" });
+    await expect(toggle).toBeVisible();
+    await toggle.click();
+
+    await expect(page.getByRole("link", { name: "Pessoas" })).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    await page.keyboard.press("Escape");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(toggle).toBeFocused();
+  });
+
   test("keeps the dashboard usable at 200 percent zoom", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await login(page, FIXTURES.admin.email);

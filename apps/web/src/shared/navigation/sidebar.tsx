@@ -3,8 +3,20 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { Can } from "@/src/shared/auth/guards";
+
+const MOBILE_MEDIA_QUERY = "(max-width: 48rem)";
+
+const focusableSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])"
+].join(",");
 
 const BASE_LINKS: ReadonlyArray<{
   readonly href: string;
@@ -18,8 +30,83 @@ const BASE_LINKS: ReadonlyArray<{
   { href: "/cells", label: "Células", icon: <IconCells /> }
 ];
 
+function subscribeToMediaQuery(onStoreChange: () => void): () => void {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return () => {};
+  }
+  const query = window.matchMedia(MOBILE_MEDIA_QUERY);
+  if (typeof query.addEventListener === "function") {
+    query.addEventListener("change", onStoreChange);
+    return () => query.removeEventListener("change", onStoreChange);
+  }
+  query.onchange = onStoreChange;
+  return () => {
+    query.onchange = null;
+  };
+}
+
+function isMobileViewport(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const drawerRef = useRef<HTMLElement>(null);
+  const isMobile = useSyncExternalStore(subscribeToMediaQuery, isMobileViewport, () => false);
+  const [previousPathname, setPreviousPathname] = useState(pathname);
+
+  const close = () => setOpen(false);
+
+  if (previousPathname !== pathname) {
+    setPreviousPathname(pathname);
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const drawer = drawerRef.current;
+    if (!drawer) return undefined;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector));
+    (focusables()[0] ?? drawer).focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const list = focusables();
+      if (list.length === 0) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+      previouslyFocused?.focus();
+    };
+  }, [open]);
+
+  const hidden = isMobile && !open;
 
   const links = [
     ...BASE_LINKS.map((link) => (
@@ -37,32 +124,74 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="sidebar">
-      <p className="sidebar__brand">
+    <>
+      <div className="shell__topbar">
+        <button
+          type="button"
+          className="shell__menu-toggle"
+          aria-controls="shell-sidebar"
+          aria-expanded={open}
+          aria-label="Abrir menu"
+          onClick={() => setOpen(true)}
+        >
+          <IconMenu />
+        </button>
         <Image
-          className="sidebar__logo"
+          className="shell__topbar-logo"
           src="/brand/missao-atos-logo.png"
-          alt="Missão Atos — Igreja em Células"
-          width={1254}
-          height={1254}
-          priority
+          alt=""
+          aria-hidden
+          width={1120}
+          height={520}
+          priority={false}
         />
-      </p>
-      <p className="sidebar__label">Workspace</p>
-      <nav aria-label="Navegação principal" className="sidebar__nav">
-        {links}
-      </nav>
-      <a
-        className="sidebar__footer"
-        href="https://wa.me/5517991203993?text=Ol%C3%A1%20miss%C3%A3o%20atos%2C%20preciso%20de%20ajuda%20..."
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Precisa de ajuda? Conversar pelo WhatsApp (abre em nova aba)"
+      </div>
+      <div
+        className={`sidebar-scrim${open ? " sidebar-scrim--open" : ""}`}
+        aria-hidden="true"
+        onClick={close}
+      />
+      <aside
+        ref={drawerRef}
+        id="shell-sidebar"
+        className={`sidebar${open ? " sidebar--open" : ""}`}
+        aria-hidden={hidden || undefined}
+        inert={hidden}
       >
-        <span className="sidebar__footer-mark" aria-hidden="true">?</span>
-        <span><strong>Precisa de ajuda?</strong><small>Fale pelo WhatsApp</small></span>
-      </a>
-    </aside>
+        <p className="sidebar__brand">
+          <Image
+            className="sidebar__logo"
+            src="/brand/missao-atos-logo.png"
+            alt="Missão Atos — Igreja em Células"
+            width={1254}
+            height={1254}
+            priority
+          />
+          <button
+            type="button"
+            className="sidebar__close"
+            aria-label="Fechar menu"
+            onClick={close}
+          >
+            <IconClose />
+          </button>
+        </p>
+        <p className="sidebar__label">Workspace</p>
+        <nav aria-label="Navegação principal" className="sidebar__nav">
+          {links}
+        </nav>
+        <a
+          className="sidebar__footer"
+          href="https://wa.me/5517991203993?text=Ol%C3%A1%20miss%C3%A3o%20atos%2C%20preciso%20de%20ajuda%20..."
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Precisa de ajuda? Conversar pelo WhatsApp (abre em nova aba)"
+        >
+          <span className="sidebar__footer-mark" aria-hidden="true">?</span>
+          <span><strong>Precisa de ajuda?</strong><small>Fale pelo WhatsApp</small></span>
+        </a>
+      </aside>
+    </>
   );
 }
 
@@ -166,5 +295,37 @@ function IconUsers() {
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </NavIcon>
+  );
+}
+
+function IconMenu() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+}
+
+function IconClose() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
   );
 }
