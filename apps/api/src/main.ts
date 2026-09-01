@@ -18,7 +18,7 @@ async function bootstrap(): Promise<void> {
           scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'"],
+          connectSrc: ["'self'", "https://viacep.com.br"],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
           frameAncestors: ["'none'"]
