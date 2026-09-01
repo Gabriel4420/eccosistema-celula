@@ -21,17 +21,27 @@ const nextConfig: NextConfig = {
     const connectSrc = production
       ? "'self'"
       : "'self' http://localhost:3001 ws://localhost:3001";
+    const onVercel = Boolean(process.env.VERCEL_ENV);
+    const vercelLive = onVercel
+      ? {
+          script: " https://vercel.live https://vercel.com",
+          connect: " https://vercel.live https://vercel.com wss://*.pusher.com",
+          img: " https://vercel.live https://vercel.com",
+          frame: " https://vercel.live"
+        }
+      : { script: "", connect: "", img: "", frame: "" };
     const directives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline'${vercelLive.script}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' blob: data:",
+      `img-src 'self' blob: data:${vercelLive.img}`,
       "font-src 'self' data:",
-      `connect-src ${connectSrc}`,
+      `connect-src ${connectSrc}${vercelLive.connect}`,
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "frame-ancestors 'none'"
+      "frame-ancestors 'none'",
+      `frame-src 'self'${vercelLive.frame}`
     ];
     if (production) directives.push("upgrade-insecure-requests");
     return [
