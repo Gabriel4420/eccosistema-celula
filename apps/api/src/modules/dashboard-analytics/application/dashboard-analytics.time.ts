@@ -9,8 +9,9 @@ export function resolvePeriodBounds(
   timezone: string
 ): PeriodBounds {
   if (input.from && input.to) {
+    const spanDays = civilSpanDays(input.from, input.to);
     const prevTo = addDays(input.from, -1);
-    const prevFrom = addDays(prevTo, -(DEFAULT_PERIOD_DAYS - 1));
+    const prevFrom = addDays(prevTo, -(spanDays - 1));
     return { from: input.from, to: input.to, prevFrom, prevTo };
   }
   const to = civilDateOf(now, timezone);
@@ -69,4 +70,10 @@ export function compareCivil(a: string, b: string): number {
   const ms = DAY_MS;
   void ms;
   return a < b ? -1 : a > b ? 1 : 0;
+}
+
+export function civilSpanDays(from: string, to: string): number {
+  const [fromY, fromM, fromD] = from.split("-").map(Number);
+  const [toY, toM, toD] = to.split("-").map(Number);
+  return (Date.UTC(toY ?? 0, (toM ?? 1) - 1, toD ?? 0) - Date.UTC(fromY ?? 0, (fromM ?? 1) - 1, fromD ?? 0)) / DAY_MS + 1;
 }

@@ -12,8 +12,10 @@ test.describe("dashboard analytics", () => {
     const card = page.locator(".stat-card", { hasText: "Pessoas" });
     await expect(card).toBeVisible();
 
-    const chart = page.getByRole("img", { name: /Gráfico mensal de encontros, presentes e visitantes/ });
-    await expect(chart).toBeVisible();
+    const meetingChart = page.getByRole("img", { name: /Gráfico de encontros por mês/ });
+    const attendanceChart = page.getByRole("img", { name: /Gráfico de presentes e visitantes por mês/ });
+    await expect(meetingChart).toBeVisible();
+    await expect(attendanceChart).toBeVisible();
 
     const shortcuts = page.getByRole("heading", { name: "O que você quer fazer?" });
     await expect(shortcuts).toBeVisible();

@@ -20,6 +20,7 @@ describe("aggregateAttendanceRate", () => {
   });
 
   it("caps at 100 when present exceeds eligible", () => {
-    expect(aggregateAttendanceRate(12, 10)).toBe(120);
+    expect(aggregateAttendanceRate(12, 10)).toBe(100);
+    expect(aggregateAttendanceRate(200, 100)).toBe(100);
   });
 });

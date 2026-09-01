@@ -1,4 +1,4 @@
-import { addDays, civilDateOf, civilDayBounds, resolvePeriodBounds, startOfCivilDay, endOfCivilDay } from "./dashboard-analytics.time";
+import { addDays, civilDateOf, civilDayBounds, civilSpanDays, resolvePeriodBounds, startOfCivilDay, endOfCivilDay } from "./dashboard-analytics.time";
 
 describe("dashboard analytics time helpers", () => {
   describe("resolvePeriodBounds", () => {
@@ -14,7 +14,23 @@ describe("dashboard analytics time helpers", () => {
     it("uses explicit from/to and derives the previous equal-length period", () => {
       const bounds = resolvePeriodBounds({ from: "2026-08-10", to: "2026-08-31" }, new Date(), "UTC");
       expect(bounds.prevTo).toBe("2026-08-09");
-      expect(bounds.prevFrom).toBe("2026-07-11");
+      expect(civilSpanDays(bounds.from, bounds.to)).toBe(civilSpanDays(bounds.prevFrom, bounds.prevTo));
+      expect(bounds.prevFrom).toBe("2026-07-19");
+    });
+
+    it("matches previous period span to current span for non-30-day ranges", () => {
+      const bounds = resolvePeriodBounds({ from: "2026-08-01", to: "2026-08-07" }, new Date(), "UTC");
+      expect(bounds.prevTo).toBe("2026-07-31");
+      expect(bounds.prevFrom).toBe("2026-07-25");
+      expect(civilSpanDays(bounds.from, bounds.to)).toBe(7);
+      expect(civilSpanDays(bounds.prevFrom, bounds.prevTo)).toBe(7);
+    });
+
+    it("handles single-day periods", () => {
+      const bounds = resolvePeriodBounds({ from: "2026-08-15", to: "2026-08-15" }, new Date(), "UTC");
+      expect(bounds.prevTo).toBe("2026-08-14");
+      expect(bounds.prevFrom).toBe("2026-08-14");
+      expect(civilSpanDays(bounds.prevFrom, bounds.prevTo)).toBe(1);
     });
   });
 

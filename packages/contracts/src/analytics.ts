@@ -66,7 +66,7 @@ export const seriesQuerySchema = z
 export const cellsSummaryQuerySchema = z
   .object({
     windowDays: z.coerce.number().int().min(2).max(90).default(14),
-    status: z.enum(cellStatuses).optional()
+    status: z.enum(cellStatuses).default("ACTIVE")
   })
   .strict();
 

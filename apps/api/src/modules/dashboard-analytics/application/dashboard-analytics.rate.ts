@@ -3,7 +3,8 @@ export function aggregateAttendanceRate(
   eligibleSum: number
 ): number | null {
   if (eligibleSum <= 0) return null;
-  return roundPercentage(presentSum / eligibleSum);
+  const capped = Math.min(presentSum, eligibleSum);
+  return roundPercentage(capped / eligibleSum);
 }
 
 function roundPercentage(ratio: number): number {

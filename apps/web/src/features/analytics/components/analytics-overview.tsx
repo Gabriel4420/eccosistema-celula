@@ -117,11 +117,6 @@ function StatCards({ overview }: { readonly overview: OverviewResponse }) {
 
 function MonthlyChart({ series }: { readonly series: readonly SeriesPoint[] }) {
   const points = series;
-  const max = Math.max(1, ...points.flatMap((point) => [point.meetings, point.presentMembers, point.visitors]));
-  const label = (month: string): string => {
-    const parts = month.split("-");
-    return `${parts[1]}/${parts[0]!.slice(2)}`;
-  };
 
   if (points.length === 0) {
     return (
@@ -132,9 +127,104 @@ function MonthlyChart({ series }: { readonly series: readonly SeriesPoint[] }) {
     );
   }
 
-  const width = 320;
-  const height = 160;
-  const padL = 8;
+  const label = (month: string): string => {
+    const parts = month.split("-");
+    return `${parts[1]}/${parts[0]!.slice(2)}`;
+  };
+
+  return (
+    <section className="analytics-panel" aria-label="Evolução mensal">
+      <h3 className="analytics-panel__title">Evolução mensal</h3>
+      <div className="analytics-charts">
+        <MeetingChart points={points} label={label} />
+        <AttendanceChart points={points} label={label} />
+      </div>
+    </section>
+  );
+}
+
+function MeetingChart({
+  points,
+  label
+}: {
+  readonly points: readonly SeriesPoint[];
+  readonly label: (month: string) => string;
+}) {
+  const max = Math.max(1, ...points.map((p) => p.meetings));
+  const width = 280;
+  const height = 150;
+  const padL = 30;
+  const padB = 22;
+  const padT = 8;
+  const plotW = width - padL - 8;
+  const plotH = height - padT - padB;
+  const colW = plotW / points.length;
+  const barW = Math.min(18, colW * 0.45);
+
+  return (
+    <div className="analytics-chart-panel">
+      <p className="analytics-chart-panel__label">Encontros</p>
+      <svg
+        width="100%"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="Gráfico de encontros por mês"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <g aria-hidden="true">
+          {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+            const y = padT + (1 - fraction) * plotH;
+            return <line key={fraction} x1={padL} y1={y} x2={width - 8} y2={y} className="analytics-chart__grid" />;
+          })}
+          {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+            const y = padT + (1 - fraction) * plotH;
+            const value = Math.round(fraction * max);
+            return (
+              <text key={`label-${fraction}`} x={padL - 4} y={y + 3} textAnchor="end" className="analytics-chart__axis-label">
+                {value}
+              </text>
+            );
+          })}
+        </g>
+        {points.map((point, index) => {
+          const cx = padL + colW * (index + 0.5);
+          const barHeight = max > 0 ? (point.meetings / max) * plotH : 0;
+          return (
+            <g key={point.month} role="graphics-symbol" aria-label={`${label(point.month)}: ${point.meetings} encontros`}>
+              <title>{`${label(point.month)}: ${point.meetings} encontros`}</title>
+              <rect
+                x={cx - barW / 2}
+                y={padT + plotH - barHeight}
+                width={barW}
+                height={barHeight}
+                className="analytics-chart__meetings"
+              />
+            </g>
+          );
+        })}
+        <g>
+          {points.map((point, index) => (
+            <text key={point.month} x={padL + colW * (index + 0.5)} y={height - 6} textAnchor="middle" className="analytics-chart__label">
+              {label(point.month)}
+            </text>
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function AttendanceChart({
+  points,
+  label
+}: {
+  readonly points: readonly SeriesPoint[];
+  readonly label: (month: string) => string;
+}) {
+  const max = Math.max(1, ...points.flatMap((p) => [p.presentMembers, p.visitors]));
+  const width = 280;
+  const height = 150;
+  const padL = 30;
   const padB = 22;
   const padT = 8;
   const plotW = width - padL - 8;
@@ -143,50 +233,67 @@ function MonthlyChart({ series }: { readonly series: readonly SeriesPoint[] }) {
   const barW = Math.min(14, colW * 0.28);
 
   return (
-    <section className="analytics-panel" aria-label="Evolução mensal">
-      <h3 className="analytics-panel__title">Evolução mensal</h3>
-      <div className="analytics-chart">
-        <svg
-          width="100%"
-          viewBox={`0 0 ${width} ${height}`}
-          role="img"
-          aria-label="Gráfico mensal de encontros, presentes e visitantes"
-          preserveAspectRatio="xMidYMid meet"
-        >
-          <g aria-hidden="true">
-            {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
-              const y = padT + (1 - fraction) * plotH;
-              return <line key={fraction} x1={padL} y1={y} x2={width - 8} y2={y} className="analytics-chart__grid" />;
-            })}
-            {points.map((point, index) => {
-              const cx = padL + colW * (index + 0.5);
-              const barHeight = (point.meetings / max) * plotH;
-              const presentHeight = (point.presentMembers / max) * plotH;
-              const visitorHeight = (point.visitors / max) * plotH;
-              return (
-                <g key={point.month}>
-                  <rect x={cx - barW} y={padT + plotH - barHeight} width={barW} height={barHeight} className="analytics-chart__meetings" />
-                  <rect x={cx - barW * 0.32} y={padT + plotH - presentHeight} width={barW * 0.64} height={presentHeight} className="analytics-chart__present" />
-                  <rect x={cx + barW * 0.4} y={padT + plotH - visitorHeight} width={barW * 0.5} height={visitorHeight} className="analytics-chart__visitors" />
-                </g>
-              );
-            })}
-          </g>
-          <g>
-            {points.map((point, index) => (
-              <text key={point.month} x={padL + colW * (index + 0.5)} y={height - 6} textAnchor="middle" className="analytics-chart__label">
-                {label(point.month)}
+    <div className="analytics-chart-panel">
+      <p className="analytics-chart-panel__label">Pessoas</p>
+      <svg
+        width="100%"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="Gráfico de presentes e visitantes por mês"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <g aria-hidden="true">
+          {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+            const y = padT + (1 - fraction) * plotH;
+            return <line key={fraction} x1={padL} y1={y} x2={width - 8} y2={y} className="analytics-chart__grid" />;
+          })}
+          {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+            const y = padT + (1 - fraction) * plotH;
+            const value = Math.round(fraction * max);
+            return (
+              <text key={`label-${fraction}`} x={padL - 4} y={y + 3} textAnchor="end" className="analytics-chart__axis-label">
+                {value}
               </text>
-            ))}
-          </g>
-        </svg>
-        <div className="analytics-chart__legend">
-          <span className="analytics-chart__legend-item"><i className="analytics-chart__swatch analytics-chart__swatch--meetings" />Encontros</span>
-          <span className="analytics-chart__legend-item"><i className="analytics-chart__swatch analytics-chart__swatch--present" />Presentes</span>
-          <span className="analytics-chart__legend-item"><i className="analytics-chart__swatch analytics-chart__swatch--visitors" />Visitantes</span>
-        </div>
+            );
+          })}
+        </g>
+        {points.map((point, index) => {
+          const cx = padL + colW * (index + 0.5);
+          const presentHeight = max > 0 ? (point.presentMembers / max) * plotH : 0;
+          const visitorHeight = max > 0 ? (point.visitors / max) * plotH : 0;
+          return (
+            <g key={point.month} role="graphics-symbol" aria-label={`${label(point.month)}: ${point.presentMembers} presentes, ${point.visitors} visitantes`}>
+              <title>{`${label(point.month)}: ${point.presentMembers} presentes, ${point.visitors} visitantes`}</title>
+              <rect
+                x={cx - barW}
+                y={padT + plotH - presentHeight}
+                width={barW}
+                height={presentHeight}
+                className="analytics-chart__present"
+              />
+              <rect
+                x={cx + barW * 0.1}
+                y={padT + plotH - visitorHeight}
+                width={barW * 0.8}
+                height={visitorHeight}
+                className="analytics-chart__visitors"
+              />
+            </g>
+          );
+        })}
+        <g>
+          {points.map((point, index) => (
+            <text key={point.month} x={padL + colW * (index + 0.5)} y={height - 6} textAnchor="middle" className="analytics-chart__label">
+              {label(point.month)}
+            </text>
+          ))}
+        </g>
+      </svg>
+      <div className="analytics-chart__legend">
+        <span className="analytics-chart__legend-item"><i className="analytics-chart__swatch analytics-chart__swatch--present" />Presentes</span>
+        <span className="analytics-chart__legend-item"><i className="analytics-chart__swatch analytics-chart__swatch--visitors" />Visitantes</span>
       </div>
-    </section>
+    </div>
   );
 }
 

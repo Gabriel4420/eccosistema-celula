@@ -61,18 +61,19 @@ describe("analytics contracts", () => {
   });
 
   describe("cellsSummaryQuerySchema", () => {
-    it("defaults windowDays to 14", () => {
-      expect(cellsSummaryQuerySchema.parse({})).toEqual({ windowDays: 14 });
+    it("defaults windowDays to 14 and status to ACTIVE", () => {
+      expect(cellsSummaryQuerySchema.parse({})).toEqual({ windowDays: 14, status: "ACTIVE" });
     });
 
     it("coerces and bounds windowDays", () => {
-      expect(cellsSummaryQuerySchema.parse({ windowDays: "30" })).toEqual({ windowDays: 30 });
+      expect(cellsSummaryQuerySchema.parse({ windowDays: "30" })).toEqual({ windowDays: 30, status: "ACTIVE" });
       expect(() => cellsSummaryQuerySchema.parse({ windowDays: 1 })).toThrow();
       expect(() => cellsSummaryQuerySchema.parse({ windowDays: 91 })).toThrow();
     });
 
     it("accepts status and rejects unknown fields", () => {
       expect(cellsSummaryQuerySchema.parse({ status: "ACTIVE" })).toEqual({ windowDays: 14, status: "ACTIVE" });
+      expect(cellsSummaryQuerySchema.parse({ status: "FORMING" })).toEqual({ windowDays: 14, status: "FORMING" });
       expect(() => cellsSummaryQuerySchema.parse({ status: "OPEN" })).toThrow();
       expect(() => cellsSummaryQuerySchema.parse({ churchId: "x" })).toThrow();
     });
