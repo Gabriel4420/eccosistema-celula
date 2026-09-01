@@ -164,3 +164,27 @@ export {
   saveAttendanceRequestSchema
 } from "./attendance";
 export type { AttendanceEnvelope, AttendanceSnapshot, CreateMeetingVisitorRequest, SaveAttendanceRequest } from "./attendance";
+export {
+  cellsSummaryEnvelopeSchema,
+  cellsSummaryQuerySchema,
+  cellsSummaryResponseSchema,
+  overviewEnvelopeSchema,
+  overviewQuerySchema,
+  overviewResponseSchema,
+  seriesEnvelopeSchema,
+  seriesQuerySchema,
+  seriesResponseSchema
+} from "./analytics";
+export type {
+  CellSummaryItem,
+  CellsSummaryEnvelope,
+  CellsSummaryQuery,
+  CellsSummaryResponse,
+  OverviewEnvelope,
+  OverviewQuery,
+  OverviewResponse,
+  SeriesEnvelope,
+  SeriesPoint,
+  SeriesQuery,
+  SeriesResponse
+} from "./analytics";

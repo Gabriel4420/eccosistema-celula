@@ -124,6 +124,15 @@ const SEED_PEOPLE: readonly SeedPerson[] = [
     birthDate: "1975-04-25",
     gender: "Masculino",
     observations: ""
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000109",
+    fullName: "Visitante do Espírito Santo",
+    phone: "+5511909876543",
+    email: "visitante.santo@email.test",
+    birthDate: "1992-08-11",
+    gender: "Masculino",
+    observations: "Visitante convidado a participar da célula Esperança."
   }
 ];
 
@@ -243,7 +252,27 @@ const SEED_ATTENDANCES: readonly SeedAttendance[] = [
   { id: "00000000-0000-4000-8000-000000000503", meetingId: SEED_MEETINGS[2]!.id, personId: SEED_PEOPLE[2]!.id, attendanceStatus: "PRESENT" },
   { id: "00000000-0000-4000-8000-000000000504", meetingId: SEED_MEETINGS[2]!.id, personId: SEED_PEOPLE[3]!.id, attendanceStatus: "ABSENT" },
   { id: "00000000-0000-4000-8000-000000000505", meetingId: SEED_MEETINGS[4]!.id, personId: SEED_PEOPLE[5]!.id, attendanceStatus: "PRESENT" },
-  { id: "00000000-0000-4000-8000-000000000506", meetingId: SEED_MEETINGS[4]!.id, personId: SEED_PEOPLE[6]!.id, attendanceStatus: "EXCUSED" }
+  { id: "00000000-0000-4000-8000-000000000506", meetingId: SEED_MEETINGS[4]!.id, personId: SEED_PEOPLE[6]!.id, attendanceStatus: "EXCUSED" },
+  { id: "00000000-0000-4000-8000-000000000507", meetingId: SEED_MEETINGS[0]!.id, personId: SEED_PEOPLE[8]!.id, attendanceStatus: "PRESENT" }
+];
+
+// Visitantes de reuniões. Cada visitante possui um MeetingAttendance com
+// attendanceStatus PRESENT e um registro MeetingVisitor associado. Visitantes
+// não possuem cell_membership: são contabilizados à parte da taxa de presença.
+interface SeedVisitor {
+  readonly id: string;
+  readonly meetingId: string;
+  readonly personId: string;
+  readonly observation?: string;
+}
+
+const SEED_VISITORS: readonly SeedVisitor[] = [
+  {
+    id: "00000000-0000-4000-8000-000000000801",
+    meetingId: SEED_MEETINGS[0]!.id,
+    personId: SEED_PEOPLE[8]!.id,
+    observation: "Convidado pela célula Esperança."
+  }
 ];
 
 interface SeedReport {
@@ -472,6 +501,31 @@ async function seed(): Promise<void> {
       });
     }
 
+    // meeting_visitors — visitantes presentes (possuem MeetingAttendance PRESENT)
+    for (const visitor of SEED_VISITORS) {
+      await prisma.meetingVisitor.upsert({
+        where: {
+          churchId_meetingId_personId: {
+            churchId: FICTIONAL_CHURCH_ID,
+            meetingId: visitor.meetingId,
+            personId: visitor.personId
+          }
+        },
+        create: {
+          id: visitor.id,
+          churchId: FICTIONAL_CHURCH_ID,
+          meetingId: visitor.meetingId,
+          personId: visitor.personId,
+          observation: visitor.observation ?? null
+        },
+        update: {
+          meetingId: visitor.meetingId,
+          personId: visitor.personId,
+          observation: visitor.observation ?? null
+        }
+      });
+    }
+
     // meeting_reports — sem submittedBy nesta etapa
     for (const report of SEED_REPORTS) {
       await prisma.meetingReport.upsert({
@@ -516,7 +570,7 @@ async function seed(): Promise<void> {
     }
 
     console.info(
-      "ETAPA 1 concluída: igreja, papéis, pessoas, células, membros, encontros, frequências, relatórios e auditoria criados."
+      "ETAPA 1 concluída: igreja, papéis, pessoas, células, membros, encontros, frequências, visitantes, relatórios e auditoria criados."
     );
 
     // ========================================================================

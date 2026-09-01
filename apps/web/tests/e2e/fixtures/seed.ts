@@ -3,7 +3,9 @@ import { hash } from "argon2";
 
 const E2E_CHURCH_ID = "11111111-1111-4111-8111-111111111111";
 const E2E_PERSON_ID = "11111111-1111-4111-8111-111111111121";
+const E2E_VISITOR_ID = "11111111-1111-4111-8111-111111111122";
 const E2E_MEETING_ID = "11111111-1111-4111-8111-111111111131";
+const E2E_COMPLETED_MEETING_ID = "11111111-1111-4111-8111-111111111132";
 export const E2E_PASSWORD = "e2e-password-1234";
 
 const MANAGED_ROLE_NAMES = ["ADMIN", "PASTOR", "SUPERVISOR", "LEADER"] as const;
@@ -171,6 +173,16 @@ export async function seedDatabase(): Promise<void> {
         observations: "Observação fictícia visível para ADMIN e PASTOR."
       }
     });
+    const visitorPerson = await database.person.create({
+      data: {
+        id: E2E_VISITOR_ID,
+        churchId: E2E_CHURCH_ID,
+        fullName: "Visitante E2E do Painel",
+        phone: "+5511990000003",
+        birthDate: new Date("1995-02-10"),
+        gender: "Masculino"
+      }
+    });
     await database.person.create({
       data: {
         churchId: E2E_CHURCH_ID,
@@ -185,6 +197,35 @@ export async function seedDatabase(): Promise<void> {
     });
     await database.meeting.create({
       data: { id: E2E_MEETING_ID, churchId: E2E_CHURCH_ID, cellId: cell.id, meetingDate: new Date("2026-08-22"), status: "SCHEDULED" }
+    });
+
+    const recentMeetingDate = new Date(Date.now() - 10 * 86_400_000);
+    await database.meeting.create({
+      data: { id: E2E_COMPLETED_MEETING_ID, churchId: E2E_CHURCH_ID, cellId: cell.id, meetingDate: recentMeetingDate, status: "COMPLETED" }
+    });
+    await database.meetingAttendance.create({
+      data: {
+        churchId: E2E_CHURCH_ID,
+        meetingId: E2E_COMPLETED_MEETING_ID,
+        personId: activePerson.id,
+        attendanceStatus: "PRESENT"
+      }
+    });
+    await database.meetingAttendance.create({
+      data: {
+        churchId: E2E_CHURCH_ID,
+        meetingId: E2E_COMPLETED_MEETING_ID,
+        personId: visitorPerson.id,
+        attendanceStatus: "PRESENT"
+      }
+    });
+    await database.meetingVisitor.create({
+      data: {
+        churchId: E2E_CHURCH_ID,
+        meetingId: E2E_COMPLETED_MEETING_ID,
+        personId: visitorPerson.id,
+        observation: "Visitante registrado pelo painel E2E."
+      }
     });
 
     console.info(

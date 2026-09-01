@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { Can } from "@/src/shared/auth/guards";
 import { Skeleton } from "@/src/shared/components";
 import { useSession } from "@/src/providers/session-provider";
+import { AnalyticsOverview } from "@/src/features/analytics/components/analytics-overview";
 
 interface Shortcut {
   readonly title: string;
@@ -94,7 +95,10 @@ export default function DashboardPage() {
           <span className="network-line network-line--three" />
         </div>
       </div>
-      <div className="dashboard-section-heading">
+      <Can capability="viewAnalytics">
+        <AnalyticsOverview />
+      </Can>
+      <div className="dashboard-section-heading px-20">
         <div><p className="dashboard-section-heading__eyebrow">Acesso rápido</p><h2>O que você quer fazer?</h2></div>
         <p>Escolha uma área para continuar.</p>
       </div>

@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Button, EmptyState, ErrorState, Pagination, SelectField, Skeleton, Table, TextField } from "@/src/shared/components";
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  Pagination,
+  SelectField,
+  Skeleton,
+  Table,
+  TextField,
+} from "@/src/shared/components";
 import { Can } from "@/src/shared/auth/guards";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
@@ -25,12 +34,16 @@ function readParams(searchParams: URLSearchParams): CellsParams {
   const status = searchParams.get("status");
   const requestedPage = Number(searchParams.get("page") ?? "1");
   return {
-    page: Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
+    page:
+      Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
     search: searchParams.get("search") ?? "",
     status:
-      status === "FORMING" || status === "ACTIVE" || status === "SUSPENDED" || status === "CLOSED"
+      status === "FORMING" ||
+      status === "ACTIVE" ||
+      status === "SUSPENDED" ||
+      status === "CLOSED"
         ? status
-        : ""
+        : "",
   };
 }
 
@@ -49,17 +62,22 @@ export function CellsList() {
   const searchParams = useSearchParams();
   const params = readParams(searchParams);
 
-  const { data: page, loading, error, reload } = useRemoteQuery({
+  const {
+    data: page,
+    loading,
+    error,
+    reload,
+  } = useRemoteQuery({
     fetcher: () =>
       listCells(api, {
         page: params.page,
         pageSize: PAGE_SIZE,
         search: params.search || undefined,
-        status: params.status || undefined
+        status: params.status || undefined,
       }),
     cacheName: CELLS_CACHE,
     cacheKey: `page:${params.page}:search:${params.search}:status:${params.status}`,
-    ttlMs: 20_000
+    ttlMs: 20_000,
   });
 
   const [searchInput, setSearchInput] = useState(params.search);
@@ -69,7 +87,7 @@ export function CellsList() {
     () => () => {
       if (searchTimer.current) window.clearTimeout(searchTimer.current);
     },
-    []
+    [],
   );
 
   const navigate = (next: Partial<CellsParams>) => {
@@ -80,13 +98,15 @@ export function CellsList() {
 
   return (
     <section aria-labelledby="cells-title">
-      <div className="page-header">
-        <h1 className="page-title" id="cells-title">
-          Células
-        </h1>
-        <p className="page-description">
-          Consulte, cadastre e acompanhe as células da sua igreja.
-        </p>
+      <div className="page-header w-full">
+        <div className="flex flex-col">
+          <h1 className="page-title" id="cells-title">
+            Células
+          </h1>
+          <p className="page-description">
+            Consulte, cadastre e acompanhe as células da sua igreja.
+          </p>
+        </div>
         <Can capability="createCells">
           <Link className="button" href="/cells/new">
             Nova célula
@@ -113,13 +133,18 @@ export function CellsList() {
           label="Status"
           name="status"
           value={params.status}
-          onChange={(event) => navigate({ status: event.target.value as CellsParams["status"], page: 1 })}
+          onChange={(event) =>
+            navigate({
+              status: event.target.value as CellsParams["status"],
+              page: 1,
+            })
+          }
           options={[
             { value: "", label: "Todos" },
             { value: "FORMING", label: "Em formação" },
             { value: "ACTIVE", label: "Ativa" },
             { value: "SUSPENDED", label: "Suspensa" },
-            { value: "CLOSED", label: "Encerrada" }
+            { value: "CLOSED", label: "Encerrada" },
           ]}
         />
         <Button
@@ -134,7 +159,10 @@ export function CellsList() {
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar as células" onRetry={() => void reload()}>
+        <ErrorState
+          title="Não foi possível carregar as células"
+          onRetry={() => void reload()}
+        >
           Tente novamente em instantes.
         </ErrorState>
       ) : null}
@@ -163,47 +191,50 @@ export function CellsList() {
                 header: "Código",
                 render: (cell) => (
                   <Link href={`/cells/${cell.id}`}>{cell.code}</Link>
-                )
+                ),
               },
               {
                 key: "name",
                 header: "Nome",
                 render: (cell) => (
                   <Link href={`/cells/${cell.id}`}>{cell.name}</Link>
-                )
+                ),
               },
               {
                 key: "leader",
                 header: "Líder",
-                render: (cell) => cell.leader?.name ?? "—"
+                render: (cell) => cell.leader?.name ?? "—",
               },
               {
                 key: "supervisor",
                 header: "Supervisor",
-                render: (cell) => cell.supervisor?.name ?? "—"
+                render: (cell) => cell.supervisor?.name ?? "—",
               },
               {
                 key: "meeting",
                 header: "Reunião",
                 render: (cell) =>
-                  `${formatCellDay(cell.meetingDay)} às ${cell.meetingTime}`
+                  `${formatCellDay(cell.meetingDay)} às ${cell.meetingTime}`,
               },
               {
                 key: "status",
                 header: "Status",
-                render: (cell) => <CellStatusBadge status={cell.status} />
+                render: (cell) => <CellStatusBadge status={cell.status} />,
               },
               {
                 key: "actions",
                 header: "Ações",
                 render: (cell) => (
                   <span className="table__actions">
-                    <Link className="button button--secondary button--sm" href={`/cells/${cell.id}`}>
+                    <Link
+                      className="button button--secondary button--sm"
+                      href={`/cells/${cell.id}`}
+                    >
                       Ver detalhes
                     </Link>
                   </span>
-                )
-              }
+                ),
+              },
             ]}
             rows={rows}
           />
