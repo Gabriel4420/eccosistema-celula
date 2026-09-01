@@ -1,6 +1,7 @@
 import {
   Catch,
-  HttpException
+  HttpException,
+  Logger
 } from "@nestjs/common";
 import type { ArgumentsHost, ExceptionFilter } from "@nestjs/common";
 import type { Response } from "express";
@@ -38,6 +39,13 @@ export class AuthExceptionFilter implements ExceptionFilter {
       response.status(exception.getStatus()).json(exception.getResponse());
       return;
     }
+    Logger.error(
+      exception instanceof Error
+        ? (exception.stack ?? exception.message)
+        : String(exception),
+      undefined,
+      "AuthExceptionFilter"
+    );
     response.status(500).json({
       error: {
         code: "INTERNAL_ERROR",
