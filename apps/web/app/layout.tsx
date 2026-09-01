@@ -6,6 +6,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   description: "Ecossistema de gestão de células e pequenos grupos.",
+  icons: {
+    icon: "/brand/favicon.png"
+  },
   title: {
     default: "Ecossistema de Células",
     template: "%s · Ecossistema de Células"
