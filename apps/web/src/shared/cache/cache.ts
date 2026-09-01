@@ -1,55 +1,51 @@
-interface CacheEntry {
-  readonly value: unknown;
-  readonly expiresAt: number;
-}
+import { getQueryClient } from "@/src/shared/api/query-client";
 
 export interface CacheStore {
   get<T>(key: string): T | undefined;
-  set(key: string, value: unknown, ttlMs: number): void;
+  set(key: string, value: unknown, ttlMs?: number): void;
   delete(key: string): void;
   invalidatePrefix(prefix: string): void;
   clear(): void;
 }
 
-const stores = new Map<string, Map<string, CacheEntry>>();
-
+/**
+ * Facade over the shared TanStack QueryClient. Preserves the historic
+ * (name, key) cache API so mutation call sites stay unchanged while all
+ * reads/writes land in the same store used by `useRemoteQuery`.
+ */
 export function cacheStore(name: string): CacheStore {
-  const existing = stores.get(name);
-  if (existing) return wrap(name, existing);
-  const inner = new Map<string, CacheEntry>();
-  stores.set(name, inner);
-  return wrap(name, inner);
-}
+  const client = getQueryClient();
 
-function wrap(name: string, inner: Map<string, CacheEntry>): CacheStore {
-  const isExpired = (entry: CacheEntry) => entry.expiresAt <= Date.now();
+  const matchesName = (queryKey: unknown): queryKey is readonly unknown[] =>
+    Array.isArray(queryKey) && queryKey[0] === name;
+
   return {
     get<T>(key: string): T | undefined {
-      const entry = inner.get(key);
-      if (!entry) return undefined;
-      if (isExpired(entry)) {
-        inner.delete(key);
-        return undefined;
-      }
-      return entry.value as T;
+      return client.getQueryData<T>([name, key]);
     },
-    set(key: string, value: unknown, ttlMs: number): void {
-      inner.set(key, { value, expiresAt: Date.now() + ttlMs });
+    set(key: string, value: unknown): void {
+      client.setQueryData([name, key], value);
     },
     delete(key: string): void {
-      inner.delete(key);
+      client.removeQueries({
+        predicate: (query) =>
+          matchesName(query.queryKey) && query.queryKey[1] === key
+      });
     },
     invalidatePrefix(prefix: string): void {
-      for (const key of inner.keys()) {
-        if (key.startsWith(prefix)) inner.delete(key);
-      }
+      client.invalidateQueries({
+        predicate: (query) =>
+          matchesName(query.queryKey) &&
+          typeof query.queryKey[1] === "string" &&
+          query.queryKey[1].startsWith(prefix)
+      });
     },
     clear(): void {
-      inner.clear();
+      client.removeQueries({ predicate: (query) => matchesName(query.queryKey) });
     }
   };
 }
 
 export function clearAllCaches(): void {
-  stores.clear();
+  getQueryClient().clear();
 }

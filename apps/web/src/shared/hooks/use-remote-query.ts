@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { cacheStore } from "@/src/shared/cache/cache";
+import { useQuery } from "@tanstack/react-query";
+import { isRetryableError } from "@/src/shared/api/query-client";
 
 interface UseRemoteQueryOptions<T> {
   readonly fetcher: () => Promise<T>;
@@ -18,6 +18,11 @@ interface UseRemoteQueryState<T> {
   readonly reload: () => Promise<void>;
 }
 
+/**
+ * TanStack Query-backed data hook. Keeps the historic (cacheName, cacheKey)
+ * surface so all callers stay untouched while gaining stale-while-revalidate,
+ * request deduplication and background refetch from React Query.
+ */
 export function useRemoteQuery<T>({
   fetcher,
   cacheName,
@@ -25,52 +30,21 @@ export function useRemoteQuery<T>({
   ttlMs = 30_000,
   enabled = true
 }: UseRemoteQueryOptions<T>): UseRemoteQueryState<T> {
-  const store = cacheStore(cacheName);
-  const initial = store.get<T>(cacheKey);
-  const [data, setData] = useState<T | undefined>(initial);
-  const [loading, setLoading] = useState<boolean>(initial === undefined);
-  const [error, setError] = useState<Error | null>(null);
-  const fetcherRef = useRef(fetcher);
+  const result = useQuery<T, Error>({
+    queryKey: [cacheName, cacheKey],
+    queryFn: fetcher,
+    staleTime: ttlMs,
+    retry: (failureCount, error) =>
+      failureCount < 1 && isRetryableError(error),
+    enabled
+  });
 
-  useEffect(() => {
-    fetcherRef.current = fetcher;
-  }, [fetcher]);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const value = await fetcherRef.current();
-      store.set(cacheKey, value, ttlMs);
-      setData(value);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Unknown error"));
-    } finally {
-      setLoading(false);
+  return {
+    data: result.data,
+    loading: result.isPending,
+    error: result.error ?? null,
+    reload: async () => {
+      await result.refetch();
     }
-  }, [store, cacheKey, ttlMs]);
-
-  useEffect(() => {
-    if (!enabled) return;
-    if (store.get<T>(cacheKey) !== undefined) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const value = await fetcherRef.current();
-        if (cancelled) return;
-        store.set(cacheKey, value, ttlMs);
-        setData(value);
-      } catch (cause) {
-        if (cancelled) return;
-        setError(cause instanceof Error ? cause : new Error("Unknown error"));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, store, cacheKey, ttlMs]);
-
-  return { data, loading, error, reload: load };
+  };
 }
