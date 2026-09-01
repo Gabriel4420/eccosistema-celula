@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURES, login } from "./support";
 
@@ -53,6 +54,27 @@ test.describe("accessibility and responsive navigation", () => {
     });
   }
 
+  test("has no serious or critical axe violations on primary screens", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    const scans: Array<Promise<void>> = [
+      scanPage(page)
+    ];
+
+    scans.push(
+      (async () => {
+        await login(page, FIXTURES.admin.email);
+        for (const screen of primaryScreens) {
+          await page.goto(screen.path);
+          await expect(page.getByRole("heading", { name: screen.heading })).toBeVisible();
+          await scanPage(page);
+        }
+      })()
+    );
+
+    await Promise.all(scans);
+  });
+
   test("opens and closes the mobile drawer with the hamburger", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await login(page, FIXTURES.admin.email);
@@ -91,4 +113,14 @@ async function focusByTab(page: Page, target: Locator): Promise<void> {
     if (await target.evaluate((element) => element === document.activeElement)) return;
   }
   await expect(target).toBeFocused();
+}
+
+async function scanPage(page: Page): Promise<void> {
+  const results = await new AxeBuilder({ page }).analyze();
+  const blocking = results.violations.filter((violation) =>
+    ["serious", "critical"].includes(violation.impact ?? "")
+  );
+  expect(
+    blocking.map((violation) => `${violation.id}: ${violation.help}`)
+  ).toEqual([]);
 }
