@@ -59,6 +59,16 @@ export class UserManagementQueries {
     return this.users.getProfilePhoto(principal.churchId, principal.userId);
   }
 
+  async getProfilePhoto(
+    principal: AuthenticatedPrincipal,
+    userId: string
+  ): Promise<ProfilePhoto | null> {
+    await this.authorization.assertAdministrator(principal);
+    const user = await this.findOrThrow(principal.churchId, userId);
+    this.authorization.assertResource(principal, user);
+    return this.users.getProfilePhoto(principal.churchId, userId);
+  }
+
   private async findOrThrow(
     churchId: string,
     userId: string

@@ -170,6 +170,27 @@ export class UsersController {
   }
 
   @Roles("ADMIN")
+  @Get(":id/profile-photo")
+  @Header("Cache-Control", "private, no-store")
+  @ApiOperation({ summary: "Get a user's profile photo from the authenticated church" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiResponse({ status: 200, description: "Profile photo returned (nullable)", schema: userProfilePhotoEnvelopeSchema() })
+  @ApiResponse({ status: 404, description: "User not found", schema: errorEnvelopeSchema() })
+  async getProfilePhoto(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown
+  ) {
+    const { id } = userIdParamsSchema.parse(params);
+    const photo = await this.queries.getProfilePhoto(principal, id);
+    return {
+      data: photo
+        ? { contentType: photo.contentType, base64: Buffer.from(photo.data).toString("base64") }
+        : null,
+      meta: {}
+    };
+  }
+
+  @Roles("ADMIN")
   @Post()
   @ApiOperation({ summary: "Create a user in the authenticated church" })
   @ApiBody({ schema: createUserBodySchema() })
@@ -448,6 +469,29 @@ function errorEnvelopeSchema() {
           details: { type: "object" }
         }
       }
+    }
+  };
+}
+
+function userProfilePhotoEnvelopeSchema() {
+  return {
+    type: "object",
+    required: ["data", "meta"],
+    properties: {
+      data: {
+        anyOf: [
+          { type: "null" },
+          {
+            type: "object",
+            required: ["contentType", "base64"],
+            properties: {
+              contentType: { type: "string", enum: ["image/jpeg", "image/png", "image/webp"] },
+              base64: { type: "string" }
+            }
+          }
+        ]
+      },
+      meta: { type: "object" }
     }
   };
 }

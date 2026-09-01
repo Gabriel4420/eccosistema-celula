@@ -10,6 +10,8 @@ interface DialogProps {
   readonly description?: string;
   readonly children?: ReactNode;
   readonly labelledBy?: string;
+  readonly className?: string;
+  readonly hideHeader?: boolean;
 }
 
 const focusableSelector = [
@@ -26,7 +28,9 @@ export function Dialog({
   onClose,
   title,
   description,
-  children
+  children,
+  className,
+  hideHeader = false
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -71,22 +75,33 @@ export function Dialog({
   if (!open) return null;
 
   return (
-    <div className="dialog-overlay">
+    <div
+      className="dialog-overlay"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="dialog-panel"
+        className={`dialog-panel${className ? ` ${className}` : ""}`}
       >
-        <div>
-          <h2 id={titleId} className="dialog-panel__title">
+        {hideHeader ? (
+          <h2 id={titleId} className="visually-hidden">
             {title}
           </h2>
-          {description ? (
-            <p className="dialog-panel__description">{description}</p>
-          ) : null}
-        </div>
+        ) : (
+          <div>
+            <h2 id={titleId} className="dialog-panel__title">
+              {title}
+            </h2>
+            {description ? (
+              <p className="dialog-panel__description">{description}</p>
+            ) : null}
+          </div>
+        )}
         {children}
       </div>
     </div>

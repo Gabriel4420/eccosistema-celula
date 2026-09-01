@@ -2,6 +2,7 @@ import {
   createUserRequestSchema,
   listUsersQuerySchema,
   managedRolesEnvelopeSchema,
+  profilePhotoEnvelopeSchema,
   replaceUserRolesRequestSchema,
   resetUserPasswordRequestSchema,
   updateUserRequestSchema,
@@ -68,6 +69,19 @@ export async function getUser(api: ApiClient, id: string): Promise<UserResponse>
     schema: userItemEnvelopeSchema
   });
   return envelope.data;
+}
+
+export async function getUserProfilePhoto(api: ApiClient, id: string): Promise<string | null> {
+  const envelope = await api.request({
+    method: "GET",
+    path: `/users/${id}/profile-photo`,
+    bearer: true,
+    allowRetry: true,
+    schema: profilePhotoEnvelopeSchema
+  });
+  return envelope.data
+    ? `data:${envelope.data.contentType};base64,${envelope.data.base64}`
+    : null;
 }
 
 export async function createUser(
