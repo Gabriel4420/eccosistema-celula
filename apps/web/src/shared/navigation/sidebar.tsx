@@ -27,7 +27,8 @@ const BASE_LINKS: ReadonlyArray<{
   { href: "/profile", label: "Meu perfil", icon: <IconProfile /> },
   { href: "/church/settings", label: "Igreja", icon: <IconChurch /> },
   { href: "/people", label: "Pessoas", icon: <IconPeople /> },
-  { href: "/cells", label: "Células", icon: <IconCells /> }
+  { href: "/cells", label: "Células", icon: <IconCells /> },
+  { href: "/reports", label: "Relatórios", icon: <IconReports /> }
 ];
 
 function subscribeToMediaQuery(onStoreChange: () => void): () => void {
@@ -294,6 +295,18 @@ function IconUsers() {
     <NavIcon>
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </NavIcon>
+  );
+}
+
+function IconReports() {
+  return (
+    <NavIcon>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
+      <path d="M10 9H8" />
     </NavIcon>
   );
 }

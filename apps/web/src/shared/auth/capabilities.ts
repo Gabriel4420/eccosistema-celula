@@ -19,6 +19,7 @@ export interface Capabilities {
   readonly editMeetings: boolean;
   readonly changeMeetingStatus: boolean;
   readonly viewAnalytics: boolean;
+  readonly viewReports: boolean;
 }
 
 export function capabilitiesFor(principal: SessionPrincipal | null): Capabilities {
@@ -40,7 +41,8 @@ export function capabilitiesFor(principal: SessionPrincipal | null): Capabilitie
     createMeetings: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),
     editMeetings: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),
     changeMeetingStatus: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),
-    viewAnalytics: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "SUPERVISOR") || hasRole(roles, "LEADER")
+    viewAnalytics: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "SUPERVISOR") || hasRole(roles, "LEADER"),
+    viewReports: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "SUPERVISOR") || hasRole(roles, "LEADER")
   };
 }
 

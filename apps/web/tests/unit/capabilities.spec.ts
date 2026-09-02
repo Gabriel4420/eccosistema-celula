@@ -11,7 +11,8 @@ const NO_CELLS = {
   createMeetings: false,
   editMeetings: false,
   changeMeetingStatus: false,
-  viewAnalytics: false
+  viewAnalytics: false,
+  viewReports: false
 };
 
 describe("capabilitiesFor", () => {
@@ -51,7 +52,8 @@ describe("capabilitiesFor", () => {
       createMeetings: true,
       editMeetings: true,
       changeMeetingStatus: true,
-      viewAnalytics: true
+      viewAnalytics: true,
+      viewReports: true
     });
   });
 
