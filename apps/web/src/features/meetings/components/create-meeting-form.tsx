@@ -11,8 +11,9 @@ import { Alert, Button, TextField } from "@/src/shared/components";
 import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import { createMeeting } from "@/src/features/meetings/api/meetings-api";
-import { toISODateString } from "@/src/features/meetings/lib/format";
+import { formatMeetingDate, toISODateString } from "@/src/features/meetings/lib/format";
 
 const MEETINGS_CACHE = "meetings";
 
@@ -57,6 +58,11 @@ export function CreateMeetingForm({ cellId }: { readonly cellId: string }) {
     try {
       const meeting = await createMeeting(api, cellId, parsed.data, idempotencyKey.current);
       cacheStore(MEETINGS_CACHE).invalidatePrefix("page");
+      toast({
+        kind: "success",
+        title: "Encontro criado",
+        description: formatMeetingDate(meeting.meetingDate)
+      });
       router.push(`/cells/${cellId}/meetings/${meeting.id}`);
     } catch (cause) {
       setFormError(messageForError(cause));

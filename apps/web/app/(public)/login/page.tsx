@@ -11,6 +11,7 @@ import { Alert, Button, TextField } from "@/src/shared/components";
 import { Skeleton } from "@/src/shared/components";
 import { consumePendingDestination } from "@/src/shared/navigation/pending-destination";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 
 const GENERIC_LOGIN_ERROR = "Não foi possível entrar. Tente novamente.";
 
@@ -67,13 +68,20 @@ export default function LoginPage() {
       router.replace(destination);
     } catch (error) {
       const apiError = toApiError(error);
+      let message: string;
       if (apiError.status === 401) {
-        setFormError("E-mail ou senha inválidos.");
+        message = "E-mail ou senha inválidos.";
       } else if (apiError.status === 429) {
-        setFormError("Muitas tentativas. Aguarde um momento e tente novamente.");
+        message = "Muitas tentativas. Aguarde um momento e tente novamente.";
       } else {
-        setFormError(GENERIC_LOGIN_ERROR);
+        message = GENERIC_LOGIN_ERROR;
       }
+      setFormError(message);
+      toast({
+        kind: "error",
+        title: "Não foi possível entrar",
+        description: message
+      });
     } finally {
       setSubmitting(false);
     }

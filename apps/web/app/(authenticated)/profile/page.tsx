@@ -16,6 +16,7 @@ import {
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import {
   changeMyPassword,
   getMyProfile,
@@ -37,7 +38,6 @@ export default function ProfilePage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [nameSaved, setNameSaved] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
 
@@ -83,7 +83,6 @@ export default function ProfilePage() {
   const handleSaveName = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setNameError(null);
-    setNameSaved(false);
     const payload: Record<string, string> = {};
     if (firstNameValue !== profile.firstName) payload.firstName = firstNameValue.trim();
     if (lastNameValue !== profile.lastName) payload.lastName = lastNameValue.trim();
@@ -96,7 +95,11 @@ export default function ProfilePage() {
       await reload();
       setFirstName("");
       setLastName("");
-      setNameSaved(true);
+      toast({
+        kind: "success",
+        title: "Perfil atualizado",
+        description: "Seus dados foram salvos."
+      });
     } catch {
       setNameError("Não foi possível salvar suas alterações. Tente novamente.");
     } finally {
@@ -149,12 +152,6 @@ export default function ProfilePage() {
           controlados por um administrador.
         </p>
       </div>
-
-      {nameSaved ? (
-        <Alert variant="success" title="Perfil atualizado">
-          Seus dados foram salvos.
-        </Alert>
-      ) : null}
 
       <div className="profile-photo-section">
         <ProfilePhoto profile={profile} size="lg" />

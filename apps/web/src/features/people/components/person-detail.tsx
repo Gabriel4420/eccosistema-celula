@@ -11,6 +11,7 @@ import { Can } from "@/src/shared/auth/guards";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import { getPerson, updatePerson, updatePersonStatus } from "@/src/features/people/api/people-api";
 
 const PEOPLE_CACHE = "people";
@@ -72,7 +73,11 @@ export function PersonDetail() {
     const observations = String(formData.get("observations") ?? "").trim();
     if (observations !== (person.observations ?? "")) payload.observations = observations;
     if (Object.keys(payload).length === 0) {
-      setFeedback({ kind: "success", message: "Nenhuma alteração para salvar." });
+      toast({
+        kind: "info",
+        title: "Nenhuma alteração",
+        description: "Não havia dados novos para salvar."
+      });
       return;
     }
     setBusy(true);
@@ -81,7 +86,11 @@ export function PersonDetail() {
       cacheStore(PEOPLE_CACHE).invalidatePrefix("detail");
       cacheStore(PEOPLE_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({ kind: "success", message: "Pessoa atualizada." });
+      toast({
+        kind: "success",
+        title: "Pessoa atualizada",
+        description: "Os dados foram salvos."
+      });
     } catch {
       setFeedback({ kind: "error", message: "Não foi possível salvar as alterações. Verifique os dados e tente novamente." });
     } finally {
@@ -98,7 +107,11 @@ export function PersonDetail() {
       cacheStore(PEOPLE_CACHE).invalidatePrefix("page");
       setConfirmInactivate(false);
       await reload();
-      setFeedback({ kind: "success", message: "Pessoa inativada. Será listada somente para administradores." });
+      toast({
+        kind: "success",
+        title: "Pessoa inativada",
+        description: "Ela será listada somente para administradores."
+      });
     } catch {
       setFeedback({ kind: "error", message: "Não foi possível inativar a pessoa. Tente novamente." });
     } finally {

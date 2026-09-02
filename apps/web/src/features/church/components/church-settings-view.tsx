@@ -10,6 +10,7 @@ import { Can } from "@/src/shared/auth/guards";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import { getChurch, getChurchSettings, updateChurch, updateChurchSettings } from "@/src/features/church/api/church-api";
 import { ChurchAddressFields } from "@/src/features/church/components/church-address-fields";
 
@@ -100,7 +101,11 @@ export function ChurchSettingsView() {
     }
 
     if (Object.keys(payload).length === 0) {
-      setFeedback({ kind: "success", message: "Nenhuma alteração para salvar." });
+      toast({
+        kind: "info",
+        title: "Nenhuma alteração",
+        description: "Não havia dados novos para salvar."
+      });
       return;
     }
 
@@ -109,7 +114,11 @@ export function ChurchSettingsView() {
       await updateChurch(api, payload);
       cacheStore(CHURCH_CACHE).invalidatePrefix("data");
       await reload();
-      setFeedback({ kind: "success", message: "Dados da igreja atualizados." });
+      toast({
+        kind: "success",
+        title: "Dados atualizados",
+        description: "As informações da igreja foram salvas."
+      });
     } catch {
       setFeedback({ kind: "error", message: "Não foi possível salvar. Verifique slug, contato e endereço." });
     } finally {
@@ -127,7 +136,11 @@ export function ChurchSettingsView() {
     if (timezone !== settings.timezone && timezone !== "") payload.timezone = timezone;
     if (weekStartsOn !== settings.weekStartsOn && weekStartsOn !== "") payload.weekStartsOn = weekStartsOn;
     if (Object.keys(payload).length === 0) {
-      setFeedback({ kind: "success", message: "Nenhuma alteração para salvar." });
+      toast({
+        kind: "info",
+        title: "Nenhuma alteração",
+        description: "Não havia configurações novas para salvar."
+      });
       return;
     }
     setSaving(true);
@@ -135,7 +148,11 @@ export function ChurchSettingsView() {
       await updateChurchSettings(api, payload);
       cacheStore(CHURCH_CACHE).invalidatePrefix("settings");
       await reloadSettings();
-      setFeedback({ kind: "success", message: "Configurações atualizadas." });
+      toast({
+        kind: "success",
+        title: "Configurações atualizadas",
+        description: "As preferências da igreja foram salvas."
+      });
     } catch {
       setFeedback({ kind: "error", message: "Não foi possível salvar as configurações. Verifique o fuso horário." });
     } finally {

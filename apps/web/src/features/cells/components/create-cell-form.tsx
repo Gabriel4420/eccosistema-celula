@@ -11,6 +11,7 @@ import { Alert, Button, SelectField, TextField } from "@/src/shared/components";
 import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import { createCell } from "@/src/features/cells/api/cells-api";
 import { AssignmentSelect } from "./assignment-select";
 
@@ -90,6 +91,11 @@ export function CreateCellForm() {
     try {
       const cell = await createCell(api, parsed.data, idempotencyKey.current);
       cacheStore(CELLS_CACHE).invalidatePrefix("page");
+      toast({
+        kind: "success",
+        title: "Célula criada",
+        description: cell.name
+      });
       router.push(`/cells/${cell.id}`);
     } catch (cause) {
       const message = messageForError(cause);

@@ -19,6 +19,7 @@ import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import {
   getManagedRoles,
   getUser,
@@ -130,7 +131,11 @@ export function UserDetail() {
       setFirstName("");
       setLastName("");
       setEmail("");
-      setFeedback({ kind: "success", message: "Usuário atualizado." });
+      toast({
+        kind: "success",
+        title: "Usuário atualizado",
+        description: "Os dados foram salvos."
+      });
     } catch {
       setFeedback({
         kind: "error",
@@ -149,21 +154,25 @@ export function UserDetail() {
       if (confirmAction === "status") {
         const next = user.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
         await updateUserStatus(api, id, next);
-        setFeedback({
+        toast({
           kind: "success",
-          message:
-            next === "ACTIVE" ? "Usuário ativado." : "Usuário bloqueado.",
+          title: next === "ACTIVE" ? "Usuário ativado" : "Usuário bloqueado",
+          description: next === "ACTIVE" ? "Ele já pode entrar no painel." : "Ele não conseguirá mais entrar."
         });
       } else if (confirmAction === "roles") {
         await replaceUserRoles(api, id, { roleIds: currentRoleIds });
-        setFeedback({ kind: "success", message: "Papéis atualizados." });
+        toast({
+          kind: "success",
+          title: "Papéis atualizados",
+          description: "As permissões foram substituídas."
+        });
       } else if (confirmAction === "reset") {
         await resetUserPassword(api, id, resetPassword);
         setResetPassword("");
-        setFeedback({
+        toast({
           kind: "success",
-          message:
-            "Senha redefinida. Compartilhe a nova senha com o usuário em um canal seguro.",
+          title: "Senha redefinida",
+          description: "Compartilhe a nova senha com o usuário em um canal seguro."
         });
       }
       cacheStore(USERS_CACHE).invalidatePrefix("detail");

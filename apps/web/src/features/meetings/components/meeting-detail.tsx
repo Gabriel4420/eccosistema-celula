@@ -11,6 +11,7 @@ import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import {
   getMeeting,
   getMeetingReport,
@@ -97,7 +98,11 @@ export function MeetingDetail() {
       cacheStore(MEETINGS_CACHE).invalidatePrefix("page");
       await reload();
       setMeetingDate("");
-      setFeedback({ kind: "success", message: "Data atualizada." });
+      toast({
+        kind: "success",
+        title: "Data atualizada",
+        description: "O encontro foi reagendado."
+      });
     } catch (cause) {
       setFeedback({ kind: "error", message: messageForError(cause, "atualizar a data") });
     } finally {
@@ -114,7 +119,11 @@ export function MeetingDetail() {
       });
       cacheStore(MEETINGS_CACHE).invalidatePrefix("report");
       await reloadReport();
-      setFeedback({ kind: "success", message: "Observações salvas." });
+      toast({
+        kind: "success",
+        title: "Observações salvas",
+        description: "O relatório foi atualizado."
+      });
     } catch (cause) {
       setFeedback({ kind: "error", message: messageForError(cause, "salvar observações") });
     } finally {
@@ -130,7 +139,11 @@ export function MeetingDetail() {
       cacheStore(MEETINGS_CACHE).invalidatePrefix("detail");
       cacheStore(MEETINGS_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({ kind: "success", message: "Encontro concluído." });
+      toast({
+        kind: "success",
+        title: "Encontro concluído",
+        description: "A frequência continua acessível pelo histórico."
+      });
       setConfirmAction("none");
     } catch (cause) {
       setFeedback({ kind: "error", message: messageForError(cause, "concluir o encontro") });
@@ -154,7 +167,11 @@ export function MeetingDetail() {
       cacheStore(MEETINGS_CACHE).invalidatePrefix("detail");
       cacheStore(MEETINGS_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({ kind: "success", message: "Encontro cancelado." });
+      toast({
+        kind: "success",
+        title: "Encontro cancelado",
+        description: "O histórico foi preservado."
+      });
       setConfirmAction("none");
       setCancellationReason("");
     } catch (cause) {

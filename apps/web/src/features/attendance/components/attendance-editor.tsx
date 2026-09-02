@@ -10,6 +10,7 @@ import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { Alert, Button, Dialog, EmptyState, ErrorState, Skeleton } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
+import { toast } from "@/src/shared/toast/toast-store";
 import { useSession } from "@/src/providers/session-provider";
 import { listPeople } from "@/src/features/people/api/people-api";
 import { addAttendanceVisitor, getAttendance, removeAttendanceVisitor, saveAttendance } from "../api/attendance-api";
@@ -94,7 +95,7 @@ export function AttendanceEditor() {
       const data = await saveAttendance(api, cellId, meetingId, { expectedRevision: snapshot.revision, attendance: Object.entries(effectiveMarks).filter(([, status]) => status !== "UNMARKED").map(([personId, status]) => ({ personId, status: status as Exclude<Mark, "UNMARKED"> })) });
       cacheStore("attendance").set(`${cellId}:${meetingId}`, data, 10_000);
       cacheStore("meetings").invalidatePrefix("detail");
-      setMarks(null); await query.reload(); setFeedback({ kind: "success", message: "Frequência salva." });
+      setMarks(null); await query.reload(); toast({ kind: "success", title: "Frequência salva", description: "As marcações foram registradas." });
     } catch (cause) {
       if (cause instanceof ApiError && cause.code === "ATTENDANCE_REVISION_CONFLICT") { setConflict(true); setFeedback({ kind: "warning", message: "Outra pessoa alterou a frequência. Suas marcações foram preservadas; recarregue a base para comparar antes de salvar novamente." }); }
       else setFeedback({ kind: "error", message: "Não foi possível salvar. Suas alterações foram preservadas." });

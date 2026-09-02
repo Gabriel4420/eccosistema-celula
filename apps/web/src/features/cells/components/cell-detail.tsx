@@ -11,6 +11,7 @@ import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import {
   getCell,
   updateCell,
@@ -124,7 +125,11 @@ export function CellDetail() {
       setMeetingDay("");
       setMeetingTime("");
       setAddress("");
-      setFeedback({ kind: "success", message: "Célula atualizada." });
+      toast({
+        kind: "success",
+        title: "Célula atualizada",
+        description: "Os dados foram salvos."
+      });
     } catch (cause) {
       setFeedback({ kind: "error", message: messageForError(cause, "salvar as alterações") });
     } finally {
@@ -141,9 +146,10 @@ export function CellDetail() {
       cacheStore(CELLS_CACHE).invalidatePrefix("detail");
       cacheStore(CELLS_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({
+      toast({
         kind: "success",
-        message: next === "ACTIVE" ? "Célula ativada." : "Célula suspensa."
+        title: next === "ACTIVE" ? "Célula ativada" : "Célula suspensa",
+        description: next === "ACTIVE" ? "A célula voltou a funcionar." : "A célula ficou suspensa."
       });
       setConfirmAction("none");
     } catch (cause) {
@@ -165,7 +171,11 @@ export function CellDetail() {
       cacheStore(CELLS_CACHE).invalidatePrefix("detail");
       cacheStore(CELLS_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({ kind: "success", message: "Liderança atualizada." });
+      toast({
+        kind: "success",
+        title: "Liderança atualizada",
+        description: "Os novos vínculos foram salvos."
+      });
       setConfirmAction("none");
     } catch (cause) {
       setFeedback({ kind: "error", message: messageForError(cause, "alterar a liderança") });
@@ -182,7 +192,11 @@ export function CellDetail() {
       cacheStore(CELLS_CACHE).invalidatePrefix("detail");
       cacheStore(CELLS_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({ kind: "success", message: "Líder em treinamento atualizado." });
+      toast({
+        kind: "success",
+        title: "Líder em treinamento atualizado",
+        description: "O vínculo foi salvo."
+      });
       setConfirmAction("none");
     } catch (cause) {
       setFeedback({ kind: "error", message: messageForError(cause, "alterar o líder em treinamento") });

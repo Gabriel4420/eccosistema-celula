@@ -10,6 +10,7 @@ import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import { createUser, getManagedRoles } from "@/src/features/users/api/users-api";
 import { roleLabel } from "@/src/shared/auth/session";
 import { evaluatePasswordStrength } from "@mission-atos/contracts";
@@ -68,6 +69,11 @@ export function CreateUserForm() {
         roleIds: selectedRoleIds
       });
       cacheStore(USERS_CACHE).invalidatePrefix("page");
+      toast({
+        kind: "success",
+        title: "Usuário criado",
+        description: `${user.firstName} ${user.lastName} agora tem acesso ao painel.`
+      });
       router.push(`/users/${user.id}`);
     } catch (cause) {
       const message =

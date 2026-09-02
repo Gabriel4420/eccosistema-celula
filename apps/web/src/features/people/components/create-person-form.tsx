@@ -8,6 +8,7 @@ import { Alert, Button, TextareaField, TextField } from "@/src/shared/components
 import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import { createPerson } from "@/src/features/people/api/people-api";
 
 const PEOPLE_CACHE = "people";
@@ -33,6 +34,11 @@ export function CreatePersonForm() {
         observations: String(formData.get("observations") ?? "").trim() || undefined
       });
       cacheStore(PEOPLE_CACHE).invalidatePrefix("page");
+      toast({
+        kind: "success",
+        title: "Pessoa cadastrada",
+        description: person.fullName
+      });
       router.push(`/people/${person.id}`);
     } catch (error) {
       const message =

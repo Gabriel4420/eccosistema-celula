@@ -22,6 +22,7 @@ import { Can } from "@/src/shared/auth/guards";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { toast } from "@/src/shared/toast/toast-store";
 import {
   listPeople,
   updatePersonStatus,
@@ -114,9 +115,10 @@ export function PeopleList() {
       await updatePersonStatus(api, person.id, "ACTIVE");
       cacheStore(PEOPLE_CACHE).invalidatePrefix("page");
       await reload();
-      setFeedback({
+      toast({
         kind: "success",
-        message: `${person.fullName} foi reativado(a).`,
+        title: "Pessoa reativada",
+        description: `${person.fullName} voltou a participar da igreja.`,
       });
     } catch {
       setFeedback({

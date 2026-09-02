@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { UserResponse } from "@mission-atos/contracts";
 import { Alert, Button, Dialog } from "@/src/shared/components";
+import { toast } from "@/src/shared/toast/toast-store";
 import { useSession } from "@/src/providers/session-provider";
 import { formatUserMenuIdentity } from "@/src/shared/navigation/user-menu-presentation";
 import { getMyProfilePhoto, removeMyProfilePhoto, updateMyProfilePhoto } from "@/src/features/profile/api/profile-api";
@@ -77,6 +78,11 @@ function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }:
         base64: candidate.base64
       });
       window.dispatchEvent(new CustomEvent(PHOTO_UPDATED_EVENT, { detail: true }));
+      toast({
+        kind: "success",
+        title: "Foto atualizada",
+        description: "Sua nova foto já está visível no painel."
+      });
       onClose();
     } catch { setError("Não foi possível salvar a foto. Tente novamente."); }
     finally { setBusy(false); }
@@ -88,6 +94,11 @@ function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }:
       await removeMyProfilePhoto(api);
       setCandidate(null);
       window.dispatchEvent(new CustomEvent(PHOTO_UPDATED_EVENT, { detail: false }));
+      toast({
+        kind: "success",
+        title: "Foto removida",
+        description: "Suas iniciais voltarão a aparecer no perfil."
+      });
       onClose();
     } catch { setError("Não foi possível remover a foto."); }
     finally { setBusy(false); }
