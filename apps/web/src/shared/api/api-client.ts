@@ -13,6 +13,7 @@ export interface RefreshTokenPayload {
 export interface ApiClientDependencies {
   readonly baseUrl: string;
   readonly onSessionEnded: () => void;
+  readonly onError?: (error: ApiError) => void;
   readonly refreshRequest?: () => Promise<RefreshTokenPayload | null>;
   readonly timeoutMs?: number;
 }
@@ -124,6 +125,9 @@ export class ApiClient {
         if (attempts === 0 && options.allowRetry && apiError.retryable) {
           attempts += 1;
           continue;
+        }
+        if (!(options.bearer && apiError.status === 401)) {
+          this.deps.onError?.(apiError);
         }
         throw apiError;
       }

@@ -16,11 +16,13 @@ function response(status: number, body: unknown) {
 function client(overrides: {
   refreshRequest?: () => Promise<RefreshTokenPayload | null>;
   onSessionEnded?: () => void;
+  onError?: (error: unknown) => void;
 } = {}) {
   return new ApiClient({
     baseUrl: "http://api.example",
     refreshRequest: overrides.refreshRequest,
     onSessionEnded: overrides.onSessionEnded ?? jest.fn(),
+    onError: overrides.onError ?? jest.fn(),
     timeoutMs: 5_000
   });
 }
@@ -190,5 +192,63 @@ describe("ApiClient", () => {
       api.request({ method: "GET", path: "/users", bearer: true, schema: idEnvelopeSchema })
     ).rejects.toMatchObject({ code: "AUTH_UNAUTHENTICATED" });
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
+  });
+
+  it("notifies the onError callback with the normalized ApiError", async () => {
+    fetchMock.mockResolvedValue(
+      response(409, {
+        error: { code: "PERSON_DUPLICATE", message: "Conflict", details: {} }
+      })
+    );
+    const onError = jest.fn();
+    const api = client({ onError });
+    api.setAccessToken("token", 600);
+
+    await expect(
+      api.request({ method: "POST", path: "/people", body: { fullName: "A" }, bearer: true, schema: idEnvelopeSchema })
+    ).rejects.toMatchObject({ code: "PERSON_DUPLICATE" });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0][0]).toMatchObject({ status: 409, code: "PERSON_DUPLICATE" });
+    api.clearAccessToken();
+  });
+
+  it("does not notify the onError callback for session-expiry 401s", async () => {
+    fetchMock.mockResolvedValue(
+      response(401, {
+        error: { code: "AUTH_UNAUTHENTICATED", message: "x", details: {} }
+      })
+    );
+    const onError = jest.fn();
+    const onSessionEnded = jest.fn();
+    const api = client({ refreshRequest: async () => null, onSessionEnded, onError });
+    api.setAccessToken("token", 600);
+
+    await expect(
+      api.request({ method: "GET", path: "/users", bearer: true, schema: idEnvelopeSchema })
+    ).rejects.toMatchObject({ code: "AUTH_UNAUTHENTICATED" });
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onError).not.toHaveBeenCalled();
+    api.clearAccessToken();
+  });
+
+  it("does not notify on transient errors that succeed after retry", async () => {
+    fetchMock
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(response(200, { data: { id: "1" }, meta: {} }));
+    const onError = jest.fn();
+    const api = client({ onError });
+    api.setAccessToken("token", 600);
+
+    const result = await api.request({
+      method: "GET",
+      path: "/people",
+      bearer: true,
+      schema: idEnvelopeSchema,
+      allowRetry: true
+    });
+
+    expect(result).toEqual({ data: { id: "1" }, meta: {} });
+    expect(onError).not.toHaveBeenCalled();
+    api.clearAccessToken();
   });
 });

@@ -13,9 +13,11 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import { ApiClient } from "@/src/shared/api/api-client";
+import type { ApiError } from "@/src/shared/api/api-error";
 import { capabilitiesFor } from "@/src/shared/auth/capabilities";
 import type { Capabilities } from "@/src/shared/auth/capabilities";
 import type { SessionPrincipal, SessionStatus } from "@/src/shared/auth/session";
+import { toast } from "@/src/shared/toast/toast-store";
 import { clearAllCaches } from "@/src/shared/cache/cache";
 import { postLogin, postLogout, postRefresh } from "@/src/features/auth/api/auth-api";
 
@@ -55,6 +57,7 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
         onSessionEnded: () => {
           /* replaced by setSessionEndedHandler */
         },
+        onError: (error) => notifyApiError(error),
         refreshRequest: async () => {
           const auth = await postRefresh(baseUrl);
           return auth
@@ -164,4 +167,28 @@ export function useSession(): SessionContextValue {
     throw new Error("useSession must be used within a SessionProvider");
   }
   return context;
+}
+
+function notifyApiError(error: ApiError): void {
+  if (error.code === "TIMEOUT") {
+    toast({
+      kind: "error",
+      title: "O servidor demorou a responder",
+      description: "Verifique sua conexão e tente novamente."
+    });
+    return;
+  }
+  if (error.code === "NETWORK_ERROR") {
+    toast({
+      kind: "error",
+      title: "Sem conexão com o servidor",
+      description: "Não foi possível conectar. Verifique sua internet e tente novamente."
+    });
+    return;
+  }
+  toast({
+    kind: "error",
+    title: "Algo deu errado",
+    description: error.message || "Tente novamente em instantes."
+  });
 }
