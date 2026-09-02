@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { SessionProvider } from "@/src/providers/session-provider";
 import { QueryProvider } from "@/src/providers/query-provider";
+import { ToastViewport } from "@/src/shared/components/toast-viewport";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <SessionProvider>
           <QueryProvider>{children}</QueryProvider>
         </SessionProvider>
+        <ToastViewport />
       </body>
     </html>
   );
