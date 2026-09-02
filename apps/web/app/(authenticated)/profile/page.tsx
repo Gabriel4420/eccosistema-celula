@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { KeyRound, Save } from "lucide-react";
 import type { FormEvent } from "react";
 import {
   Alert,
@@ -191,7 +192,7 @@ export default function ProfilePage() {
             onChange={(event) => setLastName(event.target.value)}
             required
           />
-          <Button type="submit" disabled={!hasNameChanges} loading={savingName} loadingLabel="Salvando…">
+          <Button type="submit" icon={Save} disabled={!hasNameChanges} loading={savingName} loadingLabel="Salvando…">
             Salvar alterações
           </Button>
         </fieldset>
@@ -235,7 +236,7 @@ export default function ProfilePage() {
             error={passwordFieldErrors.confirm}
             required
           />
-          <Button type="submit">Solicitar alteração de senha</Button>
+          <Button type="submit" icon={KeyRound}>Solicitar alteração de senha</Button>
         </fieldset>
       </form>
 

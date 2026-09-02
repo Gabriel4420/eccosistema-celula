@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Ban, KeyRound, Save, ShieldCheck, UserCheck } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -277,6 +278,7 @@ export function UserDetail() {
           />
           <Button
             type="submit"
+            icon={Save}
             disabled={!hasEdits}
             loading={busy}
             loadingLabel="Salvando…"
@@ -323,7 +325,7 @@ export function UserDetail() {
               </label>
             );
           })}
-          <Button type="submit" disabled={!roleDirty} variant="secondary">
+          <Button type="submit" icon={ShieldCheck} disabled={!roleDirty} variant="secondary">
             Salvar papéis
           </Button>
         </fieldset>
@@ -331,18 +333,19 @@ export function UserDetail() {
 
       <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
         {user.status === "ACTIVE" ? (
-          <Button variant="danger" onClick={() => setConfirmAction("status")}>
+          <Button variant="danger" icon={Ban} onClick={() => setConfirmAction("status")}>
             Bloquear usuário
           </Button>
         ) : (
           <Button
             variant="secondary"
+            icon={UserCheck}
             onClick={() => setConfirmAction("status")}
           >
             Ativar usuário
           </Button>
         )}
-        <Button variant="secondary" onClick={() => setConfirmAction("reset")}>
+        <Button variant="secondary" icon={KeyRound} onClick={() => setConfirmAction("reset")}>
           Redefinir senha
         </Button>
       </div>

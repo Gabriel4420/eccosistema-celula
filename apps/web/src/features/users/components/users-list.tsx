@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FilterX, UserPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -115,6 +116,7 @@ export function UsersList() {
           </p>
         </div>
         <Link className="button h-8" href="/users/new">
+          <UserPlus aria-hidden="true" className="button__icon" />
           Novo usuário
         </Link>
       </div>
@@ -167,6 +169,7 @@ export function UsersList() {
         />
         <Button
           variant="secondary"
+          icon={FilterX}
           onClick={() => {
             setSearchInput("");
             navigate({ search: "", status: "", roleId: "", page: 1 });

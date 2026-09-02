@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Save, UserX } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -161,7 +162,7 @@ export function PersonDetail() {
             <Can capability="viewPersonObservations">
               <TextareaField label="Observações" name="observations" rows={4} defaultValue={person.observations ?? ""} />
             </Can>
-            <Button type="submit" loading={busy} loadingLabel="Salvando…">
+            <Button type="submit" icon={Save} loading={busy} loadingLabel="Salvando…">
               Salvar alterações
             </Button>
           </fieldset>
@@ -171,7 +172,7 @@ export function PersonDetail() {
       <Can capability="changePersonStatus">
         <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
           {person.status === "ACTIVE" ? (
-            <Button variant="danger" onClick={() => setConfirmInactivate(true)}>
+            <Button variant="danger" icon={UserX} onClick={() => setConfirmInactivate(true)}>
               Inativar pessoa
             </Button>
           ) : null}
@@ -188,7 +189,7 @@ export function PersonDetail() {
           <Button variant="secondary" onClick={() => setConfirmInactivate(false)} disabled={busy}>
             Cancelar
           </Button>
-          <Button variant="danger" loading={busy} loadingLabel="Inativando…" onClick={() => void runInactivate()}>
+          <Button variant="danger" icon={UserX} loading={busy} loadingLabel="Inativando…" onClick={() => void runInactivate()}>
             Inativar
           </Button>
         </div>

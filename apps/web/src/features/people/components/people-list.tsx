@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FilterX, UserRoundPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -138,6 +139,7 @@ export function PeopleList() {
         </div>
         <Can capability="editPeople">
           <Link className="button" href="/people/new">
+            <UserRoundPlus aria-hidden="true" className="button__icon" />
             Nova pessoa
           </Link>
         </Can>
@@ -201,6 +203,7 @@ export function PeopleList() {
         />
         <Button
           variant="secondary"
+          icon={FilterX}
           onClick={() => {
             setSearchInput("");
             navigate({ search: "", status: "", gender: "", page: 1 });

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -97,7 +98,7 @@ export function CreateMeetingForm({ cellId }: { readonly cellId: string }) {
         </fieldset>
 
         <div className="dialog-panel__actions" style={{ justifyContent: "flex-start", marginTop: "var(--space-4)" }}>
-          <Button type="submit" loading={submitting} loadingLabel="Criando…">
+          <Button type="submit" icon={CalendarPlus} loading={submitting} loadingLabel="Criando…">
             Criar encontro
           </Button>
           <Link className="button button--secondary" href={`/cells/${cellId}/meetings`}>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -213,7 +214,7 @@ export function CreateCellForm() {
         </fieldset>
 
         <div className="dialog-panel__actions" style={{ justifyContent: "flex-start", marginTop: "var(--space-4)" }}>
-          <Button type="submit" loading={submitting} loadingLabel="Criando…">
+          <Button type="submit" icon={Plus} loading={submitting} loadingLabel="Criando…">
             Criar célula
           </Button>
           <Link className="button button--secondary" href="/cells">

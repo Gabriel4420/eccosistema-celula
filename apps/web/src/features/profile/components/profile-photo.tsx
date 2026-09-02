@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChangeEvent, RefObject } from "react";
+import { Camera, Save, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { UserResponse } from "@mission-atos/contracts";
@@ -101,12 +102,12 @@ function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }:
       </div>
       {error ? <Alert variant="error">{error}</Alert> : null}
       <input ref={inputRef} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void selectPhoto(event)} />
-      <Button variant="secondary" onClick={() => inputRef.current?.click()} disabled={busy}>Escolher foto</Button>
+      <Button variant="secondary" icon={Camera} onClick={() => inputRef.current?.click()} disabled={busy}>Escolher foto</Button>
       <p className="field__description">A imagem será recortada ao centro e otimizada. Máximo de 8 MB.</p>
       <div className="dialog-panel__actions">
-        {hasPhoto ? <Button variant="danger" onClick={() => void remove()} disabled={busy}>Remover</Button> : null}
-        <Button variant="secondary" onClick={onClose} disabled={busy}>Cancelar</Button>
-        <Button onClick={() => void save()} disabled={!candidate} loading={busy} loadingLabel="Salvando…">Salvar foto</Button>
+        {hasPhoto ? <Button variant="danger" icon={Trash2} onClick={() => void remove()} disabled={busy}>Remover</Button> : null}
+        <Button variant="secondary" icon={X} onClick={onClose} disabled={busy}>Cancelar</Button>
+        <Button icon={Save} onClick={() => void save()} disabled={!candidate} loading={busy} loadingLabel="Salvando…">Salvar foto</Button>
       </div>
     </div>
   </Dialog>;

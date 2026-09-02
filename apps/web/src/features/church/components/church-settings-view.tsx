@@ -1,6 +1,7 @@
 "use client";
 
 import { churchWeekDays, normalizeChurchPhone } from "@mission-atos/contracts";
+import { Save } from "lucide-react";
 import type { ChurchResponse } from "@mission-atos/contracts";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -180,7 +181,7 @@ export function ChurchSettingsView() {
         </fieldset>
 
         <Can capability="editChurch">
-          <Button type="submit" loading={saving} loadingLabel="Salvando…">
+          <Button type="submit" icon={Save} loading={saving} loadingLabel="Salvando…">
             Salvar dados
           </Button>
         </Can>
@@ -204,7 +205,7 @@ export function ChurchSettingsView() {
             required
           />
           <Can capability="editChurch">
-            <Button type="submit" loading={saving} loadingLabel="Salvando…">
+            <Button type="submit" icon={Save} loading={saving} loadingLabel="Salvando…">
               Salvar configurações
             </Button>
           </Can>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FilterX, Plus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -109,6 +110,7 @@ export function CellsList() {
         </div>
         <Can capability="createCells">
           <Link className="button" href="/cells/new">
+            <Plus aria-hidden="true" className="button__icon" />
             Nova célula
           </Link>
         </Can>
@@ -149,6 +151,7 @@ export function CellsList() {
         />
         <Button
           variant="secondary"
+          icon={FilterX}
           onClick={() => {
             setSearchInput("");
             navigate({ search: "", status: "", page: 1 });

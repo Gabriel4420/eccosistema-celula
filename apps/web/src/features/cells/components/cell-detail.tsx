@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PauseCircle, Play, Save, Trash2, UserCog } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -328,7 +329,7 @@ export function CellDetail() {
               </>
             ) : null}
             {fieldErrors.form ? <Alert variant="error">{fieldErrors.form}</Alert> : null}
-            <Button type="submit" disabled={!hasEdits} loading={busy} loadingLabel="Salvando…">
+            <Button type="submit" icon={Save} disabled={!hasEdits} loading={busy} loadingLabel="Salvando…">
               Salvar alterações
             </Button>
           </fieldset>
@@ -338,28 +339,28 @@ export function CellDetail() {
       {canManage ? (
         <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
           {cell.status === "ACTIVE" ? (
-            <Button variant="danger" onClick={() => setConfirmAction("status")}>
+            <Button variant="danger" icon={PauseCircle} onClick={() => setConfirmAction("status")}>
               Suspender célula
             </Button>
           ) : (
-            <Button variant="secondary" onClick={() => setConfirmAction("status")}>
+            <Button variant="secondary" icon={Play} onClick={() => setConfirmAction("status")}>
               {cell.status === "FORMING" ? "Ativar célula" : "Reativar célula"}
             </Button>
           )}
-          <Button variant="secondary" onClick={openLeaderDialog}>
+          <Button variant="secondary" icon={UserCog} onClick={openLeaderDialog}>
             Alterar líder
           </Button>
           {cell.traineeLeader ? (
             <>
-              <Button variant="secondary" onClick={openTraineeDialog}>
+              <Button variant="secondary" icon={UserCog} onClick={openTraineeDialog}>
                 Alterar líder em treinamento
               </Button>
-              <Button variant="secondary" onClick={() => setConfirmAction("remove-trainee")}>
+              <Button variant="secondary" icon={Trash2} onClick={() => setConfirmAction("remove-trainee")}>
                 Remover líder em treinamento
               </Button>
             </>
           ) : (
-            <Button variant="secondary" onClick={openTraineeDialog}>
+            <Button variant="secondary" icon={UserCog} onClick={openTraineeDialog}>
               Atribuir líder em treinamento
             </Button>
           )}

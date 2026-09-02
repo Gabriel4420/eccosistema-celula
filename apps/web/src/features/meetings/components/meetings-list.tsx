@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarPlus, FilterX } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, EmptyState, ErrorState, Pagination, SelectField, Skeleton, Table, TextField } from "@/src/shared/components";
@@ -96,6 +97,7 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
         </p>
         {capabilities.createMeetings ? (
           <Link className="button" href={`/cells/${cellId}/meetings/new`}>
+            <CalendarPlus aria-hidden="true" className="button__icon" />
             Novo encontro
           </Link>
         ) : null}
@@ -146,6 +148,7 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
         />
         <Button
           variant="secondary"
+          icon={FilterX}
           onClick={() => {
             setFromInput("");
             setToInput("");

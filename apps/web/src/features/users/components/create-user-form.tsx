@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -184,7 +185,7 @@ export function CreateUserForm() {
         </fieldset>
 
         <div className="dialog-panel__actions" style={{ justifyContent: "flex-start", marginTop: "var(--space-4)" }}>
-          <Button type="submit" loading={submitting} loadingLabel="Criando…">
+          <Button type="submit" icon={UserPlus} loading={submitting} loadingLabel="Criando…">
             Criar usuário
           </Button>
           <Link className="button button--secondary" href="/users">

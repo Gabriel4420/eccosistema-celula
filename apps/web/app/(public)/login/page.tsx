@@ -2,6 +2,7 @@
 
 import { loginRequestSchema } from "@mission-atos/contracts";
 import Image from "next/image";
+import { LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -125,7 +126,7 @@ export default function LoginPage() {
             error={fieldErrors.password}
             required
           />
-          <Button type="submit" loading={submitting} loadingLabel="Entrando…">
+          <Button type="submit" icon={LogIn} loading={submitting} loadingLabel="Entrando…">
             Entrar
           </Button>
         </form>

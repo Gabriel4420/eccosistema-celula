@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarCheck, CalendarX2, Save } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -229,7 +230,7 @@ export function MeetingDetail() {
               required
             />
             {fieldErrors.form ? <Alert variant="error">{fieldErrors.form}</Alert> : null}
-            <Button type="submit" disabled={!dirtyDate} loading={busy} loadingLabel="Salvando...">
+            <Button type="submit" icon={Save} disabled={!dirtyDate} loading={busy} loadingLabel="Salvando...">
               Salvar data
             </Button>
           </fieldset>
@@ -249,6 +250,7 @@ export function MeetingDetail() {
           />
           {canEditObs ? (
             <Button
+              icon={Save}
               onClick={() => void handleSaveObservations()}
               disabled={!dirtyObs}
               loading={busy}
@@ -262,10 +264,10 @@ export function MeetingDetail() {
 
       {isEditable ? (
         <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
-          <Button variant="primary" onClick={() => setConfirmAction("complete")}>
+          <Button variant="primary" icon={CalendarCheck} onClick={() => setConfirmAction("complete")}>
             Concluir encontro
           </Button>
-          <Button variant="danger" onClick={() => setConfirmAction("cancel")}>
+          <Button variant="danger" icon={CalendarX2} onClick={() => setConfirmAction("cancel")}>
             Cancelar encontro
           </Button>
         </div>

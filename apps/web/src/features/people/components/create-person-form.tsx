@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { UserRoundPlus } from "lucide-react";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Alert, Button, TextareaField, TextField } from "@/src/shared/components";
@@ -84,7 +85,7 @@ export function CreatePersonForm() {
         </fieldset>
 
         <div className="toolbar">
-          <Button type="submit" loading={busy} loadingLabel="Cadastrando…">
+          <Button type="submit" icon={UserRoundPlus} loading={busy} loadingLabel="Cadastrando…">
             Cadastrar pessoa
           </Button>
         </div>
