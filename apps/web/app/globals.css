@@ -1872,6 +1872,13 @@ body {
     animation: spin 0.7s linear infinite;
   }
 
+  .button__icon {
+    width: 1.15em;
+    height: 1.15em;
+    flex-shrink: 0;
+    stroke-width: 2;
+  }
+
   @keyframes spin {
     to {
       transform: rotate(360deg);

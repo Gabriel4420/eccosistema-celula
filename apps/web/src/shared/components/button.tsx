@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -6,6 +7,7 @@ type ButtonSize = "default" | "sm";
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly variant?: ButtonVariant;
   readonly size?: ButtonSize;
+  readonly icon?: LucideIcon;
   readonly loading?: boolean;
   readonly loadingLabel?: string;
 }
@@ -13,6 +15,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({
   variant = "primary",
   size = "default",
+  icon: Icon,
   loading = false,
   loadingLabel,
   disabled,
@@ -33,6 +36,8 @@ export function Button({
     >
       {loading ? (
         <span className="spinner" aria-hidden="true" />
+      ) : Icon ? (
+        <Icon aria-hidden="true" className="button__icon" />
       ) : null}
       <span>{loading && loadingLabel ? loadingLabel : children}</span>
     </button>
