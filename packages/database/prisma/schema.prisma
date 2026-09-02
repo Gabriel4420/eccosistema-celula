@@ -97,6 +97,7 @@ model Church {
   auditLogs             AuditLog[]
   sessions              Session[]
   idempotencyRequests   IdempotencyRequest[]
+  reportExports         ReportExport[]
 
   @@index([deletedAt], map: "churches_deleted_at_idx")
   @@map("churches")
@@ -126,6 +127,7 @@ model User {
   auditLogs             AuditLog[]
   sessions              Session[]
   idempotencyRequests   IdempotencyRequest[]
+  exportedReports       ReportExport[]
 
   @@unique([id, churchId], map: "users_id_church_id_key")
   @@unique([churchId, email], map: "users_church_id_email_key")
@@ -437,4 +439,23 @@ model IdempotencyRequest {
   @@index([churchId, createdAt], map: "idempotency_requests_church_created_at_idx")
   @@index([expiresAt], map: "idempotency_requests_expires_at_idx")
   @@map("idempotency_requests")
+}
+
+model ReportExport {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  churchId    String   @map("church_id") @db.Uuid
+  exportedBy  String   @map("exported_by") @db.Uuid
+  reportType  String   @map("report_type") @db.VarChar(50)
+  format      String   @db.VarChar(10)
+  scope       Json     @default("{}")
+  rowCount    Int      @map("row_count") @default(0)
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamptz(3)
+
+  church   Church @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  exporter User   @relation(fields: [exportedBy], references: [id], onDelete: Restrict)
+
+  @@index([churchId, createdAt], map: "report_exports_church_created_at_idx")
+  @@index([churchId, reportType], map: "report_exports_church_type_idx")
+  @@index([exportedBy], map: "report_exports_exported_by_idx")
+  @@map("report_exports")
 }
