@@ -14,6 +14,7 @@
     "test:people:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern people.e2e-spec.ts",
     "test:cells:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern cells.e2e-spec.ts",
     "test:attendance:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern attendance.e2e-spec.ts",
+    "test:reports:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern reports.e2e-spec.ts",
     "test:dashboard:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern dashboard.e2e-spec.ts",
     "test:integration": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.integration.config.cjs",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
@@ -32,7 +33,9 @@
     "@nestjs/throttler": "^6.0.0",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
+    "exceljs": "^4.4.0",
     "helmet": "^8.3.0",
+    "pdfkit": "^0.20.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.0"
   },
@@ -42,6 +45,7 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
     "@types/cookie-parser": "^1.4.9",
+    "@types/pdfkit": "^0.17.6",
     "@types/supertest": "^6.0.3",
     "supertest": "^7.1.4"
   }

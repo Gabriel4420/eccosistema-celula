@@ -12,6 +12,7 @@ import { ChurchesModule } from "./modules/churches/churches.module";
 import { PeopleModule } from "./modules/people/people.module";
 import { AttendanceModule } from "./modules/attendance/attendance.module";
 import { DashboardAnalyticsModule } from "./modules/dashboard-analytics/dashboard-analytics.module";
+import { ReportsModule } from "./modules/reports/reports.module";
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { DashboardAnalyticsModule } from "./modules/dashboard-analytics/dashboar
     CellsModule,
     MeetingsModule,
     AttendanceModule,
-    DashboardAnalyticsModule
+    DashboardAnalyticsModule,
+    ReportsModule
   ],
   controllers: [HealthController],
   providers: [

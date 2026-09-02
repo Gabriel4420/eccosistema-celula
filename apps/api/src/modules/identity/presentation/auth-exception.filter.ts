@@ -102,6 +102,8 @@ function applicationErrorStatus(code: string): number {
     ,PERSON_NOT_ELIGIBLE: 409
     ,VISITOR_ALREADY_ELIGIBLE: 409
     ,ATTENDANCE_PERSON_NOT_FOUND: 404
+    ,REPORT_CELL_NOT_FOUND: 404
+    ,REPORT_EXPORT_FAILED: 500
   };
   return statuses[code] ?? 500;
 }
