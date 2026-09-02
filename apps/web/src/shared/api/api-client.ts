@@ -144,6 +144,35 @@ export class ApiClient {
     };
   }
 
+  async downloadFile(options: Omit<RequestOptions<unknown>, "schema">): Promise<Blob> {
+    const token = options.bearer ? this.getAccessToken() : null;
+    if (options.bearer && !token) {
+      this.sessionEndedHandler();
+      throw new ApiError({
+        status: null,
+        code: "AUTH_UNAUTHENTICATED",
+        message: "Sua sessão foi encerrada.",
+        details: {},
+        retryable: false
+      });
+    }
+    const url = buildUrl(this.deps.baseUrl, options.path, options.query);
+    const response = await fetch(url, {
+      method: options.method,
+      headers: {
+        ...options.headers,
+        ...(token ? { authorization: `Bearer ${token}` } : {})
+      },
+      credentials: "include",
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      const data = await readJsonSafe(response);
+      throw normalizeHttpError(response.status, data);
+    }
+    return response.blob();
+  }
+
   private async send(
     options: RequestOptions<unknown>,
     token: string | null
@@ -205,4 +234,14 @@ function buildUrl(
     }
   }
   return url.toString();
+}
+
+async function readJsonSafe(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
 }

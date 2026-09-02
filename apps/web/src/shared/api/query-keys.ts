@@ -41,6 +41,17 @@ export const queryKeys = {
   analytics: {
     all: ["analytics"] as const
   },
+  reports: {
+    all: ["reports"] as const,
+    pending: () => [...(["reports"] as const), "pending"] as const,
+    attendance: {
+      all: ["reports", "attendance"] as const,
+      detail: (cellId: string) =>
+        [...(["reports", "attendance"] as const), `detail:${cellId}`] as const
+    },
+    visitors: () => [...(["reports"] as const), "visitors"] as const,
+    meetings: () => [...(["reports"] as const), "meetings"] as const
+  },
   church: {
     all: ["church"] as const
   }
