@@ -188,3 +188,46 @@ export type {
   SeriesQuery,
   SeriesResponse
 } from "./analytics";
+export {
+  attendanceDetailEnvelopeSchema,
+  attendanceDetailQuerySchema,
+  attendanceSummaryEnvelopeSchema,
+  attendanceSummaryQuerySchema,
+  exportAttendanceQuerySchema,
+  exportCellsQuerySchema,
+  exportMeetingsQuerySchema,
+  exportPeopleQuerySchema,
+  exportFormats,
+  exportReportTypes,
+  healthBands,
+  meetingsReportEnvelopeSchema,
+  meetingsReportQuerySchema,
+  pendingReportsEnvelopeSchema,
+  pendingReportsQuerySchema,
+  reportErrorCodeSchema,
+  reportErrorCodeValues,
+  reportStatuses,
+  reportsErrorEnvelopeSchema,
+  visitorsEnvelopeSchema,
+  visitorsQuerySchema
+} from "./reports";
+export type {
+  AttendanceDetailEnvelope,
+  AttendanceDetailItem,
+  AttendanceDetailQuery,
+  AttendanceSummaryEnvelope,
+  AttendanceSummaryItem,
+  AttendanceSummaryQuery,
+  ExportFormat,
+  ExportReportType,
+  MeetingsReportEnvelope,
+  MeetingsReportItem,
+  MeetingsReportQuery,
+  PendingReportsEnvelope,
+  PendingReportItem,
+  PendingReportsQuery,
+  ReportErrorCode,
+  VisitorsEnvelope,
+  VisitorReportItem,
+  VisitorsQuery
+} from "./reports";
