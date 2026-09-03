@@ -55,7 +55,9 @@ export class RefreshCookieService {
       secure,
       sameSite: "lax",
       path: secure ? "/api/auth" : "/auth",
-      partitioned: true,
+      // CHIPS partitioned cookies require Secure; without it browsers reject
+      // the Set-Cookie, which would silently break refresh over plain HTTP.
+      partitioned: secure,
       maxAge: this.environment.REFRESH_TOKEN_TTL_SECONDS * 1000
     };
   }

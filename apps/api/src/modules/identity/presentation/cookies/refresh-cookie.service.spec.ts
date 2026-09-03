@@ -30,7 +30,7 @@ describe("RefreshCookieService", () => {
       expect.objectContaining({
         secure: false,
         sameSite: "lax",
-        partitioned: true,
+        partitioned: false,
         path: "/auth"
       })
     );
