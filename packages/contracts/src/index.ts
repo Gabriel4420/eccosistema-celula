@@ -231,3 +231,27 @@ export type {
   VisitorReportItem,
   VisitorsQuery
 } from "./reports";
+export {
+  importCellItemSchema,
+  importCellsRequestSchema,
+  importDomains,
+  importFormats,
+  importPersonItemSchema,
+  importPeopleRequestSchema,
+  importRowResultSchema,
+  importResultEnvelopeSchema,
+  importResultSchema,
+  importUserItemSchema,
+  importUsersRequestSchema
+} from "./bulk-import";
+export type {
+  ImportCellItem,
+  ImportDomain,
+  ImportFormat,
+  ImportPersonItem,
+  ImportResult,
+  ImportResultEnvelope,
+  ImportRowResult,
+  ImportUserItem,
+  ManagedRoleName
+} from "./bulk-import";

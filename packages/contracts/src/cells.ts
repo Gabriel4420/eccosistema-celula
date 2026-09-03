@@ -91,7 +91,8 @@ export const createCellRequestSchema = z
   .strict()
   .refine(
     (value) =>
-      value.status !== "ACTIVE" || (value.leaderId !== null && value.supervisorId !== undefined),
+      value.status !== "ACTIVE" ||
+      (value.leaderId !== null && value.leaderId !== undefined && value.supervisorId !== undefined),
     "ACTIVE cells require leaderId and supervisorId"
   );
 

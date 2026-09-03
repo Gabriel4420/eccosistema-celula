@@ -50,6 +50,15 @@ describe("cells contracts", () => {
       meetingTime: "20:00",
       address: "Rua A"
     })).toThrow();
+    expect(() => createCellRequestSchema.parse({
+      code: "CEL-01",
+      name: "Célula",
+      status: "ACTIVE",
+      supervisorId: uuid(),
+      meetingDay: "MONDAY",
+      meetingTime: "20:00",
+      address: "Rua A"
+    })).toThrow();
     expect(createCellRequestSchema.parse({
       code: "CEL-01",
       name: "Célula",
