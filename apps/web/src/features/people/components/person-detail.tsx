@@ -6,13 +6,27 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { normalizeChurchPhone } from "@mission-atos/contracts";
-import { Alert, Button, Dialog, EmptyState, ErrorState, Skeleton, StatusBadge, TextareaField, TextField } from "@/src/shared/components";
+import {
+  Alert,
+  Button,
+  Dialog,
+  EmptyState,
+  ErrorState,
+  Skeleton,
+  StatusBadge,
+  TextareaField,
+  TextField,
+} from "@/src/shared/components";
 import { Can } from "@/src/shared/auth/guards";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
-import { getPerson, updatePerson, updatePersonStatus } from "@/src/features/people/api/people-api";
+import {
+  getPerson,
+  updatePerson,
+  updatePersonStatus,
+} from "@/src/features/people/api/people-api";
 
 const PEOPLE_CACHE = "people";
 
@@ -21,14 +35,22 @@ export function PersonDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { data: person, loading, error, reload } = useRemoteQuery({
+  const {
+    data: person,
+    loading,
+    error,
+    reload,
+  } = useRemoteQuery({
     fetcher: () => getPerson(api, id),
     cacheName: PEOPLE_CACHE,
     cacheKey: `detail:${id}`,
-    ttlMs: 20_000
+    ttlMs: 20_000,
   });
 
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    kind: "success" | "error";
+    message: string;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmInactivate, setConfirmInactivate] = useState(false);
 
@@ -43,14 +65,21 @@ export function PersonDetail() {
 
   if (error && !person) {
     return (
-      <ErrorState title="Não foi possível carregar a pessoa" onRetry={() => void reload()}>
+      <ErrorState
+        title="Não foi possível carregar a pessoa"
+        onRetry={() => void reload()}
+      >
         Tente novamente em instantes.
       </ErrorState>
     );
   }
 
   if (!person) {
-    return <EmptyState title="Pessoa não encontrada">A pessoa solicitada não existe ou não está disponível.</EmptyState>;
+    return (
+      <EmptyState title="Pessoa não encontrada">
+        A pessoa solicitada não existe ou não está disponível.
+      </EmptyState>
+    );
   }
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
@@ -62,7 +91,7 @@ export function PersonDetail() {
       ["fullName", person.fullName],
       ["email", person.email],
       ["birthDate", person.birthDate],
-      ["gender", person.gender]
+      ["gender", person.gender],
     ];
     for (const [key, original] of fields) {
       const value = String(formData.get(key) ?? "").trim();
@@ -71,12 +100,13 @@ export function PersonDetail() {
     const phone = normalizeChurchPhone(String(formData.get("phone") ?? ""));
     if (phone !== (person.phone ?? "")) payload.phone = phone;
     const observations = String(formData.get("observations") ?? "").trim();
-    if (observations !== (person.observations ?? "")) payload.observations = observations;
+    if (observations !== (person.observations ?? ""))
+      payload.observations = observations;
     if (Object.keys(payload).length === 0) {
       toast({
         kind: "info",
         title: "Nenhuma alteração",
-        description: "Não havia dados novos para salvar."
+        description: "Não havia dados novos para salvar.",
       });
       return;
     }
@@ -89,10 +119,14 @@ export function PersonDetail() {
       toast({
         kind: "success",
         title: "Pessoa atualizada",
-        description: "Os dados foram salvos."
+        description: "Os dados foram salvos.",
       });
     } catch {
-      setFeedback({ kind: "error", message: "Não foi possível salvar as alterações. Verifique os dados e tente novamente." });
+      setFeedback({
+        kind: "error",
+        message:
+          "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
+      });
     } finally {
       setBusy(false);
     }
@@ -110,14 +144,33 @@ export function PersonDetail() {
       toast({
         kind: "success",
         title: "Pessoa inativada",
-        description: "Ela será listada somente para administradores."
+        description: "Ela será listada somente para administradores.",
       });
     } catch {
-      setFeedback({ kind: "error", message: "Não foi possível inativar a pessoa. Tente novamente." });
+      setFeedback({
+        kind: "error",
+        message: "Não foi possível inativar a pessoa. Tente novamente.",
+      });
     } finally {
       setBusy(false);
     }
   };
+
+  function formatPhone(value: string | null | undefined): string {
+    const digits = (value ?? "").replace(/\D/g, "");
+
+    const patterns: Array<[RegExp, string]> = [
+      [/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3"], // 11 dígitos → celular
+      [/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3"], // 10 dígitos → fixo
+      [/^(\d{2})(\d{2})(\d{5})(\d{4})$/, "+$1 ($2) $3-$4"], // com DDI (+55)
+    ];
+
+    for (const [re, format] of patterns) {
+      if (re.test(digits)) return digits.replace(re, format);
+    }
+
+    return digits; // fallback: retorna só os dígitos
+  }
 
   return (
     <section aria-labelledby="person-title">
@@ -131,7 +184,10 @@ export function PersonDetail() {
       </div>
 
       {feedback ? (
-        <Alert variant={feedback.kind} title={feedback.kind === "success" ? "Sucesso" : "Falha"}>
+        <Alert
+          variant={feedback.kind}
+          title={feedback.kind === "success" ? "Sucesso" : "Falha"}
+        >
           {feedback.message}
         </Alert>
       ) : null}
@@ -147,7 +203,9 @@ export function PersonDetail() {
         </div>
         <div className="detail-list__item">
           <span className="detail-list__label">Telefone</span>
-          <span className="detail-list__value">{person.phone ?? "—"}</span>
+          <span className="detail-list__value">
+            {formatPhone(person.phone) ?? "—"}
+          </span>
         </div>
         <div className="detail-list__item">
           <span className="detail-list__label">Nascimento</span>
@@ -159,7 +217,12 @@ export function PersonDetail() {
         </div>
         <div className="detail-list__item">
           <span className="detail-list__label">Cadastro</span>
-          <span className="detail-list__value">{person.createdAt}</span>
+          <span className="detail-list__value">
+            {person.createdAt
+              .toString()
+              .substring(0, 10)
+              .match(/[\d-]+/)?.[0] || "—"}
+          </span>
         </div>
       </div>
 
@@ -167,15 +230,50 @@ export function PersonDetail() {
         <form className="fieldset" onSubmit={(event) => void handleSave(event)}>
           <fieldset className="fieldset">
             <legend className="fieldset__legend">Editar dados</legend>
-            <TextField label="Nome completo" name="fullName" defaultValue={person.fullName} required />
-            <TextField label="Gênero" name="gender" defaultValue={person.gender ?? ""} />
-            <TextField label="Data de nascimento" type="date" name="birthDate" defaultValue={person.birthDate ?? ""} />
-            <TextField label="E-mail" type="email" name="email" mask="email" defaultValue={person.email ?? ""} />
-            <TextField label="Telefone" name="phone" mask="phone" defaultValue={person.phone ?? ""} />
+            <TextField
+              label="Nome completo"
+              name="fullName"
+              defaultValue={person.fullName}
+              required
+            />
+            <TextField
+              label="Gênero"
+              name="gender"
+              defaultValue={person.gender ?? ""}
+            />
+            <TextField
+              label="Data de nascimento"
+              type="date"
+              name="birthDate"
+              defaultValue={person.birthDate ?? ""}
+            />
+            <TextField
+              label="E-mail"
+              type="email"
+              name="email"
+              mask="email"
+              defaultValue={person.email ?? ""}
+            />
+            <TextField
+              label="Telefone"
+              name="phone"
+              mask="phone"
+              defaultValue={person.phone ?? ""}
+            />
             <Can capability="viewPersonObservations">
-              <TextareaField label="Observações" name="observations" rows={4} defaultValue={person.observations ?? ""} />
+              <TextareaField
+                label="Observações"
+                name="observations"
+                rows={4}
+                defaultValue={person.observations ?? ""}
+              />
             </Can>
-            <Button type="submit" icon={Save} loading={busy} loadingLabel="Salvando…">
+            <Button
+              type="submit"
+              icon={Save}
+              loading={busy}
+              loadingLabel="Salvando…"
+            >
               Salvar alterações
             </Button>
           </fieldset>
@@ -185,7 +283,11 @@ export function PersonDetail() {
       <Can capability="changePersonStatus">
         <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
           {person.status === "ACTIVE" ? (
-            <Button variant="danger" icon={UserX} onClick={() => setConfirmInactivate(true)}>
+            <Button
+              variant="danger"
+              icon={UserX}
+              onClick={() => setConfirmInactivate(true)}
+            >
               Inativar pessoa
             </Button>
           ) : null}
@@ -199,10 +301,20 @@ export function PersonDetail() {
         description="A pessoa deixará de aparecer nas listagens e não poderá ser vinculada a células enquanto estiver inativa. Você poderá reativá-la a partir da listagem."
       >
         <div className="dialog-panel__actions">
-          <Button variant="secondary" onClick={() => setConfirmInactivate(false)} disabled={busy}>
+          <Button
+            variant="secondary"
+            onClick={() => setConfirmInactivate(false)}
+            disabled={busy}
+          >
             Cancelar
           </Button>
-          <Button variant="danger" icon={UserX} loading={busy} loadingLabel="Inativando…" onClick={() => void runInactivate()}>
+          <Button
+            variant="danger"
+            icon={UserX}
+            loading={busy}
+            loadingLabel="Inativando…"
+            onClick={() => void runInactivate()}
+          >
             Inativar
           </Button>
         </div>
