@@ -158,6 +158,26 @@ describe("ApiClient", () => {
     api.clearAccessToken();
   });
 
+  it("uploads multipart files without retrying or setting the content type", async () => {
+    fetchMock.mockResolvedValue(response(200, { data: { id: "1" }, meta: {} }));
+    const api = client();
+    api.setAccessToken("token", 600);
+    const file = new File(["fullName\nMaria"], "people.csv", { type: "text/csv" });
+
+    await api.uploadFile({
+      path: "/import/people",
+      file,
+      bearer: true,
+      schema: idEnvelopeSchema
+    });
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.body).toBeInstanceOf(FormData);
+    expect(init.headers).not.toHaveProperty("content-type");
+    expect((init.body as FormData).get("file")).toBeInstanceOf(File);
+    api.clearAccessToken();
+  });
+
   it("surfaces server conflict codes without internal details", async () => {
     fetchMock.mockResolvedValue(
       response(409, {
