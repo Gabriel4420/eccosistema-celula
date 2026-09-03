@@ -163,6 +163,26 @@ class PrismaPeopleManagementTransaction implements PeopleManagementTransaction {
     return { phone: phone > 0, email: email > 0, nameAndBirthDate: nameAndBirthDate > 0 };
   }
 
+  async findCellByCode(code: string): Promise<{ id: string } | null> {
+    const cell = await this.transaction.cell.findFirst({
+      where: { churchId: this.churchId, code, deletedAt: null },
+      select: { id: true }
+    });
+    return cell ?? null;
+  }
+
+  async createCellMembership(input: { personId: string; cellId: string }): Promise<void> {
+    await this.transaction.cellMembership.create({
+      data: {
+        churchId: this.churchId,
+        personId: input.personId,
+        cellId: input.cellId,
+        status: "ACTIVE",
+        joinedAt: new Date()
+      }
+    });
+  }
+
   async createPerson(input: PersonWriteInput): Promise<ManagedPerson> {
     return mapPerson(await this.transaction.person.create({
       data: {

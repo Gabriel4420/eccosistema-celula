@@ -26,6 +26,37 @@ describe("people commands", () => {
     expect(transaction.createPerson).not.toHaveBeenCalled();
   });
 
+  it("creates the optional cell membership in the same unit of work", async () => {
+    const transaction = transactionMock();
+    transaction.findCellByCode.mockResolvedValue({ id: "cell" });
+    const commands = new PeopleManagementCommands(unitOfWork(transaction), authorization());
+
+    await commands.create(
+      principal,
+      { fullName: "Pessoa", phone: null, email: null, birthDate: null, gender: null, observations: null },
+      "CEL-001"
+    );
+
+    expect(transaction.createCellMembership).toHaveBeenCalledWith({ personId: "person", cellId: "cell" });
+    expect(transaction.recordAudit).toHaveBeenCalledWith(expect.objectContaining({
+      action: "PERSON_CELL_MEMBERSHIP_CREATED",
+      entityId: "person"
+    }));
+  });
+
+  it("rejects an unknown cell before creating the person", async () => {
+    const transaction = transactionMock();
+    transaction.findCellByCode.mockResolvedValue(null);
+    const commands = new PeopleManagementCommands(unitOfWork(transaction), authorization());
+
+    await expect(commands.create(
+      principal,
+      { fullName: "Pessoa", phone: null, email: null, birthDate: null, gender: null, observations: null },
+      "INEXISTENTE"
+    )).rejects.toMatchObject({ code: "PERSON_CELL_NOT_FOUND" });
+    expect(transaction.createPerson).not.toHaveBeenCalled();
+  });
+
   it("preserves no-op updates without persistence or audit", async () => {
     const transaction = transactionMock();
     const commands = new PeopleManagementCommands(unitOfWork(transaction), authorization());
@@ -96,6 +127,7 @@ function transactionMock(): jest.Mocked<PeopleManagementTransaction> {
   return {
     hasActiveRole: jest.fn().mockResolvedValue(true), findPerson: jest.fn().mockResolvedValue(person),
     findDuplicates: jest.fn().mockResolvedValue({ phone: false, email: false, nameAndBirthDate: false }),
+    findCellByCode: jest.fn().mockResolvedValue(null), createCellMembership: jest.fn().mockResolvedValue(undefined),
     createPerson: jest.fn().mockResolvedValue(person), updatePerson: jest.fn().mockResolvedValue(person),
     setDeletedAt: jest.fn().mockResolvedValue(person), recordAudit: jest.fn().mockResolvedValue(undefined)
   };

@@ -24,6 +24,8 @@ export interface PeopleManagementTransaction {
   hasActiveRole(userId: string, roles: readonly string[]): Promise<boolean>;
   findPerson(personId: string, includeInactive?: boolean): Promise<ManagedPerson | null>;
   findDuplicates(input: PersonWriteInput, excludeId?: string): Promise<DuplicateFields>;
+  findCellByCode(code: string): Promise<{ id: string } | null>;
+  createCellMembership(input: { personId: string; cellId: string }): Promise<void>;
   createPerson(input: PersonWriteInput): Promise<ManagedPerson>;
   updatePerson(personId: string, input: PersonPatchInput): Promise<ManagedPerson>;
   setDeletedAt(personId: string, deletedAt: Date | null): Promise<ManagedPerson>;

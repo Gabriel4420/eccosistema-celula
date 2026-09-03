@@ -21,17 +21,36 @@ export class PeopleManagementCommands {
     private readonly authorization: PeopleManagementAuthorization
   ) {}
 
-  create(principal: AuthenticatedPrincipal, input: PersonWriteInput): Promise<ManagedPerson> {
+  create(
+    principal: AuthenticatedPrincipal,
+    input: PersonWriteInput,
+    cellCode?: string
+  ): Promise<ManagedPerson> {
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
       await this.assertManage(transaction, principal);
       this.assertNoDuplicates(await transaction.findDuplicates(input));
+      const cell = cellCode ? await transaction.findCellByCode(cellCode) : null;
+      if (cellCode && !cell) {
+        throw new PeopleManagementError("PERSON_CELL_NOT_FOUND", "Cell not found");
+      }
       const person = await transaction.createPerson(input);
+      if (cell) {
+        await transaction.createCellMembership({ personId: person.id, cellId: cell.id });
+      }
       await transaction.recordAudit({
         actorId: principal.userId,
         entityId: person.id,
         action: "PERSON_CREATED",
         after: { status: "ACTIVE", changedFields: writableFields.filter((field) => input[field] !== null) }
       });
+      if (cell) {
+        await transaction.recordAudit({
+          actorId: principal.userId,
+          entityId: person.id,
+          action: "PERSON_CELL_MEMBERSHIP_CREATED",
+          after: { cellId: cell.id, status: "ACTIVE" }
+        });
+      }
       return person;
     });
   }

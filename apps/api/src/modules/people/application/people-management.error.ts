@@ -3,6 +3,7 @@ import { PublicApplicationError } from "@mission-atos/domain";
 export type PeopleManagementErrorCode =
   | "PERSON_NOT_FOUND"
   | "PERSON_DUPLICATE"
+  | "PERSON_CELL_NOT_FOUND"
   | "AUTH_FORBIDDEN";
 
 export class PeopleManagementError extends PublicApplicationError<PeopleManagementErrorCode> {

@@ -51,6 +51,7 @@ import { CellsController } from "./presentation/cells.controller";
         authorization: CellsManagementAuthorization
       ) => new CellsManagementCommands(unitOfWork, authorization)
     }
-  ]
+  ],
+  exports: [CellsManagementCommands, CELLS_MANAGEMENT_UNIT_OF_WORK]
 })
 export class CellsModule {}

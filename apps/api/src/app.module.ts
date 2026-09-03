@@ -13,6 +13,7 @@ import { PeopleModule } from "./modules/people/people.module";
 import { AttendanceModule } from "./modules/attendance/attendance.module";
 import { DashboardAnalyticsModule } from "./modules/dashboard-analytics/dashboard-analytics.module";
 import { ReportsModule } from "./modules/reports/reports.module";
+import { BulkImportModule } from "./modules/bulk-import/bulk-import.module";
 
 @Module({
   imports: [
@@ -28,7 +29,8 @@ import { ReportsModule } from "./modules/reports/reports.module";
     MeetingsModule,
     AttendanceModule,
     DashboardAnalyticsModule,
-    ReportsModule
+    ReportsModule,
+    BulkImportModule
   ],
   controllers: [HealthController],
   providers: [

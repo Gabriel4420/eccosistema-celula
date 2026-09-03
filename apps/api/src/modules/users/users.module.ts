@@ -54,6 +54,7 @@ import type { UserManagementUnitOfWork } from "./application/user-management.por
         authorization: UserManagementAuthorization
       ) => new UserManagementCommands(unitOfWork, passwords, authorization)
     }
-  ]
+  ],
+  exports: [UserManagementCommands, USER_MANAGEMENT_REPOSITORY]
 })
 export class UsersModule {}
