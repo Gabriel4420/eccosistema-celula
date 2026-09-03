@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Upload } from "lucide-react";
-import { useState } from "react";
+import { Download, FileUp, Upload } from "lucide-react";
+import { useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import type { ImportDomain, ImportResult, ImportRowResult } from "@mission-atos/contracts";
 import { Alert, Button, FieldShell, Table } from "@/src/shared/components";
@@ -31,6 +31,14 @@ function validateFile(file: File | null): string | null {
   }
   if (file.size > MAX_FILE_BYTES) return "O arquivo deve ter no máximo 5 MB.";
   return null;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MB`;
 }
 
 const resultColumns = [
@@ -62,6 +70,7 @@ export function BulkImportForm({
   templateHref
 }: BulkImportFormProps) {
   const { api } = useSession();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
@@ -128,17 +137,35 @@ export function BulkImportForm({
             required
           >
             <div className="field__control">
-              <input
-                id="bulk-import-file"
-                className="input"
-                name="file"
-                type="file"
-                accept=".xlsx,.csv,.json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/json"
-                onChange={handleFileChange}
-                aria-invalid={fileError ? true : undefined}
-                aria-describedby={fileError ? "bulk-import-file-error" : undefined}
-                required
-              />
+              <div className="file-picker">
+                <input
+                  ref={inputRef}
+                  id="bulk-import-file"
+                  className="visually-hidden"
+                  name="file"
+                  type="file"
+                  accept=".xlsx,.csv,.json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/json"
+                  onChange={handleFileChange}
+                  aria-invalid={fileError ? true : undefined}
+                  aria-describedby={fileError ? "bulk-import-file-error" : undefined}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  icon={FileUp}
+                  onClick={() => inputRef.current?.click()}
+                  disabled={busy}
+                >
+                  {file ? "Trocar arquivo" : "Escolher arquivo"}
+                </Button>
+                <p
+                  className={`file-picker__name${file ? " file-picker__name--selected" : ""}`}
+                  aria-live="polite"
+                >
+                  {file ? `${file.name} (${formatFileSize(file.size)})` : "Nenhum arquivo selecionado"}
+                </p>
+              </div>
             </div>
           </FieldShell>
           <div className="flex flex-wrap gap-2">

@@ -2369,6 +2369,36 @@ body {
     font-size: 1em;
   }
 
+  /* ─── File picker ─── */
+  .file-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .file-picker__name {
+    margin: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-snug);
+  }
+
+  .file-picker__name--selected {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .file-picker:has(> input[type="file"]:focus-visible) .button {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
   /* ─── Skeleton & States ─── */
   .skeleton {
     position: relative;
