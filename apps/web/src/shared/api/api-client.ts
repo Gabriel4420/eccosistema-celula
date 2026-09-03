@@ -23,10 +23,23 @@ export interface RequestOptions<T> {
   readonly path: string;
   readonly query?: Readonly<Record<string, string | number | boolean | undefined>>;
   readonly body?: unknown;
+  readonly formData?: FormData;
   readonly headers?: Readonly<Record<string, string>>;
   readonly schema?: z.ZodType<T>;
   readonly bearer?: boolean;
   readonly allowRetry?: boolean;
+  readonly timeoutMs?: number;
+}
+
+export interface UploadFileOptions<T> {
+  readonly file: File;
+  readonly fieldName?: string;
+  readonly path: string;
+  readonly schema?: z.ZodType<T>;
+  readonly bearer?: boolean;
+  readonly headers?: Readonly<Record<string, string>>;
+  readonly allowRetry?: boolean;
+  readonly timeoutMs?: number;
 }
 
 interface SuccessEnvelope {
@@ -173,6 +186,21 @@ export class ApiClient {
     return response.blob();
   }
 
+  uploadFile<T>(options: UploadFileOptions<T>): Promise<T> {
+    const formData = new FormData();
+    formData.append(options.fieldName ?? "file", options.file, options.file.name);
+    return this.request({
+      method: "POST",
+      path: options.path,
+      formData,
+      headers: options.headers,
+      schema: options.schema,
+      bearer: options.bearer,
+      allowRetry: options.allowRetry,
+      timeoutMs: options.timeoutMs
+    });
+  }
+
   private async send(
     options: RequestOptions<unknown>,
     token: string | null
@@ -186,7 +214,8 @@ export class ApiClient {
         ...(token ? { authorization: `Bearer ${token}` } : {})
       },
       body: options.body,
-      timeoutMs: this.deps.timeoutMs
+      formData: options.formData,
+      timeoutMs: options.timeoutMs ?? this.deps.timeoutMs
     });
   }
 

@@ -8,6 +8,7 @@ export interface HttpRequestConfig {
   readonly url: string;
   readonly headers?: Readonly<Record<string, string>>;
   readonly body?: unknown;
+  readonly formData?: FormData;
   readonly timeoutMs?: number;
 }
 
@@ -27,13 +28,14 @@ export async function httpRequest<T>(config: HttpRequestConfig): Promise<HttpRes
 
   let response: Response;
   try {
+    const isMultipart = config.formData !== undefined;
     response = await fetch(config.url, {
       method: config.method,
       headers: {
-        ...(config.body !== undefined ? { "content-type": "application/json" } : {}),
+        ...(config.body !== undefined && !isMultipart ? { "content-type": "application/json" } : {}),
         ...config.headers
       },
-      body: config.body !== undefined ? JSON.stringify(config.body) : undefined,
+      body: isMultipart ? config.formData : config.body !== undefined ? JSON.stringify(config.body) : undefined,
       credentials: "include",
       cache: "no-store",
       signal: controller.signal

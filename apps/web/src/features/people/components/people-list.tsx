@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FilterX, UserRoundPlus } from "lucide-react";
+import { FilterX, Upload, UserRoundPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -140,10 +140,16 @@ export function PeopleList() {
           </p>
         </div>
         <Can capability="editPeople">
-          <Link className="button" href="/people/new">
-            <UserRoundPlus aria-hidden="true" className="button__icon" />
-            Nova pessoa
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link className="button button--secondary" href="/people/import">
+              <Upload aria-hidden="true" className="button__icon" />
+              Importar pessoas
+            </Link>
+            <Link className="button" href="/people/new">
+              <UserRoundPlus aria-hidden="true" className="button__icon" />
+              Nova pessoa
+            </Link>
+          </div>
         </Can>
       </div>
 

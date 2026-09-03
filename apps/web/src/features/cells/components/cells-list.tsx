@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FilterX, Plus } from "lucide-react";
+import { FilterX, Plus, Upload } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -109,10 +109,16 @@ export function CellsList() {
           </p>
         </div>
         <Can capability="createCells">
-          <Link className="button" href="/cells/new">
-            <Plus aria-hidden="true" className="button__icon" />
-            Nova célula
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link className="button button--secondary" href="/cells/import">
+              <Upload aria-hidden="true" className="button__icon" />
+              Importar células
+            </Link>
+            <Link className="button" href="/cells/new">
+              <Plus aria-hidden="true" className="button__icon" />
+              Nova célula
+            </Link>
+          </div>
         </Can>
       </div>
 

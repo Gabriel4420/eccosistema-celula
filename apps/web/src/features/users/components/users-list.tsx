@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FilterX, UserPlus } from "lucide-react";
+import { FilterX, Upload, UserPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -115,10 +115,16 @@ export function UsersList() {
             Gerencie contas, papéis e acesso dos usuários da sua igreja.
           </p>
         </div>
-        <Link className="button h-8" href="/users/new">
-          <UserPlus aria-hidden="true" className="button__icon" />
-          Novo usuário
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link className="button button--secondary h-8" href="/users/import">
+            <Upload aria-hidden="true" className="button__icon" />
+            Importar usuários
+          </Link>
+          <Link className="button h-8" href="/users/new">
+            <UserPlus aria-hidden="true" className="button__icon" />
+            Novo usuário
+          </Link>
+        </div>
       </div>
 
       <div className="toolbar">

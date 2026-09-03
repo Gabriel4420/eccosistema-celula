@@ -1,0 +1,2 @@
+firstName,lastName,email,initialPassword,roles
+Maria,Silva,maria@example.com,SenhaForte#123,LEADER
