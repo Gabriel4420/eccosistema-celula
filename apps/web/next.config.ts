@@ -8,12 +8,12 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
-  }
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  },
 ];
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["127.0.0.1"],
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   reactStrictMode: true,
   transpilePackages: ["@mission-atos/config"],
   async headers() {
@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
           script: " https://vercel.live https://vercel.com",
           connect: " https://vercel.live https://vercel.com wss://*.pusher.com",
           img: " https://vercel.live https://vercel.com",
-          frame: " https://vercel.live"
+          frame: " https://vercel.live",
         }
       : { script: "", connect: "", img: "", frame: "" };
     const directives = [
@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      `frame-src 'self'${vercelLive.frame}`
+      `frame-src 'self'${vercelLive.frame}`,
     ];
     if (production) directives.push("upgrade-insecure-requests");
     return [
@@ -51,10 +51,10 @@ const nextConfig: NextConfig = {
           ...securityHeaders,
           {
             key: "Content-Security-Policy",
-            value: directives.join("; ")
-          }
-        ]
-      }
+            value: directives.join("; "),
+          },
+        ],
+      },
     ];
   },
   async rewrites() {
@@ -66,13 +66,13 @@ const nextConfig: NextConfig = {
       console.error(
         "[next.config] API_PROXY_TARGET is not set in production. " +
           "Requests to /api/* will not be proxied; configure the variable to " +
-          "point at the absolute API URL."
+          "point at the absolute API URL.",
       );
       return [];
     }
     const target = rawTarget.replace(/\/$/, "");
     return [{ source: "/api/:path*", destination: `${target}/:path*` }];
-  }
+  },
 };
 
 export default nextConfig;

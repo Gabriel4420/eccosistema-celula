@@ -18,19 +18,23 @@ async function bootstrap(): Promise<void> {
           scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'", "https://viacep.com.br"],
+          connectSrc: [
+            "'self'",
+            "https://viacep.com.br",
+            "http://localhost:3001",
+          ],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
-          frameAncestors: ["'none'"]
-        }
+          frameAncestors: ["'none'"],
+        },
       },
       crossOriginResourcePolicy: { policy: "same-origin" },
-      hsts: { maxAge: 31_536_000, includeSubDomains: true }
-    })
+      hsts: { maxAge: 31_536_000, includeSubDomains: true },
+    }),
   );
   application.enableCors({
     credentials: true,
-    origin: environment.CORS_ORIGINS.split(",").map((value) => value.trim())
+    origin: environment.CORS_ORIGINS.split(",").map((value) => value.trim()),
   });
   const openApi = SwaggerModule.createDocument(
     application,
@@ -38,7 +42,7 @@ async function bootstrap(): Promise<void> {
       .setTitle("Mission Atos API")
       .setVersion("0.0.0")
       .addBearerAuth()
-      .build()
+      .build(),
   );
   SwaggerModule.setup("docs", application, openApi);
 
