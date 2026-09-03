@@ -2282,6 +2282,93 @@ body {
     }
   }
 
+  /* ─── Import guide ─── */
+  .guide {
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .guide__eyebrow {
+    margin-bottom: var(--space-1);
+    color: var(--color-text-muted);
+    font-weight: 700;
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.08em;
+    line-height: var(--line-height-snug);
+    text-transform: uppercase;
+  }
+
+  .guide__title {
+    margin-bottom: var(--space-2);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-snug);
+  }
+
+  .guide__steps,
+  .guide__list {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding-left: 1.25rem;
+    line-height: var(--line-height-relaxed);
+  }
+
+  .guide__steps li::marker {
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  .guide__subtitle {
+    margin-bottom: var(--space-2);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-snug);
+  }
+
+  .guide code {
+    padding: 0 0.375rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+    font-family: var(--font-family-mono);
+    font-size: 0.875em;
+  }
+
+  .guide__figure {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+  }
+
+  .guide__figure figcaption {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-snug);
+  }
+
+  .guide__code {
+    margin: 0;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .guide__code code {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 1em;
+  }
+
   /* ─── Skeleton & States ─── */
   .skeleton {
     position: relative;

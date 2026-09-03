@@ -1,10 +1,12 @@
 import { BulkImportForm } from "@/src/features/bulk-import/components/bulk-import-form";
+import { BulkImportGuide } from "@/src/features/bulk-import/components/bulk-import-guide";
 import { RequireRole } from "@/src/shared/auth/guards";
 import { ROLE_ADMIN, ROLE_PASTOR } from "@/src/shared/auth/session";
 
 export default function ImportPeoplePage() {
   return (
     <RequireRole allow={[ROLE_ADMIN, ROLE_PASTOR]}>
+      <BulkImportGuide domain="people" />
       <BulkImportForm
         domain="people"
         title="Importar pessoas"
