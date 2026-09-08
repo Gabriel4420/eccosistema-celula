@@ -90,6 +90,8 @@ export type TranslationKey =
   | "userMenu.photoHint"
   | "userMenu.profile"
   | "userMenu.profileDesc"
+  | "userMenu.settings"
+  | "userMenu.settingsDesc"
   | "userMenu.signout"
   | "userMenu.signingOut"
   | "userMenu.signoutTitle"
@@ -1263,6 +1265,8 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "userMenu.photoHint": "Clique na foto para alterar",
     "userMenu.profile": "Meu perfil",
     "userMenu.profileDesc": "Dados pessoais e foto",
+    "userMenu.settings": "Configurações",
+    "userMenu.settingsDesc": "Preferências e aparência",
     "userMenu.signout": "Sair",
     "userMenu.signingOut": "Saindo…",
     "userMenu.signoutTitle": "Encerrar esta sessão",
@@ -2405,6 +2409,8 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "userMenu.photoHint": "Click the photo to change it",
     "userMenu.profile": "My profile",
     "userMenu.profileDesc": "Personal details and photo",
+    "userMenu.settings": "Settings",
+    "userMenu.settingsDesc": "Preferences and appearance",
     "userMenu.signout": "Sign out",
     "userMenu.signingOut": "Signing out…",
     "userMenu.signoutTitle": "End this session",
@@ -3547,6 +3553,8 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "userMenu.photoHint": "Haz clic en la foto para cambiarla",
     "userMenu.profile": "Mi perfil",
     "userMenu.profileDesc": "Datos personales y foto",
+    "userMenu.settings": "Configuración",
+    "userMenu.settingsDesc": "Preferencias y apariencia",
     "userMenu.signout": "Cerrar sesión",
     "userMenu.signingOut": "Cerrando sesión…",
     "userMenu.signoutTitle": "Finalizar esta sesión",

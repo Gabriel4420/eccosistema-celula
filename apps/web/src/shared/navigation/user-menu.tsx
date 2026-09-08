@@ -72,6 +72,13 @@ export function UserMenu() {
           >
             <span className="user-menu__item-icon" aria-hidden="true">◎</span><span><strong>{t("userMenu.profile")}</strong><small>{t("userMenu.profileDesc")}</small></span>
           </Link>
+          <Link
+            className="user-menu__item"
+            href="/settings"
+            onClick={() => setOpen(false)}
+          >
+            <span className="user-menu__item-icon" aria-hidden="true">⚙</span><span><strong>{t("userMenu.settings")}</strong><small>{t("userMenu.settingsDesc")}</small></span>
+          </Link>
           <button
             type="button"
             className="user-menu__item"
