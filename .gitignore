@@ -3,7 +3,7 @@ node_modules/
 
 # Builds
 .next/
-.next-e2e/
+.next-e2e*/
 .next-e2e-diagnose/
 dist/
 *.tsbuildinfo

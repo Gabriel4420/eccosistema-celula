@@ -1,7 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { dictionaries, APP_LOCALES, DEFAULT_LOCALE } from "@/src/shared/i18n/dictionaries";
-import type { AppLocale, TranslationKey } from "@/src/shared/i18n/dictionaries";
 import { LanguageProvider, useI18n, LANGUAGE_STORAGE_KEY } from "@/src/shared/i18n/language-provider";
 
 describe("i18n dictionary integrity", () => {
@@ -17,7 +16,7 @@ describe("i18n dictionary integrity", () => {
   it("contains non-empty translations for all keys", () => {
     for (const locale of APP_LOCALES) {
       const dict = dictionaries[locale];
-      for (const [key, value] of Object.entries(dict)) {
+      for (const [, value] of Object.entries(dict)) {
         expect(value.trim().length).toBeGreaterThan(0);
       }
     }
