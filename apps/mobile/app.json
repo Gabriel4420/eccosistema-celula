@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Células",
+    "slug": "eccosistema-celula-mobile",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "eccosistema-celula",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.missionatos.celulas"
+    },
+    "android": {
+      "package": "br.com.missionatos.celulas",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permita o acesso às fotos para anexar imagens às atividades da célula.",
+          "cameraPermission": "Permita o uso da câmera para registrar imagens das atividades."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
