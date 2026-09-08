@@ -11,6 +11,14 @@ export const settingsDateFormats = [
 
 export const settingsThemes = ["light", "dark", "system"] as const;
 
+export const accessibilityContrasts = ["system", "standard", "high"] as const;
+
+export const accessibilityTextScales = ["standard", "large", "extra-large"] as const;
+
+export const accessibilityMotions = ["system", "reduce"] as const;
+
+export const accessibilityFocusModes = ["standard", "enhanced"] as const;
+
 export const reportDeadlineHoursSchema = z
   .coerce.number()
   .int()
@@ -31,7 +39,11 @@ export const updateOwnPreferencesRequestSchema = z
       .union([displayTimezoneSchema, z.null()])
       .optional(),
     dateFormat: z.enum(settingsDateFormats).optional(),
-    theme: z.enum(settingsThemes).optional()
+    theme: z.enum(settingsThemes).optional(),
+    accessibilityContrast: z.enum(accessibilityContrasts).optional(),
+    accessibilityTextScale: z.enum(accessibilityTextScales).optional(),
+    accessibilityMotion: z.enum(accessibilityMotions).optional(),
+    accessibilityFocus: z.enum(accessibilityFocusModes).optional()
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
@@ -41,7 +53,11 @@ export const userPreferencesResponseSchema = z
     language: z.enum(settingsLocales),
     displayTimezone: z.string().nullable(),
     dateFormat: z.enum(settingsDateFormats),
-    theme: z.enum(settingsThemes)
+    theme: z.enum(settingsThemes),
+    accessibilityContrast: z.enum(accessibilityContrasts),
+    accessibilityTextScale: z.enum(accessibilityTextScales),
+    accessibilityMotion: z.enum(accessibilityMotions),
+    accessibilityFocus: z.enum(accessibilityFocusModes)
   })
   .strict();
 
@@ -55,6 +71,10 @@ export const userPreferencesEnvelopeSchema = z
 export type SettingsLocale = (typeof settingsLocales)[number];
 export type SettingsDateFormat = (typeof settingsDateFormats)[number];
 export type SettingsTheme = (typeof settingsThemes)[number];
+export type AccessibilityContrast = (typeof accessibilityContrasts)[number];
+export type AccessibilityTextScale = (typeof accessibilityTextScales)[number];
+export type AccessibilityMotion = (typeof accessibilityMotions)[number];
+export type AccessibilityFocusMode = (typeof accessibilityFocusModes)[number];
 export type UpdateOwnPreferencesRequest = z.infer<
   typeof updateOwnPreferencesRequestSchema
 >;

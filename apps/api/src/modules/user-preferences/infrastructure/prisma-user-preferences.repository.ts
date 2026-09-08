@@ -16,6 +16,10 @@ import type {
 const DEFAULT_LANGUAGE = "pt-BR";
 const DEFAULT_DATE_FORMAT = "dd/MM/yyyy";
 const DEFAULT_THEME = "system";
+const DEFAULT_ACCESSIBILITY_CONTRAST = "system";
+const DEFAULT_ACCESSIBILITY_TEXT_SCALE = "standard";
+const DEFAULT_ACCESSIBILITY_MOTION = "system";
+const DEFAULT_ACCESSIBILITY_FOCUS = "standard";
 
 @Injectable()
 export class PrismaUserPreferencesRepository
@@ -87,7 +91,11 @@ const preferencesSelect = {
       language: true,
       displayTimezone: true,
       dateFormat: true,
-      theme: true
+      theme: true,
+      accessibilityContrast: true,
+      accessibilityTextScale: true,
+      accessibilityMotion: true,
+      accessibilityFocus: true
     }
   }
 } as const;
@@ -121,7 +129,11 @@ class PrismaUserPreferencesTransaction implements UserPreferencesTransaction {
       input.language !== undefined ||
       input.displayTimezone !== undefined ||
       input.dateFormat !== undefined ||
-      input.theme !== undefined;
+      input.theme !== undefined ||
+      input.accessibilityContrast !== undefined ||
+      input.accessibilityTextScale !== undefined ||
+      input.accessibilityMotion !== undefined ||
+      input.accessibilityFocus !== undefined;
     if (hasChanges) {
       await this.transaction.userPreferences.upsert({
         where: { userId: this.userId },
@@ -131,13 +143,21 @@ class PrismaUserPreferencesTransaction implements UserPreferencesTransaction {
           language: input.language ?? DEFAULT_LANGUAGE,
           displayTimezone: input.displayTimezone ?? null,
           dateFormat: input.dateFormat ?? DEFAULT_DATE_FORMAT,
-          theme: input.theme ?? DEFAULT_THEME
+          theme: input.theme ?? DEFAULT_THEME,
+          accessibilityContrast: input.accessibilityContrast ?? DEFAULT_ACCESSIBILITY_CONTRAST,
+          accessibilityTextScale: input.accessibilityTextScale ?? DEFAULT_ACCESSIBILITY_TEXT_SCALE,
+          accessibilityMotion: input.accessibilityMotion ?? DEFAULT_ACCESSIBILITY_MOTION,
+          accessibilityFocus: input.accessibilityFocus ?? DEFAULT_ACCESSIBILITY_FOCUS
         },
         update: {
           language: input.language,
           displayTimezone: input.displayTimezone,
           dateFormat: input.dateFormat,
-          theme: input.theme
+          theme: input.theme,
+          accessibilityContrast: input.accessibilityContrast,
+          accessibilityTextScale: input.accessibilityTextScale,
+          accessibilityMotion: input.accessibilityMotion,
+          accessibilityFocus: input.accessibilityFocus
         }
       });
     }
@@ -170,13 +190,21 @@ function mapPreferences(user: {
     displayTimezone: string | null;
     dateFormat: string;
     theme: string;
+    accessibilityContrast: string;
+    accessibilityTextScale: string;
+    accessibilityMotion: string;
+    accessibilityFocus: string;
   } | null;
 }): ManagedUserPreferences {
   return {
     language: (user.preferences?.language ?? DEFAULT_LANGUAGE) as ManagedUserPreferences["language"],
     displayTimezone: user.preferences?.displayTimezone ?? null,
     dateFormat: (user.preferences?.dateFormat ?? DEFAULT_DATE_FORMAT) as ManagedUserPreferences["dateFormat"],
-    theme: (user.preferences?.theme ?? DEFAULT_THEME) as ManagedUserPreferences["theme"]
+    theme: (user.preferences?.theme ?? DEFAULT_THEME) as ManagedUserPreferences["theme"],
+    accessibilityContrast: (user.preferences?.accessibilityContrast ?? DEFAULT_ACCESSIBILITY_CONTRAST) as ManagedUserPreferences["accessibilityContrast"],
+    accessibilityTextScale: (user.preferences?.accessibilityTextScale ?? DEFAULT_ACCESSIBILITY_TEXT_SCALE) as ManagedUserPreferences["accessibilityTextScale"],
+    accessibilityMotion: (user.preferences?.accessibilityMotion ?? DEFAULT_ACCESSIBILITY_MOTION) as ManagedUserPreferences["accessibilityMotion"],
+    accessibilityFocus: (user.preferences?.accessibilityFocus ?? DEFAULT_ACCESSIBILITY_FOCUS) as ManagedUserPreferences["accessibilityFocus"]
   };
 }
 

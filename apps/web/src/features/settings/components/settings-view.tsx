@@ -1,12 +1,20 @@
 "use client";
 
 import {
+  accessibilityContrasts,
+  accessibilityFocusModes,
+  accessibilityMotions,
+  accessibilityTextScales,
   churchWeekDays,
   settingsDateFormats,
   settingsLocales,
   settingsThemes
 } from "@mission-atos/contracts";
 import type {
+  AccessibilityContrast,
+  AccessibilityFocusMode,
+  AccessibilityMotion,
+  AccessibilityTextScale,
   ChurchWeekDay,
   SettingsDateFormat,
   SettingsLocale,
@@ -27,6 +35,7 @@ import { getChurchSettings, updateChurchSettings } from "@/src/features/church/a
 import { getOwnPreferences, updateOwnPreferences } from "@/src/features/settings/api/settings-api";
 import { useI18n } from "@/src/shared/i18n/language-provider";
 import type { AppLocale } from "@/src/shared/i18n/dictionaries";
+import { applyAccessibilityPreferences } from "@/src/shared/accessibility/accessibility-preferences";
 
 const OWN_CACHE = "settings";
 const CHURCH_CACHE = "church";
@@ -114,6 +123,10 @@ export function SettingsView() {
     const language = String(formData.get("language") ?? "") as SettingsLocale;
     const dateFormat = String(formData.get("dateFormat") ?? "") as SettingsDateFormat;
     const theme = String(formData.get("theme") ?? "") as SettingsTheme;
+    const accessibilityContrast = String(formData.get("accessibilityContrast") ?? "") as AccessibilityContrast;
+    const accessibilityTextScale = String(formData.get("accessibilityTextScale") ?? "") as AccessibilityTextScale;
+    const accessibilityMotion = String(formData.get("accessibilityMotion") ?? "") as AccessibilityMotion;
+    const accessibilityFocus = String(formData.get("accessibilityFocus") ?? "") as AccessibilityFocusMode;
     const rawTimezone = String(formData.get("displayTimezone") ?? "").trim();
     const displayTimezone = rawTimezone === "" ? null : rawTimezone;
 
@@ -121,6 +134,10 @@ export function SettingsView() {
     if (language !== prefs.language) payload.language = language;
     if (dateFormat !== prefs.dateFormat) payload.dateFormat = dateFormat;
     if (theme !== prefs.theme) payload.theme = theme;
+    if (accessibilityContrast !== prefs.accessibilityContrast) payload.accessibilityContrast = accessibilityContrast;
+    if (accessibilityTextScale !== prefs.accessibilityTextScale) payload.accessibilityTextScale = accessibilityTextScale;
+    if (accessibilityMotion !== prefs.accessibilityMotion) payload.accessibilityMotion = accessibilityMotion;
+    if (accessibilityFocus !== prefs.accessibilityFocus) payload.accessibilityFocus = accessibilityFocus;
     if (displayTimezone !== prefs.displayTimezone) payload.displayTimezone = displayTimezone;
 
     if (Object.keys(payload).length === 0) {
@@ -139,6 +156,12 @@ export function SettingsView() {
       await prefsQuery.reload();
       if (payload.theme) applySavedTheme(payload.theme);
       if (payload.language) changeLanguage(payload.language as AppLocale);
+      applyAccessibilityPreferences({
+        accessibilityContrast,
+        accessibilityTextScale,
+        accessibilityMotion,
+        accessibilityFocus
+      });
       toast({
         kind: "success",
         title: t("settings.toast.saved"),
@@ -332,6 +355,34 @@ export function SettingsView() {
               value: theme,
               label: t(`settings.theme.${theme}`)
             }))}
+            required
+          />
+          <SelectField
+            label={t("settings.field.accessibilityContrast")}
+            name="accessibilityContrast"
+            defaultValue={prefs.accessibilityContrast}
+            options={accessibilityContrasts.map((value) => ({ value, label: t(`settings.accessibility.${value}`) }))}
+            required
+          />
+          <SelectField
+            label={t("settings.field.accessibilityTextScale")}
+            name="accessibilityTextScale"
+            defaultValue={prefs.accessibilityTextScale}
+            options={accessibilityTextScales.map((value) => ({ value, label: t(`settings.accessibility.${value === "extra-large" ? "extraLarge" : value}`) }))}
+            required
+          />
+          <SelectField
+            label={t("settings.field.accessibilityMotion")}
+            name="accessibilityMotion"
+            defaultValue={prefs.accessibilityMotion}
+            options={accessibilityMotions.map((value) => ({ value, label: t(`settings.accessibility.${value}`) }))}
+            required
+          />
+          <SelectField
+            label={t("settings.field.accessibilityFocus")}
+            name="accessibilityFocus"
+            defaultValue={prefs.accessibilityFocus}
+            options={accessibilityFocusModes.map((value) => ({ value, label: t(`settings.accessibility.${value}`) }))}
             required
           />
           <Button type="submit" icon={Save} loading={savingPrefs} loadingLabel={t("settings.btn.saving")}>

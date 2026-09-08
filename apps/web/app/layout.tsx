@@ -5,6 +5,8 @@ import { QueryProvider } from "@/src/providers/query-provider";
 import { ToastViewport } from "@/src/shared/components/toast-viewport";
 import { LanguageProvider, languageInitializationScript } from "@/src/shared/i18n/language-provider";
 import { PreferredLanguageSync } from "@/src/shared/i18n/preferred-language-sync";
+import { accessibilityInitializationScript } from "@/src/shared/accessibility/accessibility-preferences";
+import { AccessibilityPreferencesSync } from "@/src/shared/accessibility/accessibility-preferences-sync";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -38,11 +40,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitializationScript }} />
         <script dangerouslySetInnerHTML={{ __html: languageInitializationScript }} />
+        <script dangerouslySetInnerHTML={{ __html: accessibilityInitializationScript }} />
       </head>
       <body>
         <LanguageProvider>
           <SessionProvider>
             <PreferredLanguageSync />
+            <AccessibilityPreferencesSync />
             <QueryProvider>{children}</QueryProvider>
           </SessionProvider>
           <ToastViewport />

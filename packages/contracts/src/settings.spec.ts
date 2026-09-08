@@ -1,4 +1,8 @@
 import {
+  accessibilityContrasts,
+  accessibilityFocusModes,
+  accessibilityMotions,
+  accessibilityTextScales,
   reportDeadlineHoursSchema,
   settingsDateFormats,
   settingsLocales,
@@ -18,6 +22,10 @@ describe("settings contracts", () => {
       "yyyy-MM-dd"
     ]);
     expect(settingsThemes).toEqual(["light", "dark", "system"]);
+    expect(accessibilityContrasts).toEqual(["system", "standard", "high"]);
+    expect(accessibilityTextScales).toEqual(["standard", "large", "extra-large"]);
+    expect(accessibilityMotions).toEqual(["system", "reduce"]);
+    expect(accessibilityFocusModes).toEqual(["standard", "enhanced"]);
   });
 
   it("coerces and validates reportDeadlineHours", () => {
@@ -46,13 +54,21 @@ describe("settings contracts", () => {
       language: "en",
       displayTimezone: "America/New_York",
       dateFormat: "yyyy-MM-dd",
-      theme: "dark"
+      theme: "dark",
+      accessibilityContrast: "high",
+      accessibilityTextScale: "large",
+      accessibilityMotion: "reduce",
+      accessibilityFocus: "enhanced"
     });
     expect(valid).toEqual({
       language: "en",
       displayTimezone: "America/New_York",
       dateFormat: "yyyy-MM-dd",
-      theme: "dark"
+      theme: "dark",
+      accessibilityContrast: "high",
+      accessibilityTextScale: "large",
+      accessibilityMotion: "reduce",
+      accessibilityFocus: "enhanced"
     });
 
     const inheritTz = updateOwnPreferencesRequestSchema.parse({
@@ -62,6 +78,7 @@ describe("settings contracts", () => {
 
     expect(() => updateOwnPreferencesRequestSchema.parse({ language: "fr" })).toThrow();
     expect(() => updateOwnPreferencesRequestSchema.parse({ theme: "blue" })).toThrow();
+    expect(() => updateOwnPreferencesRequestSchema.parse({ accessibilityContrast: "low" })).toThrow();
     expect(() => updateOwnPreferencesRequestSchema.parse({ displayTimezone: "Not/AZone" })).toThrow();
     expect(() => updateOwnPreferencesRequestSchema.parse({ extra: true })).toThrow();
     expect(() => updateOwnPreferencesRequestSchema.parse({})).toThrow();
@@ -72,7 +89,11 @@ describe("settings contracts", () => {
       language: "pt-BR",
       displayTimezone: null,
       dateFormat: "dd/MM/yyyy",
-      theme: "system"
+      theme: "system",
+      accessibilityContrast: "system",
+      accessibilityTextScale: "standard",
+      accessibilityMotion: "system",
+      accessibilityFocus: "standard"
     };
     expect(userPreferencesResponseSchema.parse(data)).toEqual(data);
     expect(userPreferencesEnvelopeSchema.parse({ data, meta: {} })).toEqual({ data, meta: {} });

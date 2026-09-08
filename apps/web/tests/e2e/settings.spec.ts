@@ -77,6 +77,35 @@ test.describe("settings", () => {
     await expect(page.getByText("Nenhuma alteração")).toBeVisible();
   });
 
+  test("saves accessibility preferences, applies root attributes and persists them", async ({ page }) => {
+    await login(page, FIXTURES.admin.email);
+    await openSettings(page);
+
+    await page.locator('select[name="accessibilityContrast"]').selectOption("high");
+    await page.locator('select[name="accessibilityTextScale"]').selectOption("large");
+    await page.locator('select[name="accessibilityMotion"]').selectOption("reduce");
+    await page.locator('select[name="accessibilityFocus"]').selectOption("enhanced");
+    const prefsForm = page.locator('form:has(select[name="theme"])');
+    await prefsForm.getByRole("button", { name: "Salvar", exact: true }).click();
+
+    await expect(page.getByText("Configurações salvas")).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.accessibilityContrast))
+      .toBe("high");
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.accessibilityTextScale))
+      .toBe("large");
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.accessibilityMotion))
+      .toBe("reduce");
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.accessibilityFocus))
+      .toBe("enhanced");
+    await expect
+      .poll(() => page.evaluate(() => window.localStorage.getItem("mission-atos-accessibility")))
+      .toContain('"accessibilityContrast":"high"');
+  });
+
   test("sidebar link navigates to /settings", async ({ page }) => {
     await login(page, FIXTURES.admin.email);
 

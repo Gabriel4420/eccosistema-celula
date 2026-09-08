@@ -174,6 +174,7 @@ export type TranslationKey =
   | "settings.section.regional"
   | "settings.section.operacional"
   | "settings.section.preferencias"
+  | "settings.section.accessibility"
   | "settings.field.timezone"
   | "settings.field.timezone.hint"
   | "settings.field.weekStartsOn"
@@ -185,6 +186,19 @@ export type TranslationKey =
   | "settings.field.displayTimezone.hint"
   | "settings.field.dateFormat"
   | "settings.field.theme"
+  | "settings.field.accessibilityContrast"
+  | "settings.field.accessibilityTextScale"
+  | "settings.field.accessibilityMotion"
+  | "settings.field.accessibilityFocus"
+  | "settings.accessibility.shortcut.contrast"
+  | "settings.accessibility.shortcut.scale"
+  | "settings.accessibility.system"
+  | "settings.accessibility.standard"
+  | "settings.accessibility.high"
+  | "settings.accessibility.large"
+  | "settings.accessibility.extraLarge"
+  | "settings.accessibility.reduce"
+  | "settings.accessibility.enhanced"
   | "settings.theme.light"
   | "settings.theme.dark"
   | "settings.theme.system"
@@ -1342,6 +1356,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "settings.section.regional": "Regional",
     "settings.section.operacional": "Operacional",
     "settings.section.preferencias": "Preferências",
+    "settings.section.accessibility": "Acessibilidade",
     "settings.field.timezone": "Fuso horário",
     "settings.field.timezone.hint": "IANA, ex.: America/Sao_Paulo.",
     "settings.field.weekStartsOn": "Início da semana",
@@ -1353,6 +1368,19 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "settings.field.displayTimezone.hint": "Deixe vazio para herdar o fuso da igreja.",
     "settings.field.dateFormat": "Formato de data",
     "settings.field.theme": "Tema",
+    "settings.field.accessibilityContrast": "Contraste",
+    "settings.field.accessibilityTextScale": "Tamanho do texto",
+    "settings.field.accessibilityMotion": "Movimento",
+    "settings.field.accessibilityFocus": "Destaque de foco",
+    "settings.accessibility.shortcut.contrast": "Contraste: {value}",
+    "settings.accessibility.shortcut.scale": "Tamanho do texto: {value}",
+    "settings.accessibility.system": "Usar preferência do sistema",
+    "settings.accessibility.standard": "Padrão",
+    "settings.accessibility.high": "Alto contraste",
+    "settings.accessibility.large": "Grande",
+    "settings.accessibility.extraLarge": "Extra grande",
+    "settings.accessibility.reduce": "Reduzir movimento",
+    "settings.accessibility.enhanced": "Reforçado",
     "settings.theme.light": "Claro",
     "settings.theme.dark": "Escuro",
     "settings.theme.system": "Sistema",
@@ -2486,6 +2514,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "settings.section.regional": "Regional",
     "settings.section.operacional": "Operational",
     "settings.section.preferencias": "Preferences",
+    "settings.section.accessibility": "Accessibility",
     "settings.field.timezone": "Timezone",
     "settings.field.timezone.hint": "IANA, e.g. America/Sao_Paulo.",
     "settings.field.weekStartsOn": "Week starts on",
@@ -2497,6 +2526,19 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "settings.field.displayTimezone.hint": "Leave empty to inherit the church timezone.",
     "settings.field.dateFormat": "Date format",
     "settings.field.theme": "Theme",
+    "settings.field.accessibilityContrast": "Contrast",
+    "settings.field.accessibilityTextScale": "Text size",
+    "settings.field.accessibilityMotion": "Motion",
+    "settings.field.accessibilityFocus": "Focus indicator",
+    "settings.accessibility.system": "Use system preference",
+    "settings.accessibility.standard": "Standard",
+    "settings.accessibility.high": "High contrast",
+    "settings.accessibility.large": "Large",
+    "settings.accessibility.extraLarge": "Extra large",
+    "settings.accessibility.reduce": "Reduce motion",
+    "settings.accessibility.enhanced": "Enhanced",
+    "settings.accessibility.shortcut.contrast": "Contrast: {value}",
+    "settings.accessibility.shortcut.scale": "Text size: {value}",
     "settings.theme.light": "Light",
     "settings.theme.dark": "Dark",
     "settings.theme.system": "System",
@@ -3630,6 +3672,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "settings.section.regional": "Regional",
     "settings.section.operacional": "Operacional",
     "settings.section.preferencias": "Preferencias",
+    "settings.section.accessibility": "Accesibilidad",
     "settings.field.timezone": "Zona horaria",
     "settings.field.timezone.hint": "IANA, ej.: America/Sao_Paulo.",
     "settings.field.weekStartsOn": "Inicio de la semana",
@@ -3641,6 +3684,19 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "settings.field.displayTimezone.hint": "Deje vacío para heredar la zona de la iglesia.",
     "settings.field.dateFormat": "Formato de fecha",
     "settings.field.theme": "Tema",
+    "settings.field.accessibilityContrast": "Contraste",
+    "settings.field.accessibilityTextScale": "Tamaño del texto",
+    "settings.field.accessibilityMotion": "Movimiento",
+    "settings.field.accessibilityFocus": "Indicador de foco",
+    "settings.accessibility.system": "Usar preferencia del sistema",
+    "settings.accessibility.standard": "Estándar",
+    "settings.accessibility.high": "Alto contraste",
+    "settings.accessibility.large": "Grande",
+    "settings.accessibility.extraLarge": "Extra grande",
+    "settings.accessibility.reduce": "Reducir movimiento",
+    "settings.accessibility.enhanced": "Reforzado",
+    "settings.accessibility.shortcut.contrast": "Contraste: {value}",
+    "settings.accessibility.shortcut.scale": "Tamaño del texto: {value}",
     "settings.theme.light": "Claro",
     "settings.theme.dark": "Oscuro",
     "settings.theme.system": "Sistema",

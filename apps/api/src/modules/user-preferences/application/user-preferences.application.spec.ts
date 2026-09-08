@@ -26,6 +26,10 @@ function preferences(
     displayTimezone: null,
     dateFormat: "dd/MM/yyyy",
     theme: "system",
+    accessibilityContrast: "system",
+    accessibilityTextScale: "standard",
+    accessibilityMotion: "system",
+    accessibilityFocus: "standard",
     ...overrides
   };
 }

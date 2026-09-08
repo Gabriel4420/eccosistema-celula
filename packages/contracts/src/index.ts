@@ -61,6 +61,10 @@ export {
   updateChurchSettingsRequestSchema
 } from "./church";
 export {
+  accessibilityContrasts,
+  accessibilityFocusModes,
+  accessibilityMotions,
+  accessibilityTextScales,
   reportDeadlineHoursSchema,
   settingsDateFormats,
   settingsLocales,
@@ -70,6 +74,10 @@ export {
   userPreferencesResponseSchema
 } from "./settings";
 export type {
+  AccessibilityContrast,
+  AccessibilityFocusMode,
+  AccessibilityMotion,
+  AccessibilityTextScale,
   SettingsDateFormat,
   SettingsLocale,
   SettingsTheme,

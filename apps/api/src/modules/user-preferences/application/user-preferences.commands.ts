@@ -12,7 +12,11 @@ const preferenceFields = [
   "language",
   "displayTimezone",
   "dateFormat",
-  "theme"
+  "theme",
+  "accessibilityContrast",
+  "accessibilityTextScale",
+  "accessibilityMotion",
+  "accessibilityFocus"
 ] as const;
 
 export class UserPreferencesCommands {

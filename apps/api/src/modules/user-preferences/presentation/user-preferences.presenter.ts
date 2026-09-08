@@ -5,6 +5,10 @@ export function presentUserPreferences(preferences: ManagedUserPreferences) {
     language: preferences.language,
     displayTimezone: preferences.displayTimezone,
     dateFormat: preferences.dateFormat,
-    theme: preferences.theme
+    theme: preferences.theme,
+    accessibilityContrast: preferences.accessibilityContrast,
+    accessibilityTextScale: preferences.accessibilityTextScale,
+    accessibilityMotion: preferences.accessibilityMotion,
+    accessibilityFocus: preferences.accessibilityFocus
   };
 }
