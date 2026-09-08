@@ -31,7 +31,7 @@ O PRD exige teclado, contraste, rótulos claros, mensagens de erro e alvos adequ
 
 - inferir deficiência, surdez, fala ou cegueira por dispositivo, navegador ou hardware;
 - gravação, reconhecimento de voz ou biometria;
-- tradução automática para Libras ou contratação de fornecedor externo;
+- ~~tradução automática para Libras~~ → movida para o plano 015 (VLibras), a pedido do cliente;
 - aplicativo mobile nesta etapa;
 - substituir tecnologias assistivas nativas, como leitor de tela e teclado do sistema.
 

@@ -33,18 +33,19 @@ const nextConfig: NextConfig = {
           frame: " https://vercel.live",
         }
       : { script: "", connect: "", img: "", frame: "" };
+    const vlibras = "https://vlibras.gov.br";
     const directives = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval'${vercelLive.script}`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${vlibras}${vercelLive.script}`,
       "style-src 'self' 'unsafe-inline'",
-      `img-src 'self' blob: data:${vercelLive.img}`,
+      `img-src 'self' blob: data: ${vlibras}${vercelLive.img}`,
       "font-src 'self' data:",
-      `connect-src ${connectSrc}${vercelLive.connect}`,
+      `connect-src ${connectSrc} ${vlibras}${vercelLive.connect}`,
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      `frame-src 'self'${vercelLive.frame}`,
+      `frame-src 'self' ${vlibras}${vercelLive.frame}`,
     ];
     if (production) directives.push("upgrade-insecure-requests");
     return [

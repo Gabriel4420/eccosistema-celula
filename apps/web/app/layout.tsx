@@ -7,6 +7,7 @@ import { LanguageProvider, languageInitializationScript } from "@/src/shared/i18
 import { PreferredLanguageSync } from "@/src/shared/i18n/preferred-language-sync";
 import { accessibilityInitializationScript } from "@/src/shared/accessibility/accessibility-preferences";
 import { AccessibilityPreferencesSync } from "@/src/shared/accessibility/accessibility-preferences-sync";
+import { VlibrasProvider } from "@/src/shared/accessibility/vlibras/vlibras-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           </SessionProvider>
           <ToastViewport />
         </LanguageProvider>
+        <VlibrasProvider />
       </body>
     </html>
   );

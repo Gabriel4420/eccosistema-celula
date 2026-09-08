@@ -105,6 +105,19 @@ test.describe("accessibility and responsive navigation", () => {
     );
     expect(hasHorizontalOverflow).toBe(false);
   });
+
+  test("does not inject the VLibras plugin when disabled", async ({ page }) => {
+    await login(page, FIXTURES.admin.email);
+
+    await expect(page.locator("#vlibras-plugin")).toHaveCount(0);
+    await expect(page.locator("[vw]")).toHaveCount(0);
+    const externalScripts = await page.evaluate(() =>
+      [...document.querySelectorAll("script[src]")]
+        .map((script) => (script as HTMLScriptElement).src)
+        .filter((src) => src.includes("vlibras.gov.br"))
+    );
+    expect(externalScripts).toEqual([]);
+  });
 });
 
 async function focusByTab(page: Page, target: Locator): Promise<void> {
