@@ -1,6 +1,6 @@
 # Ecossistema de Células
 
-Fundação técnica do ecossistema de gestão de células. O repositório contém o monorepo, a aplicação web mínima, a API, a persistência PostgreSQL/Prisma e a infraestrutura de autenticação e autorização. Ainda não há cadastro administrativo, recuperação de senha, telas de autenticação, módulos funcionais ou aplicativo mobile.
+Ecossistema de gestão de células e pequenos grupos. O monorepo contém o painel administrativo web, API NestJS, persistência PostgreSQL/Prisma, autenticação, gestão de igreja, usuários, pessoas, células, encontros, presença, relatórios, importação em lote e configurações gerais.
 
 ## Requisitos
 
@@ -21,7 +21,7 @@ Copie `.env.example` para `.env` somente se precisar sobrescrever os valores loc
 
 ## Banco de dados local
 
-Os dois serviços são isolados: desenvolvimento usa a porta `5432` e testes usam `5433`. As credenciais do Compose são deliberadamente locais e fictícias.
+Os dois serviços são isolados: desenvolvimento usa a porta `5432` e testes usam `55433`. As credenciais do Compose são deliberadamente locais e fictícias.
 
 ```powershell
 docker compose up -d postgres-dev postgres-test
@@ -32,7 +32,7 @@ Configure `DATABASE_URL` e `TEST_DATABASE_URL` a partir do `.env.example`. No Po
 
 ```powershell
 $env:DATABASE_URL="postgresql://mission_atos_dev:local_dev_only@localhost:5432/mission_atos_dev?schema=public"
-$env:TEST_DATABASE_URL="postgresql://mission_atos_test:local_test_only@localhost:5433/mission_atos_test?schema=public"
+$env:TEST_DATABASE_URL="postgresql://mission_atos_test:local_test_only@localhost:55433/mission_atos_test?schema=public"
 ```
 
 Valide, gere o client, aplique o histórico e execute a seed fictícia explicitamente:
@@ -114,6 +114,15 @@ aceitam identificador de igreja na rota, query ou body:
 - `GET /church/settings`;
 - `PATCH /church/settings`.
 
+As preferências do próprio usuário estão disponíveis em:
+
+- `GET /settings/me`;
+- `PATCH /settings/me`.
+
+Elas incluem idioma (`pt-BR`, `en`, `es`), fuso horário de exibição, formato
+de data e tema. A alteração de idioma em `/settings` é aplicada imediatamente
+em todo o painel web e persiste para a próxima sessão.
+
 Qualquer usuário autenticado pode consultar os dados institucionais seguros e
 as configurações da própria igreja. Somente um `ADMIN` atualmente ativo no
 banco pode alterar dados ou configurações. Nome, slug, contatos e endereço são
@@ -136,7 +145,7 @@ Configure valores reais apenas em ambiente local ou em um provedor seguro:
 - `AUTH_COOKIE_SECURE`: `true` sob HTTPS;
 - `CORS_ORIGINS`: origens permitidas separadas por vírgula.
 
-O Access Token é enviado como Bearer e tem duração curta. O Refresh Token é opaco, rotativo, armazenado somente como HMAC e entregue em cookie `HttpOnly`, `SameSite=Strict`, com caminho `/auth`. Logout revoga a sessão corrente; troca de senha revoga todas as sessões e cria auditoria sem hashes ou tokens.
+O Access Token é enviado como Bearer e tem duração curta. O Refresh Token é opaco, rotativo, armazenado somente como HMAC e entregue em cookie `HttpOnly`, `SameSite=Lax`, com caminho `/auth`. Logout revoga a sessão corrente; troca de senha revoga todas as sessões e cria auditoria sem hashes ou tokens.
 
 Em suspeita de comprometimento, revogue as sessões afetadas no banco e rotacione os segredos por procedimento controlado. Rotacionar `JWT_ACCESS_SECRET` invalida todos os Access Tokens; rotacionar `REFRESH_TOKEN_PEPPER` invalida todos os Refresh Tokens.
 
