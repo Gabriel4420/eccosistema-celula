@@ -2,36 +2,43 @@ import type {
   CellMeetingDay,
   CellStatus
 } from "@/src/features/cells/api/cells-api";
+import type { AppLocale, TranslationKey, TranslationParams } from "@/src/shared/i18n/dictionaries";
 
-const DAY_LABELS: Record<CellMeetingDay, string> = {
-  MONDAY: "Segunda-feira",
-  TUESDAY: "Terça-feira",
-  WEDNESDAY: "Quarta-feira",
-  THURSDAY: "Quinta-feira",
-  FRIDAY: "Sexta-feira",
-  SATURDAY: "Sábado",
-  SUNDAY: "Domingo"
+export const DAY_KEYS: Record<CellMeetingDay, TranslationKey> = {
+  MONDAY: "cells.day.monday",
+  TUESDAY: "cells.day.tuesday",
+  WEDNESDAY: "cells.day.wednesday",
+  THURSDAY: "cells.day.thursday",
+  FRIDAY: "cells.day.friday",
+  SATURDAY: "cells.day.saturday",
+  SUNDAY: "cells.day.sunday"
 };
 
-const STATUS_LABELS: Record<CellStatus, string> = {
-  FORMING: "Em formação",
-  ACTIVE: "Ativa",
-  SUSPENDED: "Suspensa",
-  CLOSED: "Encerrada"
+export const STATUS_KEYS: Record<CellStatus, TranslationKey> = {
+  FORMING: "cells.status.formative",
+  ACTIVE: "cells.status.active",
+  SUSPENDED: "cells.status.suspended",
+  CLOSED: "cells.status.closed"
 };
 
-export function formatCellDay(day: CellMeetingDay): string {
-  return DAY_LABELS[day];
+export function formatCellDay(
+  day: CellMeetingDay,
+  t: (key: TranslationKey, params?: TranslationParams) => string
+): string {
+  return t(DAY_KEYS[day]);
 }
 
-export function formatCellStatus(status: CellStatus): string {
-  return STATUS_LABELS[status];
+export function formatCellStatus(
+  status: CellStatus,
+  t: (key: TranslationKey, params?: TranslationParams) => string
+): string {
+  return t(STATUS_KEYS[status]);
 }
 
-export function formatCellTimestamp(iso: string): string {
+export function formatCellTimestamp(iso: string, locale: AppLocale): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("pt-BR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

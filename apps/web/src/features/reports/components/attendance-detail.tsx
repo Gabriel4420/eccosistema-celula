@@ -14,6 +14,7 @@ import {
 } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import { getAttendanceDetail } from "@/src/features/reports/api/reports-api";
 import { ExportButton } from "./export-button";
 
@@ -47,6 +48,7 @@ function toQuery(prefix: string, params: DetailParams): string {
 
 export function AttendanceDetail({ cellId }: { readonly cellId: string }) {
   const { api } = useSession();
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = readParams(searchParams);
@@ -85,12 +87,12 @@ export function AttendanceDetail({ cellId }: { readonly cellId: string }) {
         <div className="flex flex-col">
           <p className="page-description">
             <Link href="/reports/attendance" style={{ color: "var(--color-primary)" }}>
-              Frequência
+              {t("reports.attendance.pageTitle")}
             </Link>{" "}
-            / Detalhe por pessoa
+            / {t("reports.attendanceDetail.page.crumb")}
           </p>
           <h1 className="page-title" id="attendance-detail-title">
-            Detalhe de frequência
+            {t("reports.attendanceDetail.pageTitle")}
           </h1>
         </div>
         <ExportButton
@@ -105,7 +107,7 @@ export function AttendanceDetail({ cellId }: { readonly cellId: string }) {
 
       <div className="toolbar">
         <SelectField
-          label="Período"
+          label={t("reports.attendanceDetail.filter.period")}
           name="period"
           value={
             params.from && params.to ? `${params.from}..${params.to}` : ""
@@ -120,28 +122,28 @@ export function AttendanceDetail({ cellId }: { readonly cellId: string }) {
             navigate({ from, to, page: 1 });
           }}
           options={[
-            { value: "", label: "Últimos 30 dias" },
-            { value: d(daysAgo(30)) + ".." + d(today()), label: "Últimos 30 dias" },
-            { value: d(daysAgo(60)) + ".." + d(today()), label: "Últimos 60 dias" },
-            { value: d(monthStart()) + ".." + d(today()), label: "Este mês" },
+            { value: "", label: t("reports.period.last30") },
+            { value: d(daysAgo(30)) + ".." + d(today()), label: t("reports.period.last30") },
+            { value: d(daysAgo(60)) + ".." + d(today()), label: t("reports.period.last60") },
+            { value: d(monthStart()) + ".." + d(today()), label: t("reports.period.thisMonth") },
           ]}
         />
         <Button
           variant="secondary"
           onClick={() => navigate({ page: 1 })}
         >
-          Recarregar
+          {t("reports.attendanceDetail.action.reload")}
         </Button>
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar o detalhe de frequência" onRetry={() => void reload()}>
-          Tente novamente em instantes.
+        <ErrorState title={t("reports.attendanceDetail.error")} onRetry={() => void reload()}>
+          {t("reports.attendanceDetail.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando detalhe">
+        <div aria-label={t("reports.attendanceDetail.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -149,8 +151,8 @@ export function AttendanceDetail({ cellId }: { readonly cellId: string }) {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhuma pessoa encontrada">
-          Não há dados de frequência para esta célula no período.
+        <EmptyState title={t("reports.attendanceDetail.emptyState")}>
+          {t("reports.attendanceDetail.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -159,13 +161,13 @@ export function AttendanceDetail({ cellId }: { readonly cellId: string }) {
           <Table<AttendanceDetailItem>
             rowKey={(item) => item.person.id}
             columns={[
-              { key: "name", header: "Pessoa", render: (item) => item.person.fullName },
-              { key: "present", header: "Presentes", render: (item) => item.totalPresent },
-              { key: "absent", header: "Ausentes", render: (item) => item.totalAbsent },
-              { key: "excused", header: "Justificados", render: (item) => item.totalExcused },
+              { key: "name", header: t("reports.attendanceDetail.column.person"), render: (item) => item.person.fullName },
+              { key: "present", header: t("reports.attendanceDetail.column.present"), render: (item) => item.totalPresent },
+              { key: "absent", header: t("reports.attendanceDetail.column.absent"), render: (item) => item.totalAbsent },
+              { key: "excused", header: t("reports.attendanceDetail.column.excused"), render: (item) => item.totalExcused },
               {
                 key: "rate",
-                header: "Frequência",
+                header: t("reports.attendanceDetail.column.rate"),
                 render: (item) => (item.attendanceRate !== null ? `${item.attendanceRate}%` : "—"),
               },
             ]}

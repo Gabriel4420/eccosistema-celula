@@ -22,6 +22,7 @@ import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import {
   getPerson,
   updatePerson,
@@ -31,6 +32,7 @@ import {
 const PEOPLE_CACHE = "people";
 
 export function PersonDetail() {
+  const { t } = useI18n();
   const { api } = useSession();
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -56,7 +58,7 @@ export function PersonDetail() {
 
   if (loading && !person) {
     return (
-      <div aria-label="Carregando pessoa">
+      <div aria-label={t("people.detail.loading")}>
         <Skeleton width="40%" height="2.5rem" />
         <Skeleton width="100%" height="8rem" />
       </div>
@@ -65,19 +67,16 @@ export function PersonDetail() {
 
   if (error && !person) {
     return (
-      <ErrorState
-        title="Não foi possível carregar a pessoa"
-        onRetry={() => void reload()}
-      >
-        Tente novamente em instantes.
+      <ErrorState title={t("people.error.load")} onRetry={() => void reload()}>
+        {t("people.error.retry")}
       </ErrorState>
     );
   }
 
   if (!person) {
     return (
-      <EmptyState title="Pessoa não encontrada">
-        A pessoa solicitada não existe ou não está disponível.
+      <EmptyState title={t("people.detail.empty")}>
+        {t("people.detail.empty.desc")}
       </EmptyState>
     );
   }
@@ -105,8 +104,8 @@ export function PersonDetail() {
     if (Object.keys(payload).length === 0) {
       toast({
         kind: "info",
-        title: "Nenhuma alteração",
-        description: "Não havia dados novos para salvar.",
+        title: t("people.toast.noChange"),
+        description: t("people.toast.noChange.desc"),
       });
       return;
     }
@@ -118,14 +117,13 @@ export function PersonDetail() {
       await reload();
       toast({
         kind: "success",
-        title: "Pessoa atualizada",
-        description: "Os dados foram salvos.",
+        title: t("people.detail.toast.updated"),
+        description: t("people.detail.saved.desc"),
       });
     } catch {
       setFeedback({
         kind: "error",
-        message:
-          "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
+        message: t("people.detail.error.save"),
       });
     } finally {
       setBusy(false);
@@ -143,13 +141,13 @@ export function PersonDetail() {
       await reload();
       toast({
         kind: "success",
-        title: "Pessoa inativada",
-        description: "Ela será listada somente para administradores.",
+        title: t("people.toast.inactivated"),
+        description: t("people.toast.inactivated.desc"),
       });
     } catch {
       setFeedback({
         kind: "error",
-        message: "Não foi possível inativar a pessoa. Tente novamente.",
+        message: t("people.detail.error.inactivate"),
       });
     } finally {
       setBusy(false);
@@ -179,14 +177,18 @@ export function PersonDetail() {
           {person.fullName}
         </h1>
         <Link className="breadcrumbs__link" href="/people">
-          Voltar para pessoas
+          {t("people.detail.back")}
         </Link>
       </div>
 
       {feedback ? (
         <Alert
           variant={feedback.kind}
-          title={feedback.kind === "success" ? "Sucesso" : "Falha"}
+          title={
+            feedback.kind === "success"
+              ? t("people.alert.success")
+              : t("people.alert.failure")
+          }
         >
           {feedback.message}
         </Alert>
@@ -194,29 +196,39 @@ export function PersonDetail() {
 
       <div className="detail-list" style={{ marginBottom: "var(--space-5)" }}>
         <div className="detail-list__item">
-          <span className="detail-list__label">Status</span>
+          <span className="detail-list__label">{t("common.status")}</span>
           <StatusBadge status={person.status} />
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">E-mail</span>
+          <span className="detail-list__label">
+            {t("people.column.email")}
+          </span>
           <span className="detail-list__value">{person.email ?? "—"}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Telefone</span>
+          <span className="detail-list__label">
+            {t("people.column.phone")}
+          </span>
           <span className="detail-list__value">
             {formatPhone(person.phone) ?? "—"}
           </span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Nascimento</span>
+          <span className="detail-list__label">
+            {t("people.column.birthDate")}
+          </span>
           <span className="detail-list__value">{person.birthDate ?? "—"}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Gênero</span>
+          <span className="detail-list__label">
+            {t("people.column.gender")}
+          </span>
           <span className="detail-list__value">{person.gender ?? "—"}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Cadastro</span>
+          <span className="detail-list__label">
+            {t("people.detail.label.registration")}
+          </span>
           <span className="detail-list__value">
             {person.createdAt
               .toString()
@@ -229,40 +241,40 @@ export function PersonDetail() {
       <Can capability="editPeople">
         <form className="fieldset" onSubmit={(event) => void handleSave(event)}>
           <fieldset className="fieldset">
-            <legend className="fieldset__legend">Editar dados</legend>
+            <legend className="fieldset__legend">{t("people.detail.edit")}</legend>
             <TextField
-              label="Nome completo"
+              label={t("people.detail.field.fullName")}
               name="fullName"
               defaultValue={person.fullName}
               required
             />
             <TextField
-              label="Gênero"
+              label={t("people.detail.label.gender")}
               name="gender"
               defaultValue={person.gender ?? ""}
             />
             <TextField
-              label="Data de nascimento"
+              label={t("people.detail.field.birthDate")}
               type="date"
               name="birthDate"
               defaultValue={person.birthDate ?? ""}
             />
             <TextField
-              label="E-mail"
+              label={t("people.column.email")}
               type="email"
               name="email"
               mask="email"
               defaultValue={person.email ?? ""}
             />
             <TextField
-              label="Telefone"
+              label={t("people.column.phone")}
               name="phone"
               mask="phone"
               defaultValue={person.phone ?? ""}
             />
             <Can capability="viewPersonObservations">
               <TextareaField
-                label="Observações"
+                label={t("people.detail.field.observations")}
                 name="observations"
                 rows={4}
                 defaultValue={person.observations ?? ""}
@@ -272,9 +284,9 @@ export function PersonDetail() {
               type="submit"
               icon={Save}
               loading={busy}
-              loadingLabel="Salvando…"
+              loadingLabel={t("common.saving")}
             >
-              Salvar alterações
+              {t("people.detail.saveChanges")}
             </Button>
           </fieldset>
         </form>
@@ -288,7 +300,7 @@ export function PersonDetail() {
               icon={UserX}
               onClick={() => setConfirmInactivate(true)}
             >
-              Inativar pessoa
+              {t("people.detail.inactivatePerson")}
             </Button>
           ) : null}
         </div>
@@ -297,8 +309,8 @@ export function PersonDetail() {
       <Dialog
         open={confirmInactivate}
         onClose={() => setConfirmInactivate(false)}
-        title="Inativar pessoa"
-        description="A pessoa deixará de aparecer nas listagens e não poderá ser vinculada a células enquanto estiver inativa. Você poderá reativá-la a partir da listagem."
+        title={t("people.detail.inactivate.title")}
+        description={t("people.detail.inactivate.desc")}
       >
         <div className="dialog-panel__actions">
           <Button
@@ -306,16 +318,16 @@ export function PersonDetail() {
             onClick={() => setConfirmInactivate(false)}
             disabled={busy}
           >
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button
             variant="danger"
             icon={UserX}
             loading={busy}
-            loadingLabel="Inativando…"
+            loadingLabel={t("people.detail.inactivate.inactivating")}
             onClick={() => void runInactivate()}
           >
-            Inativar
+            {t("people.detail.inactivate.action")}
           </Button>
         </div>
       </Dialog>

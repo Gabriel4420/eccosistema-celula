@@ -7,11 +7,13 @@ import { Skeleton } from "@/src/shared/components";
 import type { Capabilities } from "@/src/shared/auth/capabilities";
 import { setPendingDestination } from "@/src/shared/navigation/pending-destination";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 export function RequireSession({ children }: { readonly children: ReactNode }) {
   const { status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (status === "anonymous") {
@@ -22,7 +24,7 @@ export function RequireSession({ children }: { readonly children: ReactNode }) {
 
   if (status === "bootstrapping") {
     return (
-      <div className="auth-shell" aria-label="Carregando sessão">
+      <div className="auth-shell" aria-label={t("shell.loadingSession")}>
         <div className="auth-card">
           <Skeleton width="60%" height="1.5rem" />
           <Skeleton width="100%" height="2.5rem" />

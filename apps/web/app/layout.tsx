@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { SessionProvider } from "@/src/providers/session-provider";
 import { QueryProvider } from "@/src/providers/query-provider";
 import { ToastViewport } from "@/src/shared/components/toast-viewport";
+import { LanguageProvider, languageInitializationScript } from "@/src/shared/i18n/language-provider";
+import { PreferredLanguageSync } from "@/src/shared/i18n/preferred-language-sync";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -35,12 +37,16 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitializationScript }} />
+        <script dangerouslySetInnerHTML={{ __html: languageInitializationScript }} />
       </head>
       <body>
-        <SessionProvider>
-          <QueryProvider>{children}</QueryProvider>
-        </SessionProvider>
-        <ToastViewport />
+        <LanguageProvider>
+          <SessionProvider>
+            <PreferredLanguageSync />
+            <QueryProvider>{children}</QueryProvider>
+          </SessionProvider>
+          <ToastViewport />
+        </LanguageProvider>
       </body>
     </html>
   );

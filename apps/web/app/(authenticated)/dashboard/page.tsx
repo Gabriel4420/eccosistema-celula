@@ -6,10 +6,12 @@ import { Can } from "@/src/shared/auth/guards";
 import { Skeleton } from "@/src/shared/components";
 import { useSession } from "@/src/providers/session-provider";
 import { AnalyticsOverview } from "@/src/features/analytics/components/analytics-overview";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey, TranslationParams } from "@/src/shared/i18n/dictionaries";
 
 interface Shortcut {
-  readonly title: string;
-  readonly description: string;
+  readonly titleKey: TranslationKey;
+  readonly descriptionKey: TranslationKey;
   readonly href: string;
   readonly icon: ReactNode;
   readonly capability?: "manageUsers" | "editPeople" | "viewCells";
@@ -17,27 +19,27 @@ interface Shortcut {
 
 const SHORTCUTS: readonly Shortcut[] = [
   {
-    title: "Meu perfil",
-    description: "Atualize seus dados e altere sua senha.",
+    titleKey: "nav.profile",
+    descriptionKey: "dash.shortcut.profile",
     href: "/profile",
     icon: <IconProfile />
   },
   {
-    title: "Configurações da igreja",
-    description: "Consulte os dados institucionais e ajustes.",
-    href: "/church/settings",
+    titleKey: "nav.settings",
+    descriptionKey: "dash.shortcut.settings",
+    href: "/settings",
     icon: <IconChurch />
   },
   {
-    title: "Pessoas",
-    description: "Consulte e gerencie as pessoas da igreja.",
+    titleKey: "nav.people",
+    descriptionKey: "dash.shortcut.people",
     href: "/people",
     icon: <IconPeople />,
     capability: "editPeople"
   },
   {
-    title: "Células",
-    description: "Consulte e gerencie as células da igreja.",
+    titleKey: "nav.cells",
+    descriptionKey: "dash.shortcut.cells",
     href: "/cells",
     icon: <IconCells />,
     capability: "viewCells"
@@ -46,44 +48,46 @@ const SHORTCUTS: readonly Shortcut[] = [
 
 const ADMIN_SHORTCUTS: readonly Shortcut[] = [
   {
-    title: "Usuários",
-    description: "Gerencie contas, papéis e acesso.",
+    titleKey: "nav.users",
+    descriptionKey: "dash.shortcut.users",
     href: "/users",
     icon: <IconUsers />
   }
 ];
 
-const ROLE_LABELS: Readonly<Record<string, string>> = {
-  ADMIN: "Administrador",
-  PASTOR: "Pastor",
-  SUPERVISOR: "Supervisor",
-  LEADER: "Líder"
+const ROLE_KEYS: Readonly<Record<string, TranslationKey>> = {
+  ADMIN: "role.admin",
+  PASTOR: "role.pastor",
+  SUPERVISOR: "role.supervisor",
+  LEADER: "role.leader"
 };
 
 export default function DashboardPage() {
   const { status, principal } = useSession();
+  const { t } = useI18n();
 
   if (status === "bootstrapping") {
     return (
-      <div aria-label="Carregando painel">
+      <div aria-label={t("dash.loading")}>
         <Skeleton width="50%" height="2.5rem" />
         <Skeleton width="100%" height="6rem" />
       </div>
     );
   }
 
-  const roleLabel = ROLE_LABELS[principal?.roles[0] ?? ""];
+  const roleKey = ROLE_KEYS[principal?.roles[0] ?? ""];
+  const roleLabel = roleKey ? t(roleKey) : null;
 
   return (
     <section aria-labelledby="dashboard-title">
       <div className="dashboard-hero">
         <div className="dashboard-hero__content">
-          <p className="dashboard-hero__eyebrow">Visão geral</p>
-          <h1 className="dashboard-hero__title dark:text-white" id="dashboard-title">Painel</h1>
+          <p className="dashboard-hero__eyebrow">{t("dash.overview")}</p>
+          <h1 className="dashboard-hero__title dark:text-white" id="dashboard-title">{t("dash.title")}</h1>
           <p className="dashboard-hero__description">
-            Organize pessoas, acompanhe células e mantenha a liderança conectada.
+            {t("dash.description")}
           </p>
-          {roleLabel ? <span className="dashboard-hero__role">Acesso: {roleLabel}</span> : null}
+          {roleLabel ? <span className="dashboard-hero__role">{t("dash.access", { role: roleLabel } as TranslationParams)}</span> : null}
         </div>
         <div className="dashboard-hero__network" aria-hidden="true">
           <span className="network-node network-node--center" />
@@ -99,8 +103,8 @@ export default function DashboardPage() {
         <AnalyticsOverview />
       </Can>
       <div className="dashboard-section-heading px-20">
-        <div><p className="dashboard-section-heading__eyebrow">Acesso rápido</p><h2>O que você quer fazer?</h2></div>
-        <p>Escolha uma área para continuar.</p>
+        <div><p className="dashboard-section-heading__eyebrow">{t("dash.quickAccess")}</p><h2>{t("dash.quickAccess.hint")}</h2></div>
+        <p>{t("dash.quickAccess.choose")}</p>
       </div>
       <div className="dashboard-grid">
         {SHORTCUTS.map((shortcut, index) => (
@@ -113,8 +117,8 @@ export default function DashboardPage() {
             <span className="dashboard-card__icon" aria-hidden="true">
               {shortcut.icon}
             </span>
-            <span className="dashboard-card__title">{shortcut.title}</span>
-            <span className="dashboard-card__description">{shortcut.description}</span>
+            <span className="dashboard-card__title">{t(shortcut.titleKey)}</span>
+            <span className="dashboard-card__description">{t(shortcut.descriptionKey)}</span>
           </Link>
         ))}
         {ADMIN_SHORTCUTS.map((shortcut, index) => (
@@ -127,8 +131,8 @@ export default function DashboardPage() {
               <span className="dashboard-card__icon" aria-hidden="true">
                 {shortcut.icon}
               </span>
-              <span className="dashboard-card__title">{shortcut.title}</span>
-              <span className="dashboard-card__description">{shortcut.description}</span>
+              <span className="dashboard-card__title">{t(shortcut.titleKey)}</span>
+              <span className="dashboard-card__description">{t(shortcut.descriptionKey)}</span>
             </Link>
           </Can>
         ))}

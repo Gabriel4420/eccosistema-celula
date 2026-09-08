@@ -1,4 +1,7 @@
+"use client";
+
 import type { HTMLAttributes, ReactNode } from "react";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 interface SkeletonProps extends HTMLAttributes<HTMLSpanElement> {
   readonly width?: string;
@@ -35,20 +38,22 @@ export function ErrorState({
   title,
   children,
   onRetry,
-  retryLabel = "Tentar novamente",
+  retryLabel,
 }: {
   readonly title: string;
   readonly children?: ReactNode;
   readonly onRetry?: () => void;
   readonly retryLabel?: string;
 }) {
+  const { t } = useI18n();
+  const label = retryLabel ?? t("states.retry");
   return (
     <div className="error-state" role="alert">
       <p className="error-state__title">{title}</p>
       {children ? <p>{children}</p> : null}
       {onRetry ? (
         <button type="button" className="button button--secondary" onClick={onRetry}>
-          {retryLabel}
+          {label}
         </button>
       ) : null}
     </div>

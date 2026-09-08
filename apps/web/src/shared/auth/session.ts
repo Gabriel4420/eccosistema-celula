@@ -1,3 +1,5 @@
+import type { TranslationKey, TranslationParams } from "@/src/shared/i18n/dictionaries";
+
 export type SessionStatus =
   | "bootstrapping"
   | "anonymous"
@@ -21,13 +23,17 @@ export const ROLE_PASTOR = "PASTOR";
 export const ROLE_SUPERVISOR = "SUPERVISOR";
 export const ROLE_LEADER = "LEADER";
 
-const ROLE_LABELS: Record<string, string> = {
-  [ROLE_ADMIN]: "Admin",
-  [ROLE_PASTOR]: "Pastor",
-  [ROLE_SUPERVISOR]: "Supervisor",
-  [ROLE_LEADER]: "Líder",
+const ROLE_KEYS: Record<string, TranslationKey> = {
+  [ROLE_ADMIN]: "role.admin",
+  [ROLE_PASTOR]: "role.pastor",
+  [ROLE_SUPERVISOR]: "role.supervisor",
+  [ROLE_LEADER]: "role.leader",
 };
 
-export function roleLabel(name: string): string {
-  return ROLE_LABELS[name] ?? name;
+export function roleLabel(
+  name: string,
+  t: (key: TranslationKey, params?: TranslationParams) => string
+): string {
+  const key = ROLE_KEYS[name];
+  return key ? t(key) : name;
 }

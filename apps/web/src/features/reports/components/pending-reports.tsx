@@ -12,11 +12,13 @@ import {
 } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey } from "@/src/shared/i18n/dictionaries";
 import { getPendingReports } from "@/src/features/reports/api/reports-api";
 import type { PendingReportItem } from "@mission-atos/contracts";
 import { ExportButton } from "./export-button";
 import {
-  PERIOD_OPTIONS,
+  getPeriodOptions,
   periodValue,
   readPage,
   splitPeriod,
@@ -43,6 +45,7 @@ function readParams(searchParams: URLSearchParams): PendingParams {
 
 export function PendingReports() {
   const { api } = useSession();
+  const { t, locale } = useI18n();
   const { searchParams, navigate } = useReportNavigation("/reports/pending");
   const params = readParams(searchParams);
 
@@ -74,10 +77,10 @@ export function PendingReports() {
       <div className="page-header w-full">
         <div className="flex flex-col">
           <h1 className="page-title" id="pending-reports-title">
-            Relatórios Pendentes
+            {t("reports.pending.pageTitle")}
           </h1>
           <p className="page-description">
-            Encontros concluídos que ainda não tiveram o relatório submetido.
+            {t("reports.pending.page.description")}
           </p>
         </div>
         <ExportButton reportType="pending" params={exportParams} />
@@ -85,25 +88,25 @@ export function PendingReports() {
 
       <div className="toolbar">
         <SelectField
-          label="Período"
+          label={t("reports.pending.filter.period")}
           name="period"
           value={periodValue(params)}
           onChange={(event) =>
             navigate({ ...splitPeriod(event.target.value), page: 1 })
           }
-          options={PERIOD_OPTIONS}
+          options={getPeriodOptions(t)}
         />
         <SelectField
-          label="Status"
+          label={t("reports.pending.filter.status")}
           name="status"
           value={params.status}
           onChange={(event) => navigate({ status: event.target.value, page: 1 })}
           options={[
-            { value: "", label: "Todos" },
-            { value: "NO_REPORT", label: "Sem relatório" },
-            { value: "NOT_STARTED", label: "Não iniciado" },
-            { value: "DRAFT", label: "Rascunho" },
-            { value: "RETURNED", label: "Devolvido" },
+            { value: "", label: t("reports.pending.filter.all") },
+            { value: "NO_REPORT", label: t("reports.pending.status.noReport") },
+            { value: "NOT_STARTED", label: t("reports.pending.status.notStarted") },
+            { value: "DRAFT", label: t("reports.pending.status.draft") },
+            { value: "RETURNED", label: t("reports.pending.status.returned") },
           ]}
         />
         <Button
@@ -111,18 +114,18 @@ export function PendingReports() {
           icon={FilterX}
           onClick={() => navigate({ status: "", from: "", to: "", page: 1 })}
         >
-          Limpar filtros
+          {t("reports.pending.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar os relatórios pendentes" onRetry={() => void reload()}>
-          Tente novamente em instantes.
+        <ErrorState title={t("reports.pending.error")} onRetry={() => void reload()}>
+          {t("reports.pending.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando relatórios">
+        <div aria-label={t("reports.pending.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -130,8 +133,8 @@ export function PendingReports() {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhum relatório pendente">
-          Todos os encontros concluídos já foram reportados.
+        <EmptyState title={t("reports.pending.emptyState")}>
+          {t("reports.pending.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -142,29 +145,39 @@ export function PendingReports() {
             columns={[
               {
                 key: "cell",
-                header: "Célula",
+                header: t("reports.pending.column.cell"),
                 render: (item) => `${item.cell.code} — ${item.cell.name}`,
               },
               {
                 key: "leader",
-                header: "Líder",
+                header: t("reports.pending.column.leader"),
                 render: (item) =>
                   item.leader ? `${item.leader.firstName} ${item.leader.lastName}` : "—",
               },
               {
                 key: "date",
-                header: "Data do encontro",
-                render: (item) => new Date(item.meetingDate).toLocaleDateString("pt-BR"),
+                header: t("reports.pending.column.date"),
+                render: (item) => new Date(item.meetingDate).toLocaleDateString(locale),
               },
               {
                 key: "days",
-                header: "Dias sem relatório",
+                header: t("reports.pending.column.days"),
                 render: (item) => item.daysSinceMeeting,
               },
               {
+                key: "deadline",
+                header: t("reports.pending.column.deadline"),
+                render: (item) =>
+                  item.overdue ? (
+                    <span className="status-badge status-badge--overdue">{t("reports.pending.status.late")}</span>
+                  ) : (
+                    <span className="status-badge status-badge--ontime">{t("reports.pending.status.onTime")}</span>
+                  ),
+              },
+              {
                 key: "status",
-                header: "Status",
-                render: (item) => formatReportStatus(item.reportStatus),
+                header: t("reports.pending.column.status"),
+                render: (item) => formatReportStatus(item.reportStatus, t),
               },
             ]}
             rows={rows}
@@ -182,12 +195,13 @@ export function PendingReports() {
   );
 }
 
-function formatReportStatus(status: string): string {
-  const map: Record<string, string> = {
-    NOT_STARTED: "Não iniciado",
-    DRAFT: "Rascunho",
-    SUBMITTED: "Submetido",
-    RETURNED: "Devolvido",
+function formatReportStatus(status: string, t: (key: TranslationKey) => string): string {
+  const map: Record<string, TranslationKey> = {
+    NOT_STARTED: "reports.pending.status.notStarted",
+    DRAFT: "reports.pending.status.draft",
+    SUBMITTED: "reports.pending.status.submitted",
+    RETURNED: "reports.pending.status.returned",
   };
-  return map[status] ?? status;
+  const key = map[status];
+  return key ? t(key) : status;
 }

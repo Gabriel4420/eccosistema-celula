@@ -1,6 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Sidebar } from "@/src/shared/navigation/sidebar";
+import { LanguageProvider } from "@/src/shared/i18n/language-provider";
+import { renderWithI18n } from "./helpers/render-with-i18n";
 
 let mockPathname: string = "/dashboard";
 
@@ -62,7 +64,7 @@ describe("Sidebar mobile drawer", () => {
   });
 
   it("hides the off-canvas drawer from assistive tech and tab order while closed on mobile", () => {
-    const { container } = render(<Sidebar />);
+    const { container } = renderWithI18n(<Sidebar />);
     const aside = container.querySelector("#shell-sidebar");
     expect(aside).not.toBeNull();
     expect(aside).toHaveAttribute("aria-hidden", "true");
@@ -71,7 +73,7 @@ describe("Sidebar mobile drawer", () => {
 
   it("opens the drawer with the hamburger and moves focus to the close button", async () => {
     const user = userEvent.setup();
-    const { container } = render(<Sidebar />);
+    const { container } = renderWithI18n(<Sidebar />);
     const toggle = screen.getByRole("button", { name: "Abrir menu" });
 
     await user.click(toggle);
@@ -86,7 +88,7 @@ describe("Sidebar mobile drawer", () => {
 
   it("closes with Escape and returns focus to the hamburger", async () => {
     const user = userEvent.setup();
-    render(<Sidebar />);
+    renderWithI18n(<Sidebar />);
     const toggle = screen.getByRole("button", { name: "Abrir menu" });
 
     await user.click(toggle);
@@ -98,7 +100,7 @@ describe("Sidebar mobile drawer", () => {
 
   it("closes when the scrim overlay is clicked", async () => {
     const user = userEvent.setup();
-    const { container } = render(<Sidebar />);
+    const { container } = renderWithI18n(<Sidebar />);
     const toggle = screen.getByRole("button", { name: "Abrir menu" });
 
     await user.click(toggle);
@@ -111,7 +113,7 @@ describe("Sidebar mobile drawer", () => {
 
   it("locks the body scroll while open and restores it on close", async () => {
     const user = userEvent.setup();
-    render(<Sidebar />);
+    renderWithI18n(<Sidebar />);
     const toggle = screen.getByRole("button", { name: "Abrir menu" });
 
     await user.click(toggle);
@@ -123,7 +125,7 @@ describe("Sidebar mobile drawer", () => {
 
   it("traps focus inside the drawer", async () => {
     const user = userEvent.setup();
-    render(<Sidebar />);
+    renderWithI18n(<Sidebar />);
     await user.click(screen.getByRole("button", { name: "Abrir menu" }));
 
     const close = screen.getByRole("button", { name: "Fechar menu" });
@@ -142,7 +144,7 @@ describe("Sidebar mobile drawer", () => {
 
   it("keeps the drawer fully reachable on desktop (no aria-hidden or inert)", () => {
     mockMatchMedia(false);
-    const { container } = render(<Sidebar />);
+    const { container } = renderWithI18n(<Sidebar />);
     const aside = container.querySelector("#shell-sidebar");
     expect(aside).not.toHaveAttribute("aria-hidden");
     expect(aside).not.toHaveAttribute("inert");
@@ -150,14 +152,18 @@ describe("Sidebar mobile drawer", () => {
 
   it("closes the drawer when the route changes", async () => {
     const user = userEvent.setup();
-    const { container, rerender } = render(<Sidebar />);
+    const { container, rerender } = renderWithI18n(<Sidebar />);
     const toggle = screen.getByRole("button", { name: "Abrir menu" });
 
     await user.click(toggle);
     expect(container.querySelector("#shell-sidebar")?.className).toContain("sidebar--open");
 
     mockPathname = "/cells";
-    rerender(<Sidebar />);
+    rerender(
+      <LanguageProvider>
+        <Sidebar />
+      </LanguageProvider>
+    );
 
     expect(container.querySelector("#shell-sidebar")?.className).not.toContain("sidebar--open");
   });

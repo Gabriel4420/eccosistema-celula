@@ -7,6 +7,7 @@ import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { getUserProfilePhoto } from "@/src/features/users/api/users-api";
 import { roleLabel } from "@/src/shared/auth/session";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import type { UserResponse } from "@mission-atos/contracts";
 
 interface UserDetailModalProps {
@@ -15,8 +16,8 @@ interface UserDetailModalProps {
   readonly onClose: () => void;
 }
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("pt-BR", {
+function formatDate(value: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric"
@@ -31,6 +32,7 @@ function initials(user: UserResponse): string {
 
 export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
   const { api } = useSession();
+  const { t, locale } = useI18n();
   const { data: photoSource } = useRemoteQuery({
     fetcher: () => getUserProfilePhoto(api, user.id),
     cacheName: "user-profile-photo",
@@ -68,37 +70,37 @@ export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
 
       <div className="user-modal__body">
         <div className="user-modal__section">
-          <span className="user-modal__eyebrow">Papéis</span>
+          <span className="user-modal__eyebrow">{t("users.modal.roles")}</span>
           <div className="user-modal__roles">
             {user.roles.length > 0 ? (
               user.roles.map((role) => (
                 <span key={role.id} className="user-modal__role-badge">
-                  {roleLabel(role.name)}
+                  {roleLabel(role.name, t)}
                 </span>
               ))
             ) : (
-              <span className="user-modal__empty">Nenhum papel atribuído</span>
+              <span className="user-modal__empty">{t("users.modal.noRoles")}</span>
             )}
           </div>
         </div>
 
         <div className="user-modal__section">
-          <span className="user-modal__eyebrow">Informações da conta</span>
+          <span className="user-modal__eyebrow">{t("users.modal.accountInfo")}</span>
           <dl className="user-modal__meta">
             <div className="user-modal__meta-item">
-              <dt>Criado em</dt>
-              <dd>{formatDate(user.createdAt)}</dd>
+              <dt>{t("users.modal.createdAt")}</dt>
+              <dd>{formatDate(user.createdAt, locale)}</dd>
             </div>
             <div className="user-modal__meta-item">
-              <dt>Última atualização</dt>
-              <dd>{formatDate(user.updatedAt)}</dd>
+              <dt>{t("users.modal.updatedAt")}</dt>
+              <dd>{formatDate(user.updatedAt, locale)}</dd>
             </div>
             <div className="user-modal__meta-item user-modal__meta-item--wide">
-              <dt>Foto de perfil</dt>
-              <dd>{user.hasProfilePhoto ? "Cadastrada" : "Não cadastrada"}</dd>
+              <dt>{t("users.modal.photo")}</dt>
+              <dd>{user.hasProfilePhoto ? t("users.modal.photoSet") : t("users.modal.photoNotSet")}</dd>
             </div>
             <div className="user-modal__meta-item user-modal__meta-item--wide">
-              <dt>ID do usuário</dt>
+              <dt>{t("users.modal.userId")}</dt>
               <dd className="user-modal__meta-id">{user.id}</dd>
             </div>
           </dl>
@@ -107,7 +109,7 @@ export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
 
       <div className="dialog-panel__actions">
         <Link className="button button--secondary button--sm" href={`/users/${user.id}`}>
-          Abrir página completa
+          {t("users.modal.openPage")}
         </Link>
       </div>
     </Dialog>

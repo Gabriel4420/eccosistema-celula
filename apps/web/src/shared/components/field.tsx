@@ -8,6 +8,7 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 import { FieldError } from "./alert";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 export type TextFieldMask = "phone" | "email";
 
@@ -153,6 +154,7 @@ export function TextField({
   const fieldId = id ?? generatedId;
   const isPassword = type === "password";
   const [revealed, setRevealed] = useState(false);
+  const { t } = useI18n();
 
   const applyMask =
     mask === "phone"
@@ -217,7 +219,7 @@ export function TextField({
           <button
             type="button"
             className="field__toggle"
-            aria-label={revealed ? "Ocultar senha" : "Mostrar senha"}
+            aria-label={revealed ? t("field.hidePassword") : t("field.showPassword")}
             onClick={() => setRevealed((current) => !current)}
           >
             {revealed ? <EyeOffIcon /> : <EyeIcon />}

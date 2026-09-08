@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 type Theme = "light" | "dark";
 
@@ -18,10 +19,11 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
+  const { t } = useI18n();
   const [theme, setTheme] = useState<Theme>(currentTheme);
 
   const nextTheme = theme === "light" ? "dark" : "light";
-  const label = nextTheme === "dark" ? "Ativar tema escuro" : "Ativar tema claro";
+  const label = nextTheme === "dark" ? t("theme.toggleDark") : t("theme.toggleLight");
 
   return (
     <button

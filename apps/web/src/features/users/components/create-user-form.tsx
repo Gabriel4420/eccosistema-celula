@@ -13,6 +13,7 @@ import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
 import { createUser, getManagedRoles } from "@/src/features/users/api/users-api";
 import { roleLabel } from "@/src/shared/auth/session";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import { evaluatePasswordStrength } from "@mission-atos/contracts";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 
@@ -21,6 +22,7 @@ const ROLES_CACHE = "managedRoles";
 
 export function CreateUserForm() {
   const { api } = useSession();
+  const { t } = useI18n();
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -49,13 +51,13 @@ export function CreateUserForm() {
     setFormError(null);
     setFieldErrors({});
     if (selectedRoleIds.length === 0) {
-      setFieldErrors((errors) => ({ ...errors, roles: "Selecione ao menos um papel." }));
+      setFieldErrors((errors) => ({ ...errors, roles: t("users.new.error.roles") }));
       return;
     }
     if (!evaluatePasswordStrength(initialPassword).isValid) {
       setFieldErrors((errors) => ({
         ...errors,
-        initialPassword: "Use uma senha que cumpra todos os requisitos de segurança."
+        initialPassword: t("users.new.error.password")
       }));
       return;
     }
@@ -71,15 +73,17 @@ export function CreateUserForm() {
       cacheStore(USERS_CACHE).invalidatePrefix("page");
       toast({
         kind: "success",
-        title: "Usuário criado",
-        description: `${user.firstName} ${user.lastName} agora tem acesso ao painel.`
+        title: t("users.toast.created"),
+        description: t("users.new.toast.created.desc", {
+          name: `${user.firstName} ${user.lastName}`
+        })
       });
       router.push(`/users/${user.id}`);
     } catch (cause) {
       const message =
         cause instanceof ApiError && cause.code === "USER_EMAIL_CONFLICT"
-          ? "Já existe um usuário com este e-mail."
-          : "Não foi possível criar o usuário. Verifique os dados e tente novamente.";
+          ? t("users.new.error.emailConflict")
+          : t("users.new.error.generic");
       setFormError(message);
     } finally {
       setSubmitting(false);
@@ -88,7 +92,7 @@ export function CreateUserForm() {
 
   if (loading && !managedRoles) {
     return (
-      <div aria-label="Carregando papéis">
+      <div aria-label={t("users.loading.roles")}>
         <Skeleton width="100%" height="8rem" />
       </div>
     );
@@ -96,8 +100,8 @@ export function CreateUserForm() {
 
   if (error && !managedRoles) {
     return (
-      <ErrorState title="Não foi possível carregar os papéis" onRetry={() => void reload()}>
-        Tente novamente em instantes.
+      <ErrorState title={t("users.error.loadRoles")} onRetry={() => void reload()}>
+        {t("users.error.retry")}
       </ErrorState>
     );
   }
@@ -106,24 +110,24 @@ export function CreateUserForm() {
     <section aria-labelledby="new-user-title">
       <div className="page-header">
         <h1 className="page-title" id="new-user-title">
-          Novo usuário
+          {t("users.new.title")}
         </h1>
         <Link className="breadcrumbs__link" href="/users">
-          Voltar para usuários
+          {t("users.detail.back")}
         </Link>
       </div>
 
       {formError ? (
-        <Alert variant="error" title="Não foi possível criar">
+        <Alert variant="error" title={t("users.new.alertTitle")}>
           {formError}
         </Alert>
       ) : null}
 
       <form className="fieldset" onSubmit={(event) => void handleSubmit(event)} noValidate>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Dados de acesso</legend>
+          <legend className="fieldset__legend">{t("users.new.legend.access")}</legend>
           <TextField
-            label="Nome"
+            label={t("label.firstName")}
             name="firstName"
             autoComplete="off"
             value={firstName}
@@ -132,7 +136,7 @@ export function CreateUserForm() {
             required
           />
           <TextField
-            label="Sobrenome"
+            label={t("label.lastName")}
             name="lastName"
             autoComplete="off"
             value={lastName}
@@ -141,7 +145,7 @@ export function CreateUserForm() {
             required
           />
           <TextField
-            label="E-mail"
+            label={t("label.email")}
             type="email"
             name="email"
             mask="email"
@@ -152,13 +156,13 @@ export function CreateUserForm() {
             required
           />
           <TextField
-            label="Senha inicial"
+            label={t("users.new.field.password")}
             type="password"
             name="initialPassword"
             autoComplete="new-password"
             value={initialPassword}
             onChange={(event) => setInitialPassword(event.target.value)}
-            hint="Compartilhe a senha inicial com o usuário por um canal seguro."
+            hint={t("users.new.hint.password")}
             error={fieldErrors.initialPassword}
             required
           />
@@ -166,11 +170,11 @@ export function CreateUserForm() {
         </fieldset>
 
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Papéis</legend>
+          <legend className="fieldset__legend">{t("users.new.legend.roles")}</legend>
           {fieldErrors.roles ? <Alert variant="error">{fieldErrors.roles}</Alert> : null}
           {(managedRoles ?? []).length === 0 ? (
-            <EmptyState title="Nenhum papel disponível">
-              Não há papéis gerenciáveis para atribuir.
+            <EmptyState title={t("users.new.noRoles")}>
+              {t("users.new.noRoles.desc")}
             </EmptyState>
           ) : (
             <div className="fieldset">
@@ -183,7 +187,7 @@ export function CreateUserForm() {
                     checked={selectedRoleIds.includes(role.id)}
                     onChange={() => toggleRole(role.id)}
                   />
-                  {roleLabel(role.name)}
+                  {roleLabel(role.name, t)}
                 </label>
               ))}
             </div>
@@ -191,11 +195,11 @@ export function CreateUserForm() {
         </fieldset>
 
         <div className="dialog-panel__actions" style={{ justifyContent: "flex-start", marginTop: "var(--space-4)" }}>
-          <Button type="submit" icon={UserPlus} loading={submitting} loadingLabel="Criando…">
-            Criar usuário
+          <Button type="submit" icon={UserPlus} loading={submitting} loadingLabel={t("users.new.submitting")}>
+            {t("users.new.submit")}
           </Button>
           <Link className="button button--secondary" href="/users">
-            Cancelar
+            {t("common.cancel")}
           </Link>
         </div>
       </form>

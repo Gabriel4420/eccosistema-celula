@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { Can } from "@/src/shared/auth/guards";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey } from "@/src/shared/i18n/dictionaries";
 
 const MOBILE_MEDIA_QUERY = "(max-width: 48rem)";
 
@@ -20,15 +22,15 @@ const focusableSelector = [
 
 const BASE_LINKS: ReadonlyArray<{
   readonly href: string;
-  readonly label: string;
+  readonly labelKey: TranslationKey;
   readonly icon: ReactNode;
 }> = [
-  { href: "/dashboard", label: "Painel", icon: <IconDashboard /> },
-  { href: "/profile", label: "Meu perfil", icon: <IconProfile /> },
-  { href: "/church/settings", label: "Igreja", icon: <IconChurch /> },
-  { href: "/people", label: "Pessoas", icon: <IconPeople /> },
-  { href: "/cells", label: "Células", icon: <IconCells /> },
-  { href: "/reports", label: "Relatórios", icon: <IconReports /> }
+  { href: "/dashboard", labelKey: "nav.dashboard", icon: <IconDashboard /> },
+  { href: "/profile", labelKey: "nav.profile", icon: <IconProfile /> },
+  { href: "/settings", labelKey: "nav.settings", icon: <IconChurch /> },
+  { href: "/people", labelKey: "nav.people", icon: <IconPeople /> },
+  { href: "/cells", labelKey: "nav.cells", icon: <IconCells /> },
+  { href: "/reports", labelKey: "nav.reports", icon: <IconReports /> }
 ];
 
 function subscribeToMediaQuery(onStoreChange: () => void): () => void {
@@ -55,6 +57,7 @@ function isMobileViewport(): boolean {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLElement>(null);
   const isMobile = useSyncExternalStore(subscribeToMediaQuery, isMobileViewport, () => false);
@@ -114,13 +117,13 @@ export function Sidebar() {
       <NavLink
         key={link.href}
         href={link.href}
-        label={link.label}
+        label={t(link.labelKey)}
         icon={link.icon}
         current={pathname}
       />
     )),
     <Can key="users" capability="manageUsers">
-      <NavLink href="/users" label="Usuários" icon={<IconUsers />} current={pathname} />
+      <NavLink href="/users" label={t("nav.users")} icon={<IconUsers />} current={pathname} />
     </Can>
   ];
 
@@ -132,7 +135,7 @@ export function Sidebar() {
           className="shell__menu-toggle"
           aria-controls="shell-sidebar"
           aria-expanded={open}
-          aria-label="Abrir menu"
+          aria-label={t("nav.openMenu")}
           onClick={() => setOpen(true)}
         >
           <IconMenu />
@@ -163,7 +166,7 @@ export function Sidebar() {
           <Image
             className="sidebar__logo"
             src="/brand/missao-atos-logo.png"
-            alt="Missão Atos — Igreja em Células"
+            alt={t("login.brandAlt")}
             width={1254}
             height={1254}
             priority
@@ -171,14 +174,14 @@ export function Sidebar() {
           <button
             type="button"
             className="sidebar__close"
-            aria-label="Fechar menu"
+            aria-label={t("nav.closeMenu")}
             onClick={close}
           >
             <IconClose />
           </button>
         </p>
-        <p className="sidebar__label">Workspace</p>
-        <nav aria-label="Navegação principal" className="sidebar__nav">
+        <p className="sidebar__label">{t("nav.workspace")}</p>
+        <nav aria-label={t("nav.main")} className="sidebar__nav">
           {links}
         </nav>
         <a
@@ -186,10 +189,10 @@ export function Sidebar() {
           href="https://wa.me/5517991203993?text=Ol%C3%A1%20miss%C3%A3o%20atos%2C%20preciso%20de%20ajuda%20..."
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Precisa de ajuda? Conversar pelo WhatsApp (abre em nova aba)"
+          aria-label={t("nav.helpAria")}
         >
           <span className="sidebar__footer-mark" aria-hidden="true">?</span>
-          <span><strong>Precisa de ajuda?</strong><small>Fale pelo WhatsApp</small></span>
+          <span><strong>{t("nav.help")}</strong><small>{t("nav.helpAction")}</small></span>
         </a>
       </aside>
     </>

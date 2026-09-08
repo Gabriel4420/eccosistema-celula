@@ -9,15 +9,20 @@ import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import { createPerson } from "@/src/features/people/api/people-api";
 
 const PEOPLE_CACHE = "people";
 
 export function CreatePersonForm() {
+  const { t } = useI18n();
   const { api } = useSession();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    kind: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,20 +36,21 @@ export function CreatePersonForm() {
         email: String(formData.get("email") ?? "").trim() || undefined,
         birthDate: String(formData.get("birthDate") ?? "").trim() || undefined,
         gender: String(formData.get("gender") ?? "").trim() || undefined,
-        observations: String(formData.get("observations") ?? "").trim() || undefined
+        observations:
+          String(formData.get("observations") ?? "").trim() || undefined,
       });
       cacheStore(PEOPLE_CACHE).invalidatePrefix("page");
       toast({
         kind: "success",
-        title: "Pessoa cadastrada",
+        title: t("people.toast.created"),
         description: person.fullName
       });
       router.push(`/people/${person.id}`);
     } catch (error) {
       const message =
         error instanceof ApiError && error.code === "PERSON_DUPLICATE"
-          ? "Já existe uma pessoa ativa com dados semelhantes. Verifique o cadastro antes de continuar."
-          : "Não foi possível cadastrar a pessoa. Verifique os dados e tente novamente.";
+          ? t("people.new.error.duplicate")
+          : t("people.new.error.generic");
       setFeedback({ kind: "error", message });
     } finally {
       setBusy(false);
@@ -55,44 +61,86 @@ export function CreatePersonForm() {
     <section aria-labelledby="create-person-title">
       <div className="page-header">
         <h1 className="page-title" id="create-person-title">
-          Nova pessoa
+          {t("people.new")}
         </h1>
-        <p className="page-description">Preencha os dados de contato e identificação.</p>
+        <p className="page-description">{t("people.new.description")}</p>
       </div>
 
       {feedback ? (
-        <Alert variant={feedback.kind} title={feedback.kind === "success" ? "Sucesso" : "Falha"}>
+        <Alert
+          variant={feedback.kind}
+          title={
+            feedback.kind === "success"
+              ? t("people.alert.success")
+              : t("people.alert.failure")
+          }
+        >
           {feedback.message}
         </Alert>
       ) : null}
 
       <form className="fieldset" onSubmit={(event) => void handleSubmit(event)}>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Identificação</legend>
-          <TextField label="Nome completo" name="fullName" required hint="Nome e sobrenome, ex.: Maria da Silva." />
-          <TextField label="Gênero" name="gender" hint="Ex.: Feminino, Masculino ou como a pessoa se identifica." />
-          <TextField label="Data de nascimento" type="date" name="birthDate" />
+          <legend className="fieldset__legend">
+            {t("people.new.legend.identification")}
+          </legend>
+          <TextField
+            label={t("people.detail.field.fullName")}
+            name="fullName"
+            required
+            hint={t("people.new.hint.name")}
+          />
+          <TextField
+            label={t("people.detail.label.gender")}
+            name="gender"
+            hint={t("people.new.hint.gender")}
+          />
+          <TextField
+            label={t("people.detail.field.birthDate")}
+            type="date"
+            name="birthDate"
+          />
         </fieldset>
 
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Contato</legend>
-          <TextField label="E-mail" type="email" name="email" mask="email" hint="Será normalizado para letras minúsculas." />
-          <TextField label="Telefone" name="phone" mask="phone" hint="Formato brasileiro, ex.: (11) 99999-9999." />
+          <legend className="fieldset__legend">
+            {t("people.new.legend.contact")}
+          </legend>
+          <TextField
+            label={t("people.column.email")}
+            type="email"
+            name="email"
+            mask="email"
+            hint={t("people.new.hint.email")}
+          />
+          <TextField
+            label={t("people.column.phone")}
+            name="phone"
+            mask="phone"
+            hint={t("people.new.hint.phone")}
+          />
         </fieldset>
 
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Observações</legend>
+          <legend className="fieldset__legend">
+            {t("people.new.legend.observations")}
+          </legend>
           <TextareaField
-            label="Observações"
+            label={t("people.detail.field.observations")}
             name="observations"
             rows={4}
-            hint="Informações adicionais. Visível para administradores e pastores."
+            hint={t("people.new.hint.observations")}
           />
         </fieldset>
 
         <div className="toolbar">
-          <Button type="submit" icon={UserRoundPlus} loading={busy} loadingLabel="Cadastrando…">
-            Cadastrar pessoa
+          <Button
+            type="submit"
+            icon={UserRoundPlus}
+            loading={busy}
+            loadingLabel={t("people.new.submitting")}
+          >
+            {t("people.new.submit")}
           </Button>
         </div>
       </form>

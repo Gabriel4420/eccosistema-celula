@@ -1,9 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { PasswordStrengthMeter } from "@/src/features/users/components/password-strength-meter";
+import { renderWithI18n } from "./helpers/render-with-i18n";
 
 describe("PasswordStrengthMeter", () => {
   it("shows progress and the unmet requirements", () => {
-    render(<PasswordStrengthMeter password="password" />);
+    renderWithI18n(<PasswordStrengthMeter password="password" />);
 
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
     expect(screen.getByText("Muito fraca")).toBeInTheDocument();
@@ -12,7 +13,7 @@ describe("PasswordStrengthMeter", () => {
   });
 
   it("announces a strong password after every requirement is met", () => {
-    render(<PasswordStrengthMeter password="Strong-password-123!" />);
+    renderWithI18n(<PasswordStrengthMeter password="Strong-password-123!" />);
 
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "5");
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuetext", "Forte");

@@ -12,6 +12,8 @@ import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey, TranslationParams } from "@/src/shared/i18n/dictionaries";
 import {
   getMeeting,
   getMeetingReport,
@@ -27,6 +29,7 @@ const MEETINGS_CACHE = "meetings";
 type ConfirmAction = "none" | "complete" | "cancel";
 
 export function MeetingDetail() {
+  const { t, locale } = useI18n();
   const { api } = useSession();
   const params = useParams<{ id: string; meetingId: string }>();
   const cellId = params.id;
@@ -56,7 +59,7 @@ export function MeetingDetail() {
 
   if (loading && !meeting) {
     return (
-      <div aria-label="Carregando encontro">
+      <div aria-label={t("meetings.detail.loading")}>
         <Skeleton width="40%" height="2.5rem" />
         <Skeleton width="100%" height="8rem" />
       </div>
@@ -65,14 +68,14 @@ export function MeetingDetail() {
 
   if (error && !meeting) {
     return (
-      <ErrorState title="Não foi possível carregar o encontro" onRetry={() => void reload()}>
-        Tente novamente em instantes.
+      <ErrorState title={t("meetings.error.load")} onRetry={() => void reload()}>
+        {t("meetings.error.retry")}
       </ErrorState>
     );
   }
 
   if (!meeting) {
-    return <EmptyState title="Encontro não encontrado">O encontro solicitado não existe.</EmptyState>;
+    return <EmptyState title={t("meetings.detail.empty")}>{t("meetings.detail.empty.desc")}</EmptyState>;
   }
 
   const isEditable = meeting.status === "SCHEDULED";
@@ -88,7 +91,7 @@ export function MeetingDetail() {
     if (!dirtyDate) return;
     const parsed = updateMeetingRequestSchema.safeParse({ meetingDate });
     if (!parsed.success) {
-      setFieldErrors({ meetingDate: "Data inválida." });
+      setFieldErrors({ meetingDate: t("meetings.detail.dateError") });
       return;
     }
     setBusy(true);
@@ -100,11 +103,11 @@ export function MeetingDetail() {
       setMeetingDate("");
       toast({
         kind: "success",
-        title: "Data atualizada",
-        description: "O encontro foi reagendado."
+        title: t("meetings.detail.toast.dateUpdated"),
+        description: t("meetings.detail.toast.dateUpdated.desc")
       });
     } catch (cause) {
-      setFeedback({ kind: "error", message: messageForError(cause, "atualizar a data") });
+      setFeedback({ kind: "error", message: messageForError(cause, t("meetings.action.updateDate"), t) });
     } finally {
       setBusy(false);
     }
@@ -121,11 +124,11 @@ export function MeetingDetail() {
       await reloadReport();
       toast({
         kind: "success",
-        title: "Observações salvas",
-        description: "O relatório foi atualizado."
+        title: t("meetings.detail.toast.observations"),
+        description: t("meetings.detail.toast.observations.desc")
       });
     } catch (cause) {
-      setFeedback({ kind: "error", message: messageForError(cause, "salvar observações") });
+      setFeedback({ kind: "error", message: messageForError(cause, t("meetings.action.saveObservations"), t) });
     } finally {
       setBusy(false);
     }
@@ -141,12 +144,12 @@ export function MeetingDetail() {
       await reload();
       toast({
         kind: "success",
-        title: "Encontro concluído",
-        description: "A frequência continua acessível pelo histórico."
+        title: t("meetings.detail.toast.completed"),
+        description: t("meetings.detail.toast.completed.desc")
       });
       setConfirmAction("none");
     } catch (cause) {
-      setFeedback({ kind: "error", message: messageForError(cause, "concluir o encontro") });
+      setFeedback({ kind: "error", message: messageForError(cause, t("meetings.action.completeMeeting"), t) });
     } finally {
       setBusy(false);
     }
@@ -154,7 +157,7 @@ export function MeetingDetail() {
 
   const runCancel = async () => {
     if (!cancellationReason.trim()) {
-      setFeedback({ kind: "error", message: "Informe o motivo do cancelamento." });
+      setFeedback({ kind: "error", message: t("meetings.detail.error.reason") });
       return;
     }
     setBusy(true);
@@ -169,13 +172,13 @@ export function MeetingDetail() {
       await reload();
       toast({
         kind: "success",
-        title: "Encontro cancelado",
-        description: "O histórico foi preservado."
+        title: t("meetings.detail.toast.cancelled"),
+        description: t("meetings.detail.toast.cancelled.desc")
       });
       setConfirmAction("none");
       setCancellationReason("");
     } catch (cause) {
-      setFeedback({ kind: "error", message: messageForError(cause, "cancelar o encontro") });
+      setFeedback({ kind: "error", message: messageForError(cause, t("meetings.action.cancelMeeting"), t) });
     } finally {
       setBusy(false);
     }
@@ -185,60 +188,60 @@ export function MeetingDetail() {
     <section aria-labelledby="meeting-title">
       <div className="page-header">
         <h1 className="page-title" id="meeting-title">
-          Encontro - {formatMeetingDate(meeting.meetingDate)}
+          {t("meetings.detail.titleWithDate", { date: formatMeetingDate(meeting.meetingDate, locale) })}
         </h1>
         <Link className="breadcrumbs__link" href={`/cells/${cellId}/meetings`}>
-          Voltar para encontros
+          {t("meetings.detail.back")}
         </Link>
       </div>
 
       {feedback ? (
-        <Alert variant={feedback.kind} title={feedback.kind === "success" ? "Sucesso" : "Falha"}>
+        <Alert variant={feedback.kind} title={feedback.kind === "success" ? t("common.success") : t("common.failure")}>
           {feedback.message}
         </Alert>
       ) : null}
 
       <div className="detail-list" style={{ marginBottom: "var(--space-5)" }}>
         <div className="detail-list__item">
-          <span className="detail-list__label">Célula</span>
+          <span className="detail-list__label">{t("meetings.detail.label.cell")}</span>
           <span className="detail-list__value">{meeting.cell.name}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Data</span>
-          <span className="detail-list__value">{formatMeetingDate(meeting.meetingDate)}</span>
+          <span className="detail-list__label">{t("meetings.column.date")}</span>
+          <span className="detail-list__value">{formatMeetingDate(meeting.meetingDate, locale)}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Status</span>
+          <span className="detail-list__label">{t("common.status")}</span>
           <MeetingStatusBadge status={meeting.status} />
         </div>
         {meeting.cancellationReason ? (
           <div className="detail-list__item">
-            <span className="detail-list__label">Motivo do cancelamento</span>
+            <span className="detail-list__label">{t("meetings.detail.label.cancelReason")}</span>
             <span className="detail-list__value">{meeting.cancellationReason}</span>
           </div>
         ) : null}
         <div className="detail-list__item">
-          <span className="detail-list__label">Criado em</span>
-          <span className="detail-list__value">{formatMeetingTimestamp(meeting.createdAt)}</span>
+          <span className="detail-list__label">{t("meetings.detail.label.created")}</span>
+          <span className="detail-list__value">{formatMeetingTimestamp(meeting.createdAt, locale)}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Atualizado em</span>
-          <span className="detail-list__value">{formatMeetingTimestamp(meeting.updatedAt)}</span>
+          <span className="detail-list__label">{t("meetings.detail.label.updated")}</span>
+          <span className="detail-list__value">{formatMeetingTimestamp(meeting.updatedAt, locale)}</span>
         </div>
       </div>
 
       <div className="toolbar">
         <Link className="button" href={`/cells/${cellId}/meetings/${meetingId}/attendance`}>
-          Abrir frequência
+          {t("meetings.detail.openAttendance")}
         </Link>
       </div>
 
       {isEditable ? (
         <form className="fieldset" onSubmit={(event) => void handleSaveDate(event)}>
           <fieldset className="fieldset">
-            <legend className="fieldset__legend">Editar data</legend>
+            <legend className="fieldset__legend">{t("meetings.detail.editDate")}</legend>
             <TextField
-              label="Data"
+              label={t("meetings.column.date")}
               name="meetingDate"
               type="date"
               value={meetingDate === "" ? meeting.meetingDate : meetingDate}
@@ -247,8 +250,8 @@ export function MeetingDetail() {
               required
             />
             {fieldErrors.form ? <Alert variant="error">{fieldErrors.form}</Alert> : null}
-            <Button type="submit" icon={Save} disabled={!dirtyDate} loading={busy} loadingLabel="Salvando...">
-              Salvar data
+            <Button type="submit" icon={Save} disabled={!dirtyDate} loading={busy} loadingLabel={t("meetings.detail.saving")}>
+              {t("meetings.detail.saveDate")}
             </Button>
           </fieldset>
         </form>
@@ -256,13 +259,13 @@ export function MeetingDetail() {
 
       <div className="fieldset" style={{ marginTop: "var(--space-5)" }}>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Observações</legend>
+          <legend className="fieldset__legend">{t("meetings.detail.observations")}</legend>
           <textarea
             className="textarea"
             value={observations === "" ? (report?.observations ?? "") : observations}
             onChange={(event) => setObservations(event.target.value)}
             rows={5}
-            placeholder="Observações sobre o encontro..."
+            placeholder={t("meetings.detail.observations.placeholder")}
             disabled={!canEditObs}
           />
           {canEditObs ? (
@@ -271,9 +274,9 @@ export function MeetingDetail() {
               onClick={() => void handleSaveObservations()}
               disabled={!dirtyObs}
               loading={busy}
-              loadingLabel="Salvando..."
+              loadingLabel={t("meetings.detail.saving")}
             >
-              Salvar observações
+              {t("meetings.detail.saveObservations")}
             </Button>
           ) : null}
         </fieldset>
@@ -282,10 +285,10 @@ export function MeetingDetail() {
       {isEditable ? (
         <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
           <Button variant="primary" icon={CalendarCheck} onClick={() => setConfirmAction("complete")}>
-            Concluir encontro
+            {t("meetings.detail.completeMeeting")}
           </Button>
           <Button variant="danger" icon={CalendarX2} onClick={() => setConfirmAction("cancel")}>
-            Cancelar encontro
+            {t("meetings.detail.cancelMeeting")}
           </Button>
         </div>
       ) : null}
@@ -293,20 +296,20 @@ export function MeetingDetail() {
       <Dialog
         open={confirmAction === "complete"}
         onClose={() => setConfirmAction("none")}
-        title="Concluir encontro"
-        description="O encontro será marcado como concluído e não poderá ser editado."
+        title={t("meetings.detail.dialog.complete.title")}
+        description={t("meetings.detail.dialog.complete.desc")}
       >
         <div className="dialog-panel__actions">
           <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button
             disabled={busy}
             loading={busy}
-            loadingLabel="Confirmando..."
+            loadingLabel={t("meetings.detail.dialog.confirming")}
             onClick={() => void runComplete()}
           >
-            Confirmar
+            {t("common.confirm")}
           </Button>
         </div>
       </Dialog>
@@ -314,28 +317,28 @@ export function MeetingDetail() {
       <Dialog
         open={confirmAction === "cancel"}
         onClose={() => setConfirmAction("none")}
-        title="Cancelar encontro"
-        description="Informe o motivo do cancelamento. O encontro será cancelado permanentemente."
+        title={t("meetings.detail.dialog.cancel.title")}
+        description={t("meetings.detail.dialog.cancel.desc")}
       >
         <textarea
           className="textarea"
           value={cancellationReason}
           onChange={(event) => setCancellationReason(event.target.value)}
           rows={3}
-          placeholder="Motivo do cancelamento..."
+          placeholder={t("meetings.detail.dialog.cancel.placeholder")}
         />
         <div className="dialog-panel__actions">
           <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
-            Voltar
+            {t("meetings.detail.dialog.cancel.back")}
           </Button>
           <Button
             variant="danger"
             disabled={busy || !cancellationReason.trim()}
             loading={busy}
-            loadingLabel="Cancelando..."
+            loadingLabel={t("meetings.detail.dialog.cancelling")}
             onClick={() => void runCancel()}
           >
-            Confirmar cancelamento
+            {t("meetings.detail.dialog.cancel.confirm")}
           </Button>
         </div>
       </Dialog>
@@ -343,20 +346,20 @@ export function MeetingDetail() {
   );
 }
 
-function messageForError(cause: unknown, action: string): string {
+function messageForError(cause: unknown, action: string, t: (key: TranslationKey, params?: TranslationParams) => string): string {
   if (!(cause instanceof ApiError)) {
-    return `Não foi possível ${action}. Tente novamente.`;
+    return t("meetings.detail.error.tryAgain", { action });
   }
   switch (cause.code) {
     case "MEETING_NOT_EDITABLE":
-      return "O encontro não pode ser editado pois já foi concluído ou cancelado.";
+      return t("meetings.detail.error.notEditable");
     case "MEETING_STATUS_TRANSITION_INVALID":
-      return "A transição de status não é permitida neste momento.";
+      return t("meetings.detail.error.transitionInvalid");
     case "MEETING_REPORT_NOT_EDITABLE":
-      return "Não é possível editar observações de um encontro cancelado.";
+      return t("meetings.detail.error.reportNotEditable");
     case "MEETING_DATE_CONFLICT":
-      return "Já existe um encontro agendado para esta data.";
+      return t("meetings.detail.error.dateConflict");
     default:
-      return `Não foi possível ${action}. O servidor pode ter recusado por segurança.`;
+      return t("meetings.detail.error.security", { action });
   }
 }

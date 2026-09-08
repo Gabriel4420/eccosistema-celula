@@ -38,7 +38,7 @@ export async function seedDatabase(): Promise<void> {
   const database = createRuntimeClient({ DATABASE_URL: databaseUrl });
 
   try {
-    for (const table of ["idempotency_requests", "meeting_visitors", "meeting_attendances", "meeting_reports", "meetings", "cell_memberships"]) {
+    for (const table of ["idempotency_requests", "meeting_visitors", "meeting_attendances", "meeting_reports", "meetings", "cell_memberships", "user_preferences"]) {
       await database.$executeRawUnsafe(`DELETE FROM "${table}" WHERE "church_id" = $1::uuid`, E2E_CHURCH_ID);
     }
     await database.$executeRawUnsafe(

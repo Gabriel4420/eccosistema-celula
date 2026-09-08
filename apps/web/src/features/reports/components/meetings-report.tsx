@@ -12,11 +12,13 @@ import {
 } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey } from "@/src/shared/i18n/dictionaries";
 import { getMeetingsReport } from "@/src/features/reports/api/reports-api";
 import type { MeetingsReportItem } from "@mission-atos/contracts";
 import { ExportButton } from "./export-button";
 import {
-  PERIOD_OPTIONS,
+  getPeriodOptions,
   periodValue,
   readPage,
   splitPeriod,
@@ -43,6 +45,7 @@ function readParams(searchParams: URLSearchParams): MeetingsParams {
 
 export function MeetingsReport() {
   const { api } = useSession();
+  const { t, locale } = useI18n();
   const { searchParams, navigate } = useReportNavigation("/reports/meetings");
   const params = readParams(searchParams);
 
@@ -74,10 +77,10 @@ export function MeetingsReport() {
       <div className="page-header w-full">
         <div className="flex flex-col">
           <h1 className="page-title" id="meetings-report-title">
-            Encontros
+            {t("reports.meetings.pageTitle")}
           </h1>
           <p className="page-description">
-            Relatório consolidado de encontros por período.
+            {t("reports.meetings.page.description")}
           </p>
         </div>
         <ExportButton reportType="meetings" params={exportParams} />
@@ -85,24 +88,24 @@ export function MeetingsReport() {
 
       <div className="toolbar">
         <SelectField
-          label="Período"
+          label={t("reports.meetings.filter.period")}
           name="period"
           value={periodValue(params)}
           onChange={(event) =>
             navigate({ ...splitPeriod(event.target.value), page: 1 })
           }
-          options={PERIOD_OPTIONS}
+          options={getPeriodOptions(t)}
         />
         <SelectField
-          label="Status"
+          label={t("reports.meetings.filter.status")}
           name="status"
           value={params.status}
           onChange={(event) => navigate({ status: event.target.value, page: 1 })}
           options={[
-            { value: "", label: "Todos" },
-            { value: "SCHEDULED", label: "Agendado" },
-            { value: "COMPLETED", label: "Concluído" },
-            { value: "CANCELED", label: "Cancelado" },
+            { value: "", label: t("reports.meetings.filter.all") },
+            { value: "SCHEDULED", label: t("reports.meetings.status.scheduled") },
+            { value: "COMPLETED", label: t("reports.meetings.status.completed") },
+            { value: "CANCELED", label: t("reports.meetings.status.canceled") },
           ]}
         />
         <Button
@@ -110,18 +113,18 @@ export function MeetingsReport() {
           icon={FilterX}
           onClick={() => navigate({ status: "", from: "", to: "", page: 1 })}
         >
-          Limpar filtros
+          {t("reports.meetings.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar os encontros" onRetry={() => void reload()}>
-          Tente novamente em instantes.
+        <ErrorState title={t("reports.meetings.error")} onRetry={() => void reload()}>
+          {t("reports.meetings.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando encontros">
+        <div aria-label={t("reports.meetings.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -129,8 +132,8 @@ export function MeetingsReport() {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhum encontro encontrado">
-          Não há encontros registrados no período.
+        <EmptyState title={t("reports.meetings.emptyState")}>
+          {t("reports.meetings.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -139,14 +142,14 @@ export function MeetingsReport() {
           <Table<MeetingsReportItem>
             rowKey={(item) => `${item.cell.id}-${item.meetingDate}`}
             columns={[
-              { key: "cell", header: "Célula", render: (item) => `${item.cell.code} — ${item.cell.name}` },
-              { key: "date", header: "Data", render: (item) => new Date(item.meetingDate).toLocaleDateString("pt-BR") },
-              { key: "status", header: "Status", render: (item) => formatMeetingStatus(item.status) },
-              { key: "present", header: "Presentes", render: (item) => item.presentCount },
-              { key: "absent", header: "Ausentes", render: (item) => item.absentCount },
-              { key: "visitors", header: "Visitantes", render: (item) => item.visitorCount },
-              { key: "rate", header: "Frequência", render: (item) => (item.attendanceRate !== null ? `${item.attendanceRate}%` : "—") },
-              { key: "report", header: "Relatório", render: (item) => formatReportStatus(item.reportStatus) },
+              { key: "cell", header: t("reports.meetings.column.cell"), render: (item) => `${item.cell.code} — ${item.cell.name}` },
+              { key: "date", header: t("reports.meetings.column.date"), render: (item) => new Date(item.meetingDate).toLocaleDateString(locale) },
+              { key: "status", header: t("reports.meetings.column.status"), render: (item) => formatMeetingStatus(item.status, t) },
+              { key: "present", header: t("reports.meetings.column.present"), render: (item) => item.presentCount },
+              { key: "absent", header: t("reports.meetings.column.absent"), render: (item) => item.absentCount },
+              { key: "visitors", header: t("reports.meetings.column.visitors"), render: (item) => item.visitorCount },
+              { key: "rate", header: t("reports.meetings.column.rate"), render: (item) => (item.attendanceRate !== null ? `${item.attendanceRate}%` : "—") },
+              { key: "report", header: t("reports.meetings.column.report"), render: (item) => formatReportStatus(item.reportStatus, t) },
             ]}
             rows={rows}
           />
@@ -163,23 +166,24 @@ export function MeetingsReport() {
   );
 }
 
-function formatMeetingStatus(status: string): string {
-  const map: Record<string, string> = {
-    SCHEDULED: "Agendado",
-    COMPLETED: "Concluído",
-    CANCELED: "Cancelado",
+function formatMeetingStatus(status: string, t: (key: TranslationKey) => string): string {
+  const map: Record<string, TranslationKey> = {
+    SCHEDULED: "reports.meetings.status.scheduled",
+    COMPLETED: "reports.meetings.status.completed",
+    CANCELED: "reports.meetings.status.canceled",
   };
-  return map[status] ?? status;
+  return map[status] ? t(map[status]) : status;
 }
 
-function formatReportStatus(status: string | null): string {
+function formatReportStatus(status: string | null, t: (key: TranslationKey) => string): string {
   if (!status) return "—";
-  const map: Record<string, string> = {
-    NOT_STARTED: "Não iniciado",
-    DRAFT: "Rascunho",
-    SUBMITTED: "Submetido",
-    RETURNED: "Devolvido",
-    CANCELED: "Cancelado",
+  const map: Record<string, TranslationKey> = {
+    NOT_STARTED: "reports.meetings.reportStatus.notStarted",
+    DRAFT: "reports.meetings.reportStatus.draft",
+    SUBMITTED: "reports.meetings.reportStatus.submitted",
+    RETURNED: "reports.meetings.reportStatus.returned",
+    CANCELED: "reports.meetings.reportStatus.cancelled",
   };
-  return map[status] ?? status;
+  const key = map[status];
+  return key ? t(key) : status;
 }

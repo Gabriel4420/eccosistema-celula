@@ -29,6 +29,7 @@ import {
   updateUserStatus,
 } from "@/src/features/users/api/users-api";
 import { roleLabel } from "@/src/shared/auth/session";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 const PASSWORD_MIN = 12;
 const USERS_CACHE = "users";
@@ -38,6 +39,7 @@ type ConfirmAction = "none" | "status" | "roles" | "reset";
 
 export function UserDetail() {
   const { api } = useSession();
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = params.id;
 
@@ -74,7 +76,7 @@ export function UserDetail() {
 
   if (loading && !user) {
     return (
-      <div aria-label="Carregando usuário">
+      <div aria-label={t("users.detail.loading")}>
         <Skeleton width="40%" height="2.5rem" />
         <Skeleton width="100%" height="8rem" />
       </div>
@@ -84,18 +86,18 @@ export function UserDetail() {
   if (error && !user) {
     return (
       <ErrorState
-        title="Não foi possível carregar o usuário"
+        title={t("users.error.load")}
         onRetry={() => void reload()}
       >
-        Tente novamente em instantes.
+        {t("users.error.retry")}
       </ErrorState>
     );
   }
 
   if (!user) {
     return (
-      <EmptyState title="Usuário não encontrado">
-        O usuário solicitado não existe.
+      <EmptyState title={t("users.detail.empty")}>
+        {t("users.detail.empty.desc")}
       </EmptyState>
     );
   }
@@ -133,14 +135,13 @@ export function UserDetail() {
       setEmail("");
       toast({
         kind: "success",
-        title: "Usuário atualizado",
-        description: "Os dados foram salvos."
+        title: t("users.toast.updated"),
+        description: t("users.detail.toast.updated.desc")
       });
     } catch {
       setFeedback({
         kind: "error",
-        message:
-          "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
+        message: t("users.detail.error.save"),
       });
     } finally {
       setBusy(false);
@@ -156,23 +157,23 @@ export function UserDetail() {
         await updateUserStatus(api, id, next);
         toast({
           kind: "success",
-          title: next === "ACTIVE" ? "Usuário ativado" : "Usuário bloqueado",
-          description: next === "ACTIVE" ? "Ele já pode entrar no painel." : "Ele não conseguirá mais entrar."
+          title: next === "ACTIVE" ? t("users.detail.toast.activated") : t("users.detail.toast.blocked"),
+          description: next === "ACTIVE" ? t("users.detail.toast.activated.desc") : t("users.detail.toast.blocked.desc")
         });
       } else if (confirmAction === "roles") {
         await replaceUserRoles(api, id, { roleIds: currentRoleIds });
         toast({
           kind: "success",
-          title: "Papéis atualizados",
-          description: "As permissões foram substituídas."
+          title: t("users.detail.toast.roles"),
+          description: t("users.detail.toast.roles.desc")
         });
       } else if (confirmAction === "reset") {
         await resetUserPassword(api, id, resetPassword);
         setResetPassword("");
         toast({
           kind: "success",
-          title: "Senha redefinida",
-          description: "Compartilhe a nova senha com o usuário em um canal seguro."
+          title: t("users.detail.toast.password"),
+          description: t("users.detail.toast.password.desc")
         });
       }
       cacheStore(USERS_CACHE).invalidatePrefix("detail");
@@ -182,10 +183,10 @@ export function UserDetail() {
     } catch (cause) {
       const message =
         cause instanceof ApiError && cause.code === "LAST_ACTIVE_ADMIN"
-          ? "Não é possível concluir a operação porque este é o último administrador ativo da igreja."
+          ? t("users.detail.error.lastAdmin")
           : cause instanceof ApiError && cause.code === "USER_EMAIL_CONFLICT"
-            ? "Já existe um usuário com este e-mail."
-            : "Não foi possível concluir a operação. O servidor pode ter recusado por segurança.";
+            ? t("users.detail.error.emailConflict")
+            : t("users.detail.error.generic");
       setFeedback({ kind: "error", message });
     } finally {
       setBusy(false);
@@ -204,20 +205,20 @@ export function UserDetail() {
   const confirmTitle =
     confirmAction === "status"
       ? user.status === "ACTIVE"
-        ? "Bloquear usuário"
-        : "Ativar usuário"
+        ? t("users.detail.dialog.block.title")
+        : t("users.detail.dialog.activate.title")
       : confirmAction === "roles"
-        ? "Substituir papéis"
-        : "Redefinir senha";
+        ? t("users.detail.dialog.roles.title")
+        : t("users.detail.dialog.reset.title");
 
   const confirmDescription =
     confirmAction === "status"
       ? user.status === "ACTIVE"
-        ? "O usuário não conseguirá mais entrar enquanto estiver bloqueado."
-        : "O usuário voltará a conseguir entrar."
+        ? t("users.detail.dialog.block.desc")
+        : t("users.detail.dialog.activate.desc")
       : confirmAction === "roles"
-        ? "Os papéis atuais serão substituídos pelos selecionados. Confirme antes de continuar."
-        : "A senha atual será substituída imediatamente.";
+        ? t("users.detail.dialog.roles.desc")
+        : t("users.detail.dialog.reset.desc");
 
   return (
     <section aria-labelledby="user-title">
@@ -226,14 +227,14 @@ export function UserDetail() {
           {user.firstName} {user.lastName}
         </h1>
         <Link className="breadcrumbs__link" href="/users">
-          Voltar para usuários
+          {t("users.detail.back")}
         </Link>
       </div>
 
       {feedback ? (
         <Alert
           variant={feedback.kind}
-          title={feedback.kind === "success" ? "Sucesso" : "Falha"}
+          title={feedback.kind === "success" ? t("common.success") : t("common.failure")}
         >
           {feedback.message}
         </Alert>
@@ -241,17 +242,17 @@ export function UserDetail() {
 
       <div className="detail-list" style={{ marginBottom: "var(--space-5)" }}>
         <div className="detail-list__item">
-          <span className="detail-list__label">E-mail</span>
+          <span className="detail-list__label">{t("label.email")}</span>
           <span className="detail-list__value">{user.email}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Status</span>
+          <span className="detail-list__label">{t("common.status")}</span>
           <StatusBadge status={user.status} />
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Papéis</span>
+          <span className="detail-list__label">{t("users.detail.roles.legend")}</span>
           <span className="detail-list__value">
-            {user.roles.map((role) => roleLabel(role.name)).join(", ")}
+            {user.roles.map((role) => roleLabel(role.name, t)).join(", ")}
           </span>
         </div>
       </div>
@@ -261,23 +262,23 @@ export function UserDetail() {
         onSubmit={(event) => void handleSaveEdits(event)}
       >
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Editar dados</legend>
+          <legend className="fieldset__legend">{t("users.detail.edit")}</legend>
           <TextField
-            label="Nome"
+            label={t("label.firstName")}
             name="firstName"
             value={currentFirstName}
             onChange={(event) => setFirstName(event.target.value)}
             required
           />
           <TextField
-            label="Sobrenome"
+            label={t("label.lastName")}
             name="lastName"
             value={currentLastName}
             onChange={(event) => setLastName(event.target.value)}
             required
           />
           <TextField
-            label="E-mail"
+            label={t("label.email")}
             type="email"
             name="email"
             mask="email"
@@ -290,9 +291,9 @@ export function UserDetail() {
             icon={Save}
             disabled={!hasEdits}
             loading={busy}
-            loadingLabel="Salvando…"
+            loadingLabel={t("common.saving")}
           >
-            Salvar alterações
+            {t("users.detail.saveChanges")}
           </Button>
         </fieldset>
       </form>
@@ -306,10 +307,8 @@ export function UserDetail() {
         }}
       >
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Papéis</legend>
-          <p className="page-description">
-            A alteração exige confirmação e pode afetar permissões.
-          </p>
+          <legend className="fieldset__legend">{t("users.detail.roles.legend")}</legend>
+          <p className="page-description">{t("users.detail.roles.hint")}</p>
           {(managedRoles ?? []).map((role) => {
             const isSelected = currentRoleIds.includes(role.id);
             return (
@@ -330,12 +329,12 @@ export function UserDetail() {
                   checked={isSelected}
                   onChange={() => toggleRole(role.id)}
                 />
-                {roleLabel(role.name)}
+                {roleLabel(role.name, t)}
               </label>
             );
           })}
           <Button type="submit" icon={ShieldCheck} disabled={!roleDirty} variant="secondary">
-            Salvar papéis
+            {t("users.detail.saveRoles")}
           </Button>
         </fieldset>
       </form>
@@ -343,7 +342,7 @@ export function UserDetail() {
       <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
         {user.status === "ACTIVE" ? (
           <Button variant="danger" icon={Ban} onClick={() => setConfirmAction("status")}>
-            Bloquear usuário
+            {t("users.detail.blockUser")}
           </Button>
         ) : (
           <Button
@@ -351,11 +350,11 @@ export function UserDetail() {
             icon={UserCheck}
             onClick={() => setConfirmAction("status")}
           >
-            Ativar usuário
+            {t("users.detail.activateUser")}
           </Button>
         )}
         <Button variant="secondary" icon={KeyRound} onClick={() => setConfirmAction("reset")}>
-          Redefinir senha
+          {t("users.detail.resetPassword")}
         </Button>
       </div>
 
@@ -367,13 +366,13 @@ export function UserDetail() {
       >
         {confirmAction === "reset" ? (
           <TextField
-            label="Nova senha"
+            label={t("users.detail.dialog.newPassword")}
             type="password"
             name="newPassword"
             autoComplete="new-password"
             value={resetPassword}
             onChange={(event) => setResetPassword(event.target.value)}
-            hint={`Ao menos ${PASSWORD_MIN} caracteres.`}
+            hint={t("users.detail.dialog.passwordHint", { min: PASSWORD_MIN })}
             required
           />
         ) : null}
@@ -383,7 +382,7 @@ export function UserDetail() {
             onClick={() => setConfirmAction("none")}
             disabled={busy}
           >
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button
             variant={
@@ -395,10 +394,10 @@ export function UserDetail() {
               confirmAction === "reset" && resetPassword.length < PASSWORD_MIN
             }
             loading={busy}
-            loadingLabel="Confirmando…"
+            loadingLabel={t("users.detail.dialog.confirming")}
             onClick={() => void runConfirm()}
           >
-            Confirmar
+            {t("common.confirm")}
           </Button>
         </div>
       </Dialog>

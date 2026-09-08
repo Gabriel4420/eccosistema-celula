@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button, EmptyState, ErrorState, Pagination, SelectField, Skeleton, Table, TextField } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import { listMeetings } from "@/src/features/meetings/api/meetings-api";
 import type { MeetingResponse } from "@mission-atos/contracts";
 import { MeetingStatusBadge } from "./meeting-status-badge";
@@ -47,6 +48,7 @@ function toQuery(params: MeetingsParams): string {
 }
 
 export function MeetingsList({ cellId }: { readonly cellId: string }) {
+  const { t, locale } = useI18n();
   const { api, capabilities } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -90,22 +92,22 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
     <section aria-labelledby="meetings-title">
       <div className="page-header">
         <h1 className="page-title" id="meetings-title">
-          Encontros
+          {t("meetings.page.title")}
         </h1>
         <p className="page-description">
-          Gerencie os encontros agendados da célula.
+          {t("meetings.page.subtitle")}
         </p>
         {capabilities.createMeetings ? (
           <Link className="button" href={`/cells/${cellId}/meetings/new`}>
             <CalendarPlus aria-hidden="true" className="button__icon" />
-            Novo encontro
+            {t("meetings.new")}
           </Link>
         ) : null}
       </div>
 
       <div className="toolbar">
         <TextField
-          label="Data início"
+          label={t("meetings.field.from")}
           name="from"
           type="date"
           value={fromInput}
@@ -117,10 +119,10 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
               navigate({ from: value, page: 1 });
             }, 300);
           }}
-          hint="AAAA-MM-DD"
+          hint={t("meetings.date.hint")}
         />
         <TextField
-          label="Data fim"
+          label={t("meetings.field.to")}
           name="to"
           type="date"
           value={toInput}
@@ -132,18 +134,18 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
               navigate({ to: value, page: 1 });
             }, 300);
           }}
-          hint="AAAA-MM-DD"
+          hint={t("meetings.date.hint")}
         />
         <SelectField
-          label="Status"
+          label={t("common.status")}
           name="status"
           value={params.status}
           onChange={(event) => navigate({ status: event.target.value as MeetingsParams["status"], page: 1 })}
           options={[
-            { value: "", label: "Todos" },
-            { value: "SCHEDULED", label: "Agendado" },
-            { value: "COMPLETED", label: "Concluído" },
-            { value: "CANCELED", label: "Cancelado" }
+            { value: "", label: t("meetings.filter.all") },
+            { value: "SCHEDULED", label: t("meetings.status.scheduled") },
+            { value: "COMPLETED", label: t("meetings.status.completed") },
+            { value: "CANCELED", label: t("meetings.status.cancelled") }
           ]}
         />
         <Button
@@ -155,18 +157,18 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
             navigate({ from: "", to: "", status: "", page: 1 });
           }}
         >
-          Limpar filtros
+          {t("meetings.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar os encontros" onRetry={() => void reload()}>
-          Tente novamente em instantes.
+        <ErrorState title={t("meetings.error.list")} onRetry={() => void reload()}>
+          {t("meetings.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando encontros">
+        <div aria-label={t("meetings.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -174,8 +176,8 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhum encontro encontrado">
-          Ajuste os filtros ou agende um novo encontro.
+        <EmptyState title={t("meetings.emptyState.title")}>
+          {t("meetings.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -186,29 +188,29 @@ export function MeetingsList({ cellId }: { readonly cellId: string }) {
             columns={[
               {
                 key: "meetingDate",
-                header: "Data",
-                render: (meeting) => formatMeetingDate(meeting.meetingDate)
+                header: t("meetings.column.date"),
+                render: (meeting) => formatMeetingDate(meeting.meetingDate, locale)
               },
               {
                 key: "status",
-                header: "Status",
+                header: t("common.status"),
                 render: (meeting) => <MeetingStatusBadge status={meeting.status} />
               },
               {
                 key: "updatedAt",
-                header: "Atualizado em",
-                render: (meeting) => formatMeetingTimestamp(meeting.updatedAt)
+                header: t("meetings.column.updatedAt"),
+                render: (meeting) => formatMeetingTimestamp(meeting.updatedAt, locale)
               },
               {
                 key: "actions",
-                header: "Ações",
+                header: t("common.actions"),
                 render: (meeting) => (
                   <span className="table__actions">
                     <Link
                       className="button button--secondary button--sm"
                       href={`/cells/${cellId}/meetings/${meeting.id}`}
                     >
-                      Ver detalhes
+                      {t("meetings.action.viewDetails")}
                     </Link>
                   </span>
                 )

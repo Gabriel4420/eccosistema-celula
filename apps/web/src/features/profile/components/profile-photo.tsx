@@ -12,6 +12,7 @@ import { formatUserMenuIdentity } from "@/src/shared/navigation/user-menu-presen
 import { getMyProfilePhoto, removeMyProfilePhoto, updateMyProfilePhoto } from "@/src/features/profile/api/profile-api";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { cacheStore } from "@/src/shared/cache/cache";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 const PHOTO_UPDATED_EVENT = "mission-atos:profile-photo-updated";
 const MAX_SOURCE_BYTES = 8_000_000;
@@ -19,6 +20,7 @@ const MAX_SOURCE_BYTES = 8_000_000;
 type ProfilePhotoProps = { readonly profile: UserResponse; readonly size?: "md" | "lg"; readonly onClick?: () => void; readonly buttonRef?: RefObject<HTMLButtonElement | null>; readonly expanded?: boolean; };
 
 export function ProfilePhoto({ profile, size = "md", onClick, buttonRef, expanded }: ProfilePhotoProps) {
+  const { t } = useI18n();
   const { api } = useSession();
   const [open, setOpen] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(profile.hasProfilePhoto);
@@ -43,7 +45,7 @@ export function ProfilePhoto({ profile, size = "md", onClick, buttonRef, expande
   }, [reload]);
 
   return <>
-    <button ref={buttonRef} type="button" className={`profile-avatar profile-avatar--${size}`} onClick={onClick ?? (() => setOpen(true))} aria-label={onClick ? "Abrir menu da conta" : "Alterar foto de perfil"} aria-haspopup={onClick ? "dialog" : undefined} aria-expanded={onClick ? expanded : undefined}>
+    <button ref={buttonRef} type="button" className={`profile-avatar profile-avatar--${size}`} onClick={onClick ?? (() => setOpen(true))} aria-label={onClick ? t("profile.photo.aria.menu") : t("profile.photo.aria.change")} aria-haspopup={onClick ? "dialog" : undefined} aria-expanded={onClick ? expanded : undefined}>
       {source ? <Image src={source} alt="" width={112} height={112} unoptimized className="profile-avatar__image" /> : <span aria-hidden="true">{identity.initials}</span>}
       {!onClick ? <span className="profile-avatar__edit" aria-hidden="true">✎</span> : null}
     </button>
@@ -54,6 +56,7 @@ export function ProfilePhoto({ profile, size = "md", onClick, buttonRef, expande
 function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }: {
   readonly open: boolean; readonly onClose: () => void; readonly profile: UserResponse; readonly hasPhoto: boolean; readonly currentSource: string | null;
 }) {
+  const { t } = useI18n();
   const { api } = useSession();
   const [candidate, setCandidate] = useState<{ preview: string; contentType: "image/jpeg"; base64: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -66,7 +69,7 @@ function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }:
     if (!file) return;
     setError(null);
     try { setCandidate(await prepareProfilePhoto(file)); }
-    catch { setError("Escolha uma imagem JPEG, PNG ou WebP de até 8 MB."); }
+    catch { setError(t("profile.photo.error.format")); }
   };
 
   const save = async () => {
@@ -80,11 +83,11 @@ function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }:
       window.dispatchEvent(new CustomEvent(PHOTO_UPDATED_EVENT, { detail: true }));
       toast({
         kind: "success",
-        title: "Foto atualizada",
-        description: "Sua nova foto já está visível no painel."
+        title: t("profile.photo.toast.saved"),
+        description: t("profile.photo.toast.saved.desc")
       });
       onClose();
-    } catch { setError("Não foi possível salvar a foto. Tente novamente."); }
+    } catch { setError(t("profile.photo.error.save")); }
     finally { setBusy(false); }
   };
 
@@ -96,29 +99,29 @@ function ProfilePhotoDialog({ open, onClose, profile, hasPhoto, currentSource }:
       window.dispatchEvent(new CustomEvent(PHOTO_UPDATED_EVENT, { detail: false }));
       toast({
         kind: "success",
-        title: "Foto removida",
-        description: "Suas iniciais voltarão a aparecer no perfil."
+        title: t("profile.photo.toast.removed"),
+        description: t("profile.photo.toast.removed.desc")
       });
       onClose();
-    } catch { setError("Não foi possível remover a foto."); }
+    } catch { setError(t("profile.photo.toast.removeError")); }
     finally { setBusy(false); }
   };
 
-  return <Dialog open={open} onClose={onClose} title="Foto do perfil" description="Sua foto aparece no perfil e no menu da conta.">
+  return <Dialog open={open} onClose={onClose} title={t("profile.photo.dialog.title")} description={t("profile.photo.dialog.desc")}>
     <div className="profile-photo-dialog">
       <div className="profile-photo-dialog__preview">
         {candidate?.preview ?? currentSource
-          ? <Image src={candidate?.preview ?? currentSource ?? ""} alt="Prévia da foto de perfil" width={512} height={512} unoptimized />
+          ? <Image src={candidate?.preview ?? currentSource ?? ""} alt={t("profile.photo.previewAlt")} width={512} height={512} unoptimized />
           : <span aria-hidden="true">{initials}</span>}
       </div>
       {error ? <Alert variant="error">{error}</Alert> : null}
       <input ref={inputRef} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void selectPhoto(event)} />
-      <Button variant="secondary" icon={Camera} onClick={() => inputRef.current?.click()} disabled={busy}>Escolher foto</Button>
-      <p className="field__description">A imagem será recortada ao centro e otimizada. Máximo de 8 MB.</p>
+      <Button variant="secondary" icon={Camera} onClick={() => inputRef.current?.click()} disabled={busy}>{t("profile.photo.choose")}</Button>
+      <p className="field__description">{t("profile.photo.help")}</p>
       <div className="dialog-panel__actions">
-        {hasPhoto ? <Button variant="danger" icon={Trash2} onClick={() => void remove()} disabled={busy}>Remover</Button> : null}
-        <Button variant="secondary" icon={X} onClick={onClose} disabled={busy}>Cancelar</Button>
-        <Button icon={Save} onClick={() => void save()} disabled={!candidate} loading={busy} loadingLabel="Salvando…">Salvar foto</Button>
+        {hasPhoto ? <Button variant="danger" icon={Trash2} onClick={() => void remove()} disabled={busy}>{t("profile.photo.removeShort")}</Button> : null}
+        <Button variant="secondary" icon={X} onClick={onClose} disabled={busy}>{t("common.cancel")}</Button>
+        <Button icon={Save} onClick={() => void save()} disabled={!candidate} loading={busy} loadingLabel={t("common.saving")}>{t("profile.photo.save")}</Button>
       </div>
     </div>
   </Dialog>;

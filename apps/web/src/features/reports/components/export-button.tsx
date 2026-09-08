@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import { Button } from "@/src/shared/components";
 import { exportReport, type ExportFormat } from "../api/reports-api";
 
@@ -13,6 +14,7 @@ const FORMAT_OPTIONS: ReadonlyArray<{ readonly value: ExportFormat; readonly lab
 
 export function ExportButton({ reportType, params }: { readonly reportType: string; readonly params?: Record<string, string> }) {
   const { api } = useSession();
+  const { t } = useI18n();
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async (format: ExportFormat) => {
@@ -44,7 +46,7 @@ export function ExportButton({ reportType, params }: { readonly reportType: stri
           disabled={exporting}
           onClick={() => handleExport(opt.value)}
         >
-          {exporting ? "Exportando..." : `Exportar ${opt.label}`}
+          {exporting ? t("reports.export.exporting") : t("reports.export.label", { format: opt.label })}
         </Button>
       ))}
     </div>

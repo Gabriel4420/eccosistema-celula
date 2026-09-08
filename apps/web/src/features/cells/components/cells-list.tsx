@@ -18,6 +18,7 @@ import { Can } from "@/src/shared/auth/guards";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { listCells } from "@/src/features/cells/api/cells-api";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import type { CellResponse } from "@mission-atos/contracts";
 import { CellStatusBadge } from "./cell-status-badge";
 import { formatCellDay } from "@/src/features/cells/lib/format";
@@ -58,6 +59,7 @@ function toQuery(params: CellsParams): string {
 }
 
 export function CellsList() {
+  const { t } = useI18n();
   const { api } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -102,21 +104,21 @@ export function CellsList() {
       <div className="page-header w-full">
         <div className="flex flex-col">
           <h1 className="page-title" id="cells-title">
-            Células
+            {t("cells.page.title")}
           </h1>
           <p className="page-description">
-            Consulte, cadastre e acompanhe as células da sua igreja.
+            {t("cells.page.subtitle")}
           </p>
         </div>
         <Can capability="createCells">
           <div className="flex flex-wrap gap-2">
             <Link className="button button--secondary" href="/cells/import">
               <Upload aria-hidden="true" className="button__icon" />
-              Importar células
+              {t("cells.import")}
             </Link>
             <Link className="button" href="/cells/new">
               <Plus aria-hidden="true" className="button__icon" />
-              Nova célula
+              {t("cells.new")}
             </Link>
           </div>
         </Can>
@@ -124,7 +126,7 @@ export function CellsList() {
 
       <div className="toolbar">
         <TextField
-          label="Buscar"
+          label={t("common.search")}
           name="search"
           value={searchInput}
           onChange={(event) => {
@@ -135,10 +137,10 @@ export function CellsList() {
               navigate({ search: value, page: 1 });
             }, 300);
           }}
-          hint="Nome ou código"
+          hint={t("cells.search.hint")}
         />
         <SelectField
-          label="Status"
+          label={t("common.status")}
           name="status"
           value={params.status}
           onChange={(event) =>
@@ -148,11 +150,11 @@ export function CellsList() {
             })
           }
           options={[
-            { value: "", label: "Todos" },
-            { value: "FORMING", label: "Em formação" },
-            { value: "ACTIVE", label: "Ativa" },
-            { value: "SUSPENDED", label: "Suspensa" },
-            { value: "CLOSED", label: "Encerrada" },
+            { value: "", label: t("cells.filter.allStatuses") },
+            { value: "FORMING", label: t("cells.status.formative") },
+            { value: "ACTIVE", label: t("cells.status.active") },
+            { value: "SUSPENDED", label: t("cells.status.suspended") },
+            { value: "CLOSED", label: t("cells.status.closed") },
           ]}
         />
         <Button
@@ -163,21 +165,21 @@ export function CellsList() {
             navigate({ search: "", status: "", page: 1 });
           }}
         >
-          Limpar filtros
+          {t("cells.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
         <ErrorState
-          title="Não foi possível carregar as células"
+          title={t("cells.error.list")}
           onRetry={() => void reload()}
         >
-          Tente novamente em instantes.
+          {t("cells.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando células">
+        <div aria-label={t("cells.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -185,8 +187,8 @@ export function CellsList() {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhuma célula encontrada">
-          Ajuste os filtros ou cadastre uma nova célula.
+        <EmptyState title={t("cells.emptyState.title")}>
+          {t("cells.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -197,49 +199,52 @@ export function CellsList() {
             columns={[
               {
                 key: "code",
-                header: "Código",
+                header: t("cells.column.code"),
                 render: (cell) => (
                   <Link href={`/cells/${cell.id}`}>{cell.code}</Link>
                 ),
               },
               {
                 key: "name",
-                header: "Nome",
+                header: t("cells.column.name"),
                 render: (cell) => (
                   <Link href={`/cells/${cell.id}`}>{cell.name}</Link>
                 ),
               },
               {
                 key: "leader",
-                header: "Líder",
+                header: t("cells.column.leader"),
                 render: (cell) => cell.leader?.name ?? "—",
               },
               {
                 key: "supervisor",
-                header: "Supervisor",
+                header: t("cells.column.supervisor"),
                 render: (cell) => cell.supervisor?.name ?? "—",
               },
               {
                 key: "meeting",
-                header: "Reunião",
+                header: t("cells.column.meeting"),
                 render: (cell) =>
-                  `${formatCellDay(cell.meetingDay)} às ${cell.meetingTime}`,
+                  t("cells.detail.meetingAt", {
+                    day: formatCellDay(cell.meetingDay, t),
+                    time: cell.meetingTime,
+                  }),
               },
               {
                 key: "status",
-                header: "Status",
+                header: t("common.status"),
                 render: (cell) => <CellStatusBadge status={cell.status} />,
               },
               {
                 key: "actions",
-                header: "Ações",
+                header: t("common.actions"),
                 render: (cell) => (
                   <span className="table__actions">
                     <Link
                       className="button button--secondary button--sm"
                       href={`/cells/${cell.id}`}
                     >
-                      Ver detalhes
+                      {t("cells.action.viewDetails")}
                     </Link>
                   </span>
                 ),

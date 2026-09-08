@@ -23,12 +23,14 @@ import {
   updateMyProfile
 } from "@/src/features/profile/api/profile-api";
 import { ProfilePhoto } from "@/src/features/profile/components/profile-photo";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 const PASSWORD_MIN = 12;
 const PROFILE_CACHE = "profile";
 
 export default function ProfilePage() {
   const { api, endSession } = useSession();
+  const { t } = useI18n();
   const { data: profile, loading, error, reload } = useRemoteQuery({
     fetcher: () => getMyProfile(api),
     cacheName: PROFILE_CACHE,
@@ -55,7 +57,7 @@ export default function ProfilePage() {
 
   if (loading && !profile) {
     return (
-      <div aria-label="Carregando perfil">
+      <div aria-label={t("profile.loading")}>
         <Skeleton width="40%" height="2.5rem" />
         <Skeleton width="100%" height="8rem" />
       </div>
@@ -64,14 +66,14 @@ export default function ProfilePage() {
 
   if (error && !profile) {
     return (
-      <ErrorState title="Não foi possível carregar seu perfil" onRetry={() => void reload()}>
-        Tente novamente em instantes.
+      <ErrorState title={t("profile.load.error")} onRetry={() => void reload()}>
+        {t("profile.load.retry")}
       </ErrorState>
     );
   }
 
   if (!profile) {
-    return <EmptyState title="Perfil indisponível">Seus dados não puderam ser carregados.</EmptyState>;
+    return <EmptyState title={t("profile.unavailable")}>{t("profile.unavailable.desc")}</EmptyState>;
   }
 
   const firstNameValue = firstName === "" ? profile.firstName : firstName;
@@ -97,11 +99,11 @@ export default function ProfilePage() {
       setLastName("");
       toast({
         kind: "success",
-        title: "Perfil atualizado",
-        description: "Seus dados foram salvos."
+        title: t("profile.toast.saved"),
+        description: t("profile.toast.saved.desc")
       });
     } catch {
-      setNameError("Não foi possível salvar suas alterações. Tente novamente.");
+      setNameError(t("profile.toast.error"));
     } finally {
       setSavingName(false);
     }
@@ -115,12 +117,12 @@ export default function ProfilePage() {
     if (newPassword.length < PASSWORD_MIN) {
       setPasswordFieldErrors((errors) => ({
         ...errors,
-        new: `A nova senha deve ter ao menos ${PASSWORD_MIN} caracteres.`
+        new: t("profile.passwordMin", { min: PASSWORD_MIN })
       }));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordFieldErrors((errors) => ({ ...errors, confirm: "As senhas não coincidem." }));
+      setPasswordFieldErrors((errors) => ({ ...errors, confirm: t("profile.passwordMismatch") }));
       return;
     }
     setConfirmOpen(true);
@@ -134,9 +136,7 @@ export default function ProfilePage() {
       setConfirmOpen(false);
       endSession();
     } catch {
-      setPasswordError(
-        "Não foi possível alterar a senha. Verifique a senha atual e tente novamente."
-      );
+      setPasswordError(t("profile.toast.passwordError"));
       setSavingPassword(false);
     }
   };
@@ -145,36 +145,35 @@ export default function ProfilePage() {
     <section aria-labelledby="profile-title">
       <div className="page-header">
         <h1 className="page-title" id="profile-title">
-          Meu perfil
+          {t("profile.title")}
         </h1>
         <p className="page-description">
-          Mantenha seus dados pessoais atualizados. E-mail e acesso são
-          controlados por um administrador.
+          {t("profile.subtitle")}
         </p>
       </div>
 
       <div className="profile-photo-section">
         <ProfilePhoto profile={profile} size="lg" />
-        <div><strong>{profile.firstName} {profile.lastName}</strong><p className="page-description">Clique na foto para alterar.</p></div>
+        <div><strong>{profile.firstName} {profile.lastName}</strong><p className="page-description">{t("profile.photoHint")}</p></div>
       </div>
 
       <div className="detail-list" style={{ marginBottom: "var(--space-5)" }}>
         <div className="detail-list__item">
-          <span className="detail-list__label">E-mail</span>
+          <span className="detail-list__label">{t("label.email")}</span>
           <span className="detail-list__value">{profile.email}</span>
         </div>
         <div className="detail-list__item">
-          <span className="detail-list__label">Status</span>
+          <span className="detail-list__label">{t("label.status")}</span>
           <StatusBadge status={profile.status} />
         </div>
       </div>
 
       <form className="fieldset" onSubmit={(event) => void handleSaveName(event)}>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Dados pessoais</legend>
+          <legend className="fieldset__legend">{t("profile.section.personal")}</legend>
           {nameError ? <Alert variant="error">{nameError}</Alert> : null}
           <TextField
-            label="Nome"
+            label={t("label.firstName")}
             name="firstName"
             autoComplete="given-name"
             value={firstNameValue}
@@ -182,28 +181,28 @@ export default function ProfilePage() {
             required
           />
           <TextField
-            label="Sobrenome"
+            label={t("label.lastName")}
             name="lastName"
             autoComplete="family-name"
             value={lastNameValue}
             onChange={(event) => setLastName(event.target.value)}
             required
           />
-          <Button type="submit" icon={Save} disabled={!hasNameChanges} loading={savingName} loadingLabel="Salvando…">
-            Salvar alterações
+          <Button type="submit" icon={Save} disabled={!hasNameChanges} loading={savingName} loadingLabel={t("profile.saving")}>
+            {t("profile.save")}
           </Button>
         </fieldset>
       </form>
 
       <form className="fieldset" style={{ marginTop: "var(--space-6)" }} onSubmit={handleRequestPasswordChange}>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Alterar senha</legend>
+          <legend className="fieldset__legend">{t("profile.section.password")}</legend>
           <p className="page-description">
-            Após confirmar, sua sessão será encerrada e você deverá entrar novamente.
+            {t("profile.passwordHint")}
           </p>
           {passwordError ? <Alert variant="error">{passwordError}</Alert> : null}
           <TextField
-            label="Senha atual"
+            label={t("profile.field.currentPassword")}
             type="password"
             name="currentPassword"
             autoComplete="current-password"
@@ -213,18 +212,18 @@ export default function ProfilePage() {
             required
           />
           <TextField
-            label="Nova senha"
+            label={t("profile.field.newPassword")}
             type="password"
             name="newPassword"
             autoComplete="new-password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
-            hint={`Ao menos ${PASSWORD_MIN} caracteres.`}
+            hint={t("profile.passwordMinHint", { min: PASSWORD_MIN })}
             error={passwordFieldErrors.new}
             required
           />
           <TextField
-            label="Confirmar nova senha"
+            label={t("profile.field.confirmPassword")}
             type="password"
             name="confirmPassword"
             autoComplete="new-password"
@@ -233,15 +232,15 @@ export default function ProfilePage() {
             error={passwordFieldErrors.confirm}
             required
           />
-          <Button type="submit" icon={KeyRound}>Solicitar alteração de senha</Button>
+          <Button type="submit" icon={KeyRound}>{t("profile.requestChange")}</Button>
         </fieldset>
       </form>
 
       <Dialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        title="Confirmar alteração de senha"
-        description="Sua senha será alterada e todas as suas sessões serão encerradas. Você precisará entrar novamente."
+        title={t("profile.confirm.title")}
+        description={t("profile.confirm.description")}
       >
         <div className="dialog-panel__actions">
           <Button
@@ -249,15 +248,15 @@ export default function ProfilePage() {
             onClick={() => setConfirmOpen(false)}
             disabled={savingPassword}
           >
-            Cancelar
+            {t("profile.confirm.cancel")}
           </Button>
           <Button
             variant="danger"
             loading={savingPassword}
-            loadingLabel="Alterando…"
+            loadingLabel={t("profile.confirm.changing")}
             onClick={() => void handleConfirmPasswordChange()}
           >
-            Confirmar alteração
+            {t("profile.confirm.action")}
           </Button>
         </div>
       </Dialog>

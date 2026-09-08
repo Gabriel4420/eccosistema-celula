@@ -20,6 +20,9 @@ import type { SessionPrincipal, SessionStatus } from "@/src/shared/auth/session"
 import { toast } from "@/src/shared/toast/toast-store";
 import { clearAllCaches } from "@/src/shared/cache/cache";
 import { postLogin, postLogout, postRefresh } from "@/src/features/auth/api/auth-api";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey } from "@/src/shared/i18n/dictionaries";
+import type { TranslationParams } from "@/src/shared/i18n/dictionaries";
 
 interface SessionContextValue {
   readonly status: SessionStatus;
@@ -35,6 +38,7 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { readonly children: ReactNode }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [status, setStatus] = useState<SessionStatus>("bootstrapping");
   const [principal, setPrincipal] = useState<SessionPrincipal | null>(null);
 
@@ -49,6 +53,10 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
     []
   );
 
+  const handleApiError = useCallback((error: ApiError) => {
+    notifyApiError(error, t);
+  }, [t]);
+
   const [api] = useState(
     () =>
       new ApiClient({
@@ -57,7 +65,7 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
         onSessionEnded: () => {
           /* replaced by setSessionEndedHandler */
         },
-        onError: (error) => notifyApiError(error),
+        onError: handleApiError,
         refreshRequest: async () => {
           const auth = await postRefresh(baseUrl);
           return auth
@@ -66,6 +74,10 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
         }
       })
   );
+
+  useEffect(() => {
+    api.setErrorHandler(handleApiError);
+  }, [api, handleApiError]);
 
   const endSession = useCallback(() => {
     api.clearAccessToken();
@@ -169,26 +181,26 @@ export function useSession(): SessionContextValue {
   return context;
 }
 
-function notifyApiError(error: ApiError): void {
+function notifyApiError(error: ApiError, t: (key: TranslationKey, params?: TranslationParams) => string): void {
   if (error.code === "TIMEOUT") {
     toast({
       kind: "error",
-      title: "O servidor demorou a responder",
-      description: "Verifique sua conexão e tente novamente."
+      title: t("api.timeout"),
+      description: t("api.network")
     });
     return;
   }
   if (error.code === "NETWORK_ERROR") {
     toast({
       kind: "error",
-      title: "Sem conexão com o servidor",
-      description: "Não foi possível conectar. Verifique sua internet e tente novamente."
+      title: t("api.network"),
+      description: t("api.generic")
     });
     return;
   }
   toast({
     kind: "error",
-    title: "Algo deu errado",
-    description: error.message || "Tente novamente em instantes."
+    title: t("api.generic"),
+    description: error.message || t("api.generic")
   });
 }

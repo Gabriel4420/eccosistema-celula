@@ -20,6 +20,7 @@ import { useSession } from "@/src/providers/session-provider";
 import { getManagedRoles, listUsers } from "@/src/features/users/api/users-api";
 import { UserDetailModal } from "@/src/features/users/components/user-detail-modal";
 import { roleLabel } from "@/src/shared/auth/session";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import type { UserResponse } from "@mission-atos/contracts";
 
 const PAGE_SIZE = 20;
@@ -57,6 +58,7 @@ function toQuery(params: UsersParams): string {
 
 export function UsersList() {
   const { api } = useSession();
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = readParams(searchParams);
@@ -109,27 +111,25 @@ export function UsersList() {
       <div className="page-header w-full">
         <div className="flex flex-col gap-2">
           <h1 className="page-title" id="users-title">
-            Usuários
+            {t("users.title")}
           </h1>
-          <p className="page-description">
-            Gerencie contas, papéis e acesso dos usuários da sua igreja.
-          </p>
+          <p className="page-description">{t("users.page.subtitle")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link className="button button--secondary h-8" href="/users/import">
             <Upload aria-hidden="true" className="button__icon" />
-            Importar usuários
+            {t("users.import")}
           </Link>
           <Link className="button h-8" href="/users/new">
             <UserPlus aria-hidden="true" className="button__icon" />
-            Novo usuário
+            {t("users.add")}
           </Link>
         </div>
       </div>
 
       <div className="toolbar">
         <TextField
-          label="Buscar"
+          label={t("users.search")}
           name="search"
           value={searchInput}
           onChange={(event) => {
@@ -140,10 +140,10 @@ export function UsersList() {
               navigate({ search: value, page: 1 });
             }, 300);
           }}
-          hint="Nome ou e-mail"
+          hint={t("users.search.hint")}
         />
         <SelectField
-          label="Status"
+          label={t("common.status")}
           name="status"
           value={params.status}
           onChange={(event) =>
@@ -153,23 +153,23 @@ export function UsersList() {
             })
           }
           options={[
-            { value: "", label: "Todos" },
-            { value: "ACTIVE", label: "Ativo" },
-            { value: "BLOCKED", label: "Bloqueado" },
+            { value: "", label: t("users.filter.all") },
+            { value: "ACTIVE", label: t("statusBadge.active") },
+            { value: "BLOCKED", label: t("statusBadge.blocked") },
           ]}
         />
         <SelectField
-          label="Papel"
+          label={t("users.field.role")}
           name="roleId"
           value={params.roleId}
           onChange={(event) =>
             navigate({ roleId: event.target.value, page: 1 })
           }
           options={[
-            { value: "", label: "Todos" },
+            { value: "", label: t("users.filter.all") },
             ...(managedRoles ?? []).map((role) => ({
               value: role.id,
-              label: roleLabel(role.name),
+              label: roleLabel(role.name, t),
             })),
           ]}
         />
@@ -181,21 +181,18 @@ export function UsersList() {
             navigate({ search: "", status: "", roleId: "", page: 1 });
           }}
         >
-          Limpar filtros
+          {t("users.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
-        <ErrorState
-          title="Não foi possível carregar os usuários"
-          onRetry={() => void reload()}
-        >
-          Tente novamente em instantes.
+        <ErrorState title={t("users.error")} onRetry={() => void reload()}>
+          {t("users.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando usuários">
+        <div aria-label={t("users.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -203,8 +200,8 @@ export function UsersList() {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhum usuário encontrado">
-          Ajuste os filtros ou cadastre um novo usuário.
+        <EmptyState title={t("users.empty")}>
+          {t("users.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -215,28 +212,32 @@ export function UsersList() {
             columns={[
               {
                 key: "name",
-                header: "Nome",
+                header: t("users.column.user"),
                 render: (user) => (
                   <Link href={`/users/${user.id}`}>
                     {user.firstName} {user.lastName}
                   </Link>
                 ),
               },
-              { key: "email", header: "E-mail", render: (user) => user.email },
+              {
+                key: "email",
+                header: t("users.column.email"),
+                render: (user) => user.email,
+              },
               {
                 key: "roles",
-                header: "Papéis",
+                header: t("users.column.roles"),
                 render: (user) =>
-                  user.roles.map((role) => roleLabel(role.name)).join(", "),
+                  user.roles.map((role) => roleLabel(role.name, t)).join(", "),
               },
               {
                 key: "status",
-                header: "Status",
+                header: t("users.column.status"),
                 render: (user) => <StatusBadge status={user.status} />,
               },
               {
                 key: "actions",
-                header: "Ações",
+                header: t("users.column.actions"),
                 render: (user) => (
                   <span className="table__actions">
                     <Button
@@ -244,7 +245,7 @@ export function UsersList() {
                       size="sm"
                       onClick={() => setDetailUser(user)}
                     >
-                      Ver detalhes
+                      {t("users.action.viewDetails")}
                     </Button>
                   </span>
                 ),

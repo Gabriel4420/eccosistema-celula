@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import type { TranslationKey, TranslationParams } from "@/src/shared/i18n/dictionaries";
 
 export interface PeriodValue {
   readonly from: string;
@@ -13,12 +14,14 @@ export interface ReportParams {
   readonly to: string;
 }
 
-export const PERIOD_OPTIONS: Array<{ readonly value: string; readonly label: string }> = [
-  { value: "", label: "Padrão (30 dias)" },
-  { value: `${d(daysAgo(30))}..${d(today())}`, label: "Últimos 30 dias" },
-  { value: `${d(daysAgo(60))}..${d(today())}`, label: "Últimos 60 dias" },
-  { value: `${d(monthStart())}..${d(today())}`, label: "Este mês" },
-];
+export function getPeriodOptions(t: (key: TranslationKey, params?: TranslationParams) => string): Array<{ readonly value: string; readonly label: string }> {
+  return [
+    { value: "", label: t("reports.period.default") },
+    { value: `${d(daysAgo(30))}..${d(today())}`, label: t("reports.period.last30") },
+    { value: `${d(daysAgo(60))}..${d(today())}`, label: t("reports.period.last60") },
+    { value: `${d(monthStart())}..${d(today())}`, label: t("reports.period.thisMonth") },
+  ];
+}
 
 export function readPage(searchParams: URLSearchParams): number {
   const requested = Number(searchParams.get("page") ?? "1");

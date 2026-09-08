@@ -12,12 +12,12 @@ import { Skeleton } from "@/src/shared/components";
 import { consumePendingDestination } from "@/src/shared/navigation/pending-destination";
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
-
-const GENERIC_LOGIN_ERROR = "Não foi possível entrar. Tente novamente.";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 export default function LoginPage() {
   const { status, login } = useSession();
   const router = useRouter();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -35,7 +35,7 @@ export default function LoginPage() {
   if (status === "bootstrapping") {
     return (
       <div className="auth-shell">
-        <div className="auth-card" aria-label="Carregando">
+        <div className="auth-card" aria-label={t("common.loading")}>
           <Skeleton width="70%" height="2rem" />
           <Skeleton width="100%" height="2.5rem" />
           <Skeleton width="100%" height="2.5rem" />
@@ -55,8 +55,8 @@ export default function LoginPage() {
     if (!parsed.success) {
       const errors: { email?: string; password?: string } = {};
       for (const issue of parsed.error.issues) {
-        if (issue.path[0] === "email") errors.email = "Informe um e-mail válido.";
-        if (issue.path[0] === "password") errors.password = "Informe sua senha.";
+        if (issue.path[0] === "email") errors.email = t("login.invalidEmail");
+        if (issue.path[0] === "password") errors.password = t("login.requiredPassword");
       }
       setFieldErrors(errors);
       return;
@@ -70,16 +70,16 @@ export default function LoginPage() {
       const apiError = toApiError(error);
       let message: string;
       if (apiError.status === 401) {
-        message = "E-mail ou senha inválidos.";
+        message = t("login.invalidCredentials");
       } else if (apiError.status === 429) {
-        message = "Muitas tentativas. Aguarde um momento e tente novamente.";
+        message = t("login.rateLimited");
       } else {
-        message = GENERIC_LOGIN_ERROR;
+        message = t("login.genericError");
       }
       setFormError(message);
       toast({
         kind: "error",
-        title: "Não foi possível entrar",
+        title: t("login.toastTitle"),
         description: message
       });
     } finally {
@@ -89,32 +89,32 @@ export default function LoginPage() {
 
   return (
     <div className="auth-shell">
-      <aside className="auth-showcase" aria-label="Apresentação do Ecossistema de Células">
+      <aside className="auth-showcase" aria-label={t("login.presentationAria")}>
         <Image
           className="auth-showcase__logo"
           src="/brand/missao-atos-logo.png"
-          alt="Missão Atos — Igreja em Células"
+          alt={t("login.brandAlt")}
           width={1254}
           height={1254}
           priority
         />
         <div className="auth-showcase__message">
-          <p>Gestão que aproxima.</p>
-          <h2>Uma visão clara para cuidar de cada célula.</h2>
-          <span>Organize pessoas, encontros e liderança em um só lugar.</span>
+          <p>{t("app.tagline")}</p>
+          <h2>{t("app.tagline.sub")}</h2>
+          <span>{t("app.tagline.description")}</span>
         </div>
       </aside>
       <div className="auth-card">
         <div className="auth-card__brand">
           <span className="auth-card__brand-mark" aria-hidden="true">EC</span>
         </div>
-        <p className="auth-card__eyebrow">Acesse sua conta</p>
-        <h1 className="auth-card__title">Ecossistema de Células</h1>
-        <p className="auth-card__description">Use seus dados para entrar no Ecossistema de Células.</p>
-        {formError ? <Alert variant="error" title="Não foi possível entrar">{formError}</Alert> : null}
+        <p className="auth-card__eyebrow">{t("login.title")}</p>
+        <h1 className="auth-card__title">{t("app.title")}</h1>
+        <p className="auth-card__description">{t("login.subtitle")}</p>
+        {formError ? <Alert variant="error" title={t("login.alertTitle")}>{formError}</Alert> : null}
         <form className="fieldset" onSubmit={(event) => void handleSubmit(event)} noValidate>
           <TextField
-            label="E-mail"
+            label={t("login.emailLabel")}
             type="email"
             name="email"
             mask="email"
@@ -125,7 +125,7 @@ export default function LoginPage() {
             required
           />
           <TextField
-            label="Senha"
+            label={t("login.passwordLabel")}
             type="password"
             name="password"
             autoComplete="current-password"
@@ -134,8 +134,8 @@ export default function LoginPage() {
             error={fieldErrors.password}
             required
           />
-          <Button type="submit" icon={LogIn} loading={submitting} loadingLabel="Entrando…">
-            Entrar
+          <Button type="submit" icon={LogIn} loading={submitting} loadingLabel={t("login.submitting")}>
+            {t("login.submit")}
           </Button>
         </form>
       </div>

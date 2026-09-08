@@ -12,6 +12,8 @@ import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey, TranslationParams } from "@/src/shared/i18n/dictionaries";
 import { createMeeting } from "@/src/features/meetings/api/meetings-api";
 import { formatMeetingDate, toISODateString } from "@/src/features/meetings/lib/format";
 
@@ -27,6 +29,7 @@ function errorsFromIssue(issues: readonly z.ZodIssue[]): Record<string, string> 
 }
 
 export function CreateMeetingForm({ cellId }: { readonly cellId: string }) {
+  const { t, locale } = useI18n();
   const { api } = useSession();
   const router = useRouter();
   const today = toISODateString(new Date());
@@ -60,12 +63,12 @@ export function CreateMeetingForm({ cellId }: { readonly cellId: string }) {
       cacheStore(MEETINGS_CACHE).invalidatePrefix("page");
       toast({
         kind: "success",
-        title: "Encontro criado",
-        description: formatMeetingDate(meeting.meetingDate)
+        title: t("meetings.new.toast.created"),
+        description: formatMeetingDate(meeting.meetingDate, locale)
       });
       router.push(`/cells/${cellId}/meetings/${meeting.id}`);
     } catch (cause) {
-      setFormError(messageForError(cause));
+      setFormError(messageForError(cause, t));
     } finally {
       setSubmitting(false);
     }
@@ -75,40 +78,40 @@ export function CreateMeetingForm({ cellId }: { readonly cellId: string }) {
     <section aria-labelledby="new-meeting-title">
       <div className="page-header">
         <h1 className="page-title" id="new-meeting-title">
-          Novo encontro
+          {t("meetings.new")}
         </h1>
         <Link className="breadcrumbs__link" href={`/cells/${cellId}/meetings`}>
-          Voltar para encontros
+          {t("meetings.detail.back")}
         </Link>
       </div>
 
       {formError ? (
-        <Alert variant="error" title="Não foi possível criar">
+        <Alert variant="error" title={t("meetings.new.alertTitle")}>
           {formError}
         </Alert>
       ) : null}
 
       <form className="fieldset" onSubmit={(event) => void handleSubmit(event)} noValidate>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Data do encontro</legend>
+          <legend className="fieldset__legend">{t("meetings.new.legend.date")}</legend>
           <TextField
-            label="Data"
+            label={t("meetings.column.date")}
             name="meetingDate"
             type="date"
             value={meetingDate}
             onChange={(event) => setMeetingDate(event.target.value)}
-            hint="Formato AAAA-MM-DD"
+            hint={t("meetings.new.hint.date")}
             error={fieldErrors.meetingDate}
             required
           />
         </fieldset>
 
         <div className="dialog-panel__actions" style={{ justifyContent: "flex-start", marginTop: "var(--space-4)" }}>
-          <Button type="submit" icon={CalendarPlus} loading={submitting} loadingLabel="Criando…">
-            Criar encontro
+          <Button type="submit" icon={CalendarPlus} loading={submitting} loadingLabel={t("meetings.new.submitting")}>
+            {t("meetings.new.submit")}
           </Button>
           <Link className="button button--secondary" href={`/cells/${cellId}/meetings`}>
-            Cancelar
+            {t("common.cancel")}
           </Link>
         </div>
       </form>
@@ -116,30 +119,30 @@ export function CreateMeetingForm({ cellId }: { readonly cellId: string }) {
   );
 }
 
-function messageForError(cause: unknown): string {
+function messageForError(cause: unknown, t: (key: TranslationKey, params?: TranslationParams) => string): string {
   if (!(cause instanceof ApiError)) {
-    return "Não foi possível criar o encontro. Verifique os dados e tente novamente.";
+    return t("meetings.new.error.generic");
   }
   switch (cause.code) {
     case "MEETING_DATE_CONFLICT":
-      return "Já existe um encontro agendado para esta célula nesta data.";
+      return t("meetings.new.error.dateConflict");
     case "MEETING_CELL_NOT_FOUND":
-      return "A célula informada não foi encontrada.";
+      return t("meetings.new.error.cellNotFound");
     case "MEETING_CELL_STATUS_INVALID":
-      return "A célula precisa estar ativa para agendar encontros.";
+      return t("meetings.new.error.cellStatusInvalid");
     case "MEETING_ACCESS_DENIED":
-      return "Você não tem permissão para criar encontros nesta célula.";
+      return t("meetings.new.error.accessDenied");
     case "MEETING_STATUS_TRANSITION_INVALID":
-      return "Transição de status não permitida para este encontro.";
+      return t("meetings.new.error.transitionInvalid");
     case "MEETING_NOT_EDITABLE":
-      return "Este encontro não pode mais ser editado.";
+      return t("meetings.new.error.notEditable");
     case "MEETING_REPORT_NOT_EDITABLE":
-      return "Não é possível editar o relatório de um encontro cancelado.";
+      return t("meetings.new.error.reportNotEditable");
     case "MEETING_TRANSACTION_RETRY_EXHAUSTED":
-      return "Muitas tentativas simultâneas. Aguarde um momento e tente novamente.";
+      return t("meetings.new.error.retryExhausted");
     case "IDEMPOTENCY_KEY_CONFLICT":
-      return "A tentativa anterior conflitou com outra. Tente novamente.";
+      return t("meetings.new.error.idempotency");
     default:
-      return "Não foi possível criar o encontro. Verifique os dados e tente novamente.";
+      return t("meetings.new.error.generic");
   }
 }

@@ -12,11 +12,11 @@ export function formatUserMenuIdentity(
   const firstInitial = Array.from(normalizedFirstName)[0] ?? "";
   const lastInitial = Array.from(normalizedLastName)[0] ?? "";
   const displayName = lastInitial
-    ? `${normalizedFirstName} ${lastInitial.toLocaleUpperCase("pt-BR")}.`
+    ? `${normalizedFirstName} ${lastInitial.toLocaleUpperCase()}.`
     : normalizedFirstName;
 
   return {
-    displayName: displayName || "Usuário",
-    initials: `${firstInitial}${lastInitial}`.toLocaleUpperCase("pt-BR") || "U"
+    displayName,
+    initials: `${firstInitial}${lastInitial}`.toLocaleUpperCase() || "U"
   };
 }

@@ -17,6 +17,8 @@ import {
 } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
+import type { TranslationKey } from "@/src/shared/i18n/dictionaries";
 import { getAttendanceSummary } from "@/src/features/reports/api/reports-api";
 import { ExportButton } from "./export-button";
 
@@ -54,6 +56,7 @@ function toQuery(params: AttendanceParams): string {
 
 export function AttendanceReport() {
   const { api } = useSession();
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = readParams(searchParams);
@@ -94,10 +97,10 @@ export function AttendanceReport() {
       <div className="page-header w-full">
         <div className="flex flex-col">
           <h1 className="page-title" id="attendance-report-title">
-            Frequência
+            {t("reports.attendance.pageTitle")}
           </h1>
           <p className="page-description">
-            Resumo de frequência por célula no período.
+            {t("reports.attendance.page.description")}
           </p>
         </div>
         <ExportButton reportType="attendance" params={exportParams} />
@@ -105,7 +108,7 @@ export function AttendanceReport() {
 
       <div className="toolbar">
         <SelectField
-          label="Período"
+          label={t("reports.attendance.filter.period")}
           name="period"
           value={params.from && params.to ? `${params.from}..${params.to}` : ""}
           onChange={(event) => {
@@ -118,24 +121,24 @@ export function AttendanceReport() {
             navigate({ from, to, page: 1 });
           }}
           options={[
-            { value: "", label: "Últimos 30 dias" },
-            { value: `${d(daysAgo(30))}..${d(today())}`, label: "Últimos 30 dias" },
-            { value: `${d(daysAgo(60))}..${d(today())}`, label: "Últimos 60 dias" },
-            { value: `${d(monthStart())}..${d(today())}`, label: "Este mês" },
+            { value: "", label: t("reports.period.last30") },
+            { value: `${d(daysAgo(30))}..${d(today())}`, label: t("reports.period.last30") },
+            { value: `${d(daysAgo(60))}..${d(today())}`, label: t("reports.period.last60") },
+            { value: `${d(monthStart())}..${d(today())}`, label: t("reports.period.thisMonth") },
           ]}
         />
         <SelectField
-          label="Saúde"
+          label={t("reports.attendance.filter.health")}
           name="health"
           value={params.health}
           onChange={(event) =>
             navigate({ health: event.target.value as AttendanceParams["health"], page: 1 })
           }
           options={[
-            { value: "", label: "Todas" },
-            { value: "healthy", label: "Saudável" },
-            { value: "attention", label: "Atenção" },
-            { value: "critical", label: "Crítico" },
+            { value: "", label: t("reports.attendance.filter.all") },
+            { value: "healthy", label: t("reports.attendance.band.healthy") },
+            { value: "attention", label: t("reports.attendance.band.attention") },
+            { value: "critical", label: t("reports.attendance.band.critical") },
           ]}
         />
         <Button
@@ -143,18 +146,18 @@ export function AttendanceReport() {
           icon={FilterX}
           onClick={() => navigate({ health: "", from: "", to: "", page: 1 })}
         >
-          Limpar filtros
+          {t("reports.attendance.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar a frequência" onRetry={() => void reload()}>
-          Tente novamente em instantes.
+        <ErrorState title={t("reports.attendance.error")} onRetry={() => void reload()}>
+          {t("reports.attendance.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando frequência">
+        <div aria-label={t("reports.attendance.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -162,8 +165,8 @@ export function AttendanceReport() {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhum dado de frequência">
-          Não há encontros concluídos no período.
+        <EmptyState title={t("reports.attendance.emptyState")}>
+          {t("reports.attendance.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -174,7 +177,7 @@ export function AttendanceReport() {
             columns={[
               {
                 key: "cell",
-                header: "Célula",
+                header: t("reports.attendance.column.cell"),
                 render: (item) => (
                   <Link
                     href={`/reports/attendance/${item.cell.id}`}
@@ -186,34 +189,34 @@ export function AttendanceReport() {
               },
               {
                 key: "leader",
-                header: "Líder",
+                header: t("reports.attendance.column.leader"),
                 render: (item) =>
                   item.leader ? `${item.leader.firstName} ${item.leader.lastName}` : "—",
               },
               {
                 key: "meetings",
-                header: "Encontros",
+                header: t("reports.attendance.column.meetings"),
                 render: (item) => item.totalMeetings,
               },
               {
                 key: "rate",
-                header: "Frequência",
+                header: t("reports.attendance.column.rate"),
                 render: (item) => (item.attendanceRate !== null ? `${item.attendanceRate}%` : "—"),
               },
               {
                 key: "average",
-                header: "Média presentes",
+                header: t("reports.attendance.column.average"),
                 render: (item) => item.averagePresent,
               },
               {
                 key: "visitors",
-                header: "Visitantes",
+                header: t("reports.attendance.column.visitors"),
                 render: (item) => item.totalVisitors,
               },
               {
                 key: "health",
-                header: "Saúde",
-                render: (item) => formatHealthBand(item.healthBand),
+                header: t("reports.attendance.column.health"),
+                render: (item) => formatHealthBand(item.healthBand, t),
               },
             ]}
             rows={rows}
@@ -231,11 +234,14 @@ export function AttendanceReport() {
   );
 }
 
-function formatHealthBand(band: AttendanceHealthBand | null): string {
-  if (band === "healthy") return "Saudável";
-  if (band === "attention") return "Atenção";
-  if (band === "critical") return "Crítico";
-  return "—";
+function formatHealthBand(band: AttendanceHealthBand | null, t: (key: TranslationKey) => string): string {
+  const map: Record<AttendanceHealthBand, TranslationKey> = {
+    healthy: "reports.attendance.band.healthy",
+    attention: "reports.attendance.band.attention",
+    critical: "reports.attendance.band.critical",
+  };
+  if (!band) return "—";
+  return t(map[band]);
 }
 
 function today(): Date {

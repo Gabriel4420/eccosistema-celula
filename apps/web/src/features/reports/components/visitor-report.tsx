@@ -12,11 +12,12 @@ import {
 } from "@/src/shared/components";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import { getVisitorReport } from "@/src/features/reports/api/reports-api";
 import type { VisitorReportItem } from "@mission-atos/contracts";
 import { ExportButton } from "./export-button";
 import {
-  PERIOD_OPTIONS,
+  getPeriodOptions,
   periodValue,
   readPage,
   splitPeriod,
@@ -43,6 +44,7 @@ function readParams(searchParams: URLSearchParams): VisitorParams {
 
 export function VisitorReport() {
   const { api } = useSession();
+  const { t, locale } = useI18n();
   const { searchParams, navigate } = useReportNavigation("/reports/visitors");
   const params = readParams(searchParams);
 
@@ -75,10 +77,10 @@ export function VisitorReport() {
       <div className="page-header w-full">
         <div className="flex flex-col">
           <h1 className="page-title" id="visitor-report-title">
-            Visitantes
+            {t("reports.visitors.pageTitle")}
           </h1>
           <p className="page-description">
-            Lista de visitantes e métricas de contato.
+            {t("reports.visitors.page.description")}
           </p>
         </div>
         <ExportButton reportType="visitors" params={exportParams} />
@@ -87,16 +89,16 @@ export function VisitorReport() {
       {metrics ? (
         <div className="stat-cards">
           <div className="stat-card">
-            <span className="stat-card__label">Total de visitantes</span>
+            <span className="stat-card__label">{t("reports.visitors.metric.total")}</span>
             <span className="stat-card__value">{metrics.total}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card__label">Contato pendente</span>
+            <span className="stat-card__label">{t("reports.visitors.metric.pending")}</span>
             <span className="stat-card__value">{metrics.contactPendingCount}</span>
           </div>
           {metrics.topCell ? (
             <div className="stat-card">
-              <span className="stat-card__label">Célula com mais visitantes</span>
+              <span className="stat-card__label">{t("reports.visitors.metric.topCell")}</span>
               <span className="stat-card__value">
                 {metrics.topCell.code} ({metrics.topCell.count})
               </span>
@@ -107,23 +109,23 @@ export function VisitorReport() {
 
       <div className="toolbar">
         <SelectField
-          label="Período"
+          label={t("reports.visitors.filter.period")}
           name="period"
           value={periodValue(params)}
           onChange={(event) =>
             navigate({ ...splitPeriod(event.target.value), page: 1 })
           }
-          options={PERIOD_OPTIONS}
+          options={getPeriodOptions(t)}
         />
         <SelectField
-          label="Contato"
+          label={t("reports.visitors.filter.contact")}
           name="contactPending"
           value={params.contactPending}
           onChange={(event) => navigate({ contactPending: event.target.value, page: 1 })}
           options={[
-            { value: "", label: "Todos" },
-            { value: "true", label: "Pendente" },
-            { value: "false", label: "Realizado" },
+            { value: "", label: t("reports.visitors.filter.all") },
+            { value: "true", label: t("reports.visitors.status.pending") },
+            { value: "false", label: t("reports.visitors.status.done") },
           ]}
         />
         <Button
@@ -131,18 +133,18 @@ export function VisitorReport() {
           icon={FilterX}
           onClick={() => navigate({ contactPending: "", from: "", to: "", page: 1 })}
         >
-          Limpar filtros
+          {t("reports.visitors.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
-        <ErrorState title="Não foi possível carregar os visitantes" onRetry={() => void reload()}>
-          Tente novamente em instantes.
+        <ErrorState title={t("reports.visitors.error")} onRetry={() => void reload()}>
+          {t("reports.visitors.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando visitantes">
+        <div aria-label={t("reports.visitors.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -150,8 +152,8 @@ export function VisitorReport() {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhum visitante encontrado">
-          Não há visitantes registrados no período.
+        <EmptyState title={t("reports.visitors.emptyState")}>
+          {t("reports.visitors.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -160,11 +162,11 @@ export function VisitorReport() {
           <Table<VisitorReportItem>
             rowKey={(item) => `${item.person.id}-${item.meetingDate}`}
             columns={[
-              { key: "name", header: "Nome", render: (item) => item.person.fullName },
-              { key: "cell", header: "Célula", render: (item) => `${item.cell.code} — ${item.cell.name}` },
-              { key: "date", header: "Data", render: (item) => new Date(item.meetingDate).toLocaleDateString("pt-BR") },
-              { key: "invitedBy", header: "Convidado por", render: (item) => item.invitedBy?.fullName ?? "—" },
-              { key: "contact", header: "Contato", render: (item) => (item.contactPending ? "Pendente" : "Realizado") },
+              { key: "name", header: t("reports.visitors.column.name"), render: (item) => item.person.fullName },
+              { key: "cell", header: t("reports.visitors.column.cell"), render: (item) => `${item.cell.code} — ${item.cell.name}` },
+              { key: "date", header: t("reports.visitors.column.date"), render: (item) => new Date(item.meetingDate).toLocaleDateString(locale) },
+              { key: "invitedBy", header: t("reports.visitors.column.invitedBy"), render: (item) => item.invitedBy?.fullName ?? "—" },
+              { key: "contact", header: t("reports.visitors.column.contact"), render: (item) => (item.contactPending ? t("reports.visitors.status.pending") : t("reports.visitors.status.done")) },
             ]}
             rows={rows}
           />

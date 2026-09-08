@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TextField, maskEmail, maskPhoneBR } from "@/src/shared/components";
+import { renderWithI18n } from "./helpers/render-with-i18n";
 
 describe("maskEmail", () => {
   it("lowercases and removes whitespace", () => {
@@ -34,7 +35,7 @@ describe("maskPhoneBR", () => {
 describe("TextField password toggle", () => {
   it("renders a toggle button and reveals the password", async () => {
     const user = userEvent.setup();
-    render(<TextField label="Senha" type="password" name="password" />);
+    renderWithI18n(<TextField label="Senha" type="password" name="password" />);
     const input = screen.getByLabelText("Senha") as HTMLInputElement;
     const toggle = screen.getByRole("button", { name: "Mostrar senha" });
 
@@ -76,7 +77,7 @@ function PhoneField() {
 describe("TextField masks", () => {
   it("masks the e-mail as the user types (controlled)", async () => {
     const user = userEvent.setup();
-    render(<EmailField />);
+    renderWithI18n(<EmailField />);
     const input = screen.getByLabelText("E-mail");
     await user.type(input, "Ana@Exemplo.COM");
     expect(input).toHaveValue("ana@exemplo.com");
@@ -84,14 +85,14 @@ describe("TextField masks", () => {
 
   it("masks the phone as the user types (controlled)", async () => {
     const user = userEvent.setup();
-    render(<PhoneField />);
+    renderWithI18n(<PhoneField />);
     const input = screen.getByLabelText("Telefone");
     await user.type(input, "11999999999");
     expect(input).toHaveValue("+55 (11) 99999-9999");
   });
 
   it("masks an uncontrolled default value on mount", () => {
-    render(<TextField label="Telefone" name="phone" mask="phone" defaultValue="+5511988888888" />);
+    renderWithI18n(<TextField label="Telefone" name="phone" mask="phone" defaultValue="+5511988888888" />);
     expect(screen.getByLabelText("Telefone")).toHaveValue("+55 (11) 98888-8888");
   });
 });

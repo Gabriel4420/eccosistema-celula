@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { ChurchAddressFields } from "@/src/features/church/components/church-address-fields";
+import { renderWithI18n } from "./helpers/render-with-i18n";
 
 const address = { line: null, number: "42", complement: null, neighborhood: null, city: null, state: null, postalCode: null, country: "BR" };
 
@@ -13,7 +14,7 @@ describe("ChurchAddressFields", () => {
       ok: true,
       json: async () => ({ logradouro: "Praça da Sé", bairro: "Sé", localidade: "São Paulo", uf: "SP" })
     } as Response);
-    render(<ChurchAddressFields address={address} />);
+    renderWithI18n(<ChurchAddressFields address={address} />);
     fireEvent.change(screen.getByLabelText("CEP"), { target: { value: "01001-000" } });
     fireEvent.blur(screen.getByLabelText("CEP"));
     await waitFor(() => expect(screen.getByLabelText("Logradouro")).toHaveValue("Praça da Sé"));

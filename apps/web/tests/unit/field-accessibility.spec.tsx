@@ -1,10 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { FieldShell, SelectField, TextareaField, TextField } from "@/src/shared/components/field";
+import { renderWithI18n } from "./helpers/render-with-i18n";
 
 describe("field components accessibility", () => {
   it("TextField has no axe violations and wires label, description and error", () => {
-    const { container } = render(
+    const { container } = renderWithI18n(
       <TextField
         label="E-mail"
         hint="Usado para login"
@@ -22,7 +23,7 @@ describe("field components accessibility", () => {
   });
 
   it("password TextField keeps the toggle labelled and aria-describedby", async () => {
-    const { container } = render(<TextField label="Senha" type="password" required />);
+    const { container } = renderWithI18n(<TextField label="Senha" type="password" required />);
 
     expect(screen.getByRole("button", { name: "Mostrar senha" })).toBeInTheDocument();
     const result = await axe(container);
@@ -30,7 +31,7 @@ describe("field components accessibility", () => {
   });
 
   it("TextareaField and SelectField expose accessible names", async () => {
-    const { container } = render(
+    const { container } = renderWithI18n(
       <>
         <TextareaField label="Observações" />
         <SelectField
@@ -51,7 +52,7 @@ describe("field components accessibility", () => {
   });
 
   it("FieldShell without label association fails the label rule (sanity check)", async () => {
-    const { container } = render(
+    const { container } = renderWithI18n(
       <FieldShell htmlFor="unattached" label="Sem input">
         <input id="unattached" value="text" readOnly />
       </FieldShell>

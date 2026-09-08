@@ -32,7 +32,10 @@ const apiEnvironment = {
 
 const webEnvironment = {
   ...process.env,
-  NEXT_PUBLIC_API_URL: apiUrl
+  NODE_ENV: "development",
+  NEXT_DIST_DIR: ".next-e2e",
+  NEXT_PUBLIC_API_URL: apiUrl,
+  API_PROXY_TARGET: apiUrl
 };
 
 function spawnServer(command, args, environment, name) {
@@ -57,7 +60,24 @@ const api = spawnServer(
   apiEnvironment,
   "api"
 );
-const web = spawnServer(
+
+async function waitForApi() {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`${apiUrl}/health`);
+      if (response.ok) return;
+    } catch {
+      // The server is still starting.
+    }
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
+  }
+  throw new Error(`API did not become healthy at ${apiUrl}/health`);
+}
+
+let web;
+await waitForApi();
+web = spawnServer(
   process.execPath,
   [resolve(root, "node_modules/next/dist/bin/next"), "dev", "--port", webPort],
   webEnvironment,

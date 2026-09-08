@@ -4,10 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/src/shared/components";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 export default function BootstrapEntry() {
   const { status } = useSession();
   const router = useRouter();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (status === "authenticated") router.replace("/dashboard");
@@ -16,10 +18,10 @@ export default function BootstrapEntry() {
 
   return (
     <div className="auth-shell">
-      <div className="auth-card" aria-label="Carregando sessão">
-        <h1 className="auth-card__title">Ecossistema de Células</h1>
+      <div className="auth-card" aria-label={t("bootstrap.aria")}>
+        <h1 className="auth-card__title">{t("bootstrap.loading")}</h1>
         <p className="auth-card__description">
-          Verificando sua sessão…
+          {t("bootstrap.verifying")}
         </p>
         <Skeleton width="100%" height="2.5rem" />
         <Skeleton width="100%" height="2.5rem" />

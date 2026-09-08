@@ -1,16 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 export default function AccessDeniedPage() {
+  const { t } = useI18n();
   return (
     <main className="auth-shell">
       <div className="empty-state">
-        <p className="empty-state__title">Acesso negado</p>
-        <p>
-          Sua conta não possui permissão para acessar este recurso. Caso precise
-          de acesso, fale com um administrador.
-        </p>
+        <p className="empty-state__title">{t("accessDenied.title")}</p>
+        <p>{t("accessDenied.description")}</p>
         <Link className="button button--secondary" href="/dashboard">
-          Voltar ao painel
+          {t("accessDenied.back")}
         </Link>
       </div>
     </main>

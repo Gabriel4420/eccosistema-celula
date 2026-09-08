@@ -23,6 +23,7 @@ import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import {
   listPeople,
   updatePersonStatus,
@@ -61,6 +62,7 @@ function toQuery(params: PeopleParams): string {
 }
 
 export function PeopleList() {
+  const { t } = useI18n();
   const { api, capabilities } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -117,13 +119,15 @@ export function PeopleList() {
       await reload();
       toast({
         kind: "success",
-        title: "Pessoa reativada",
-        description: `${person.fullName} voltou a participar da igreja.`,
+        title: t("people.toast.reactivated"),
+        description: t("people.toast.reactivated.desc", {
+          name: person.fullName,
+        }),
       });
     } catch {
       setFeedback({
         kind: "error",
-        message: "Não foi possível reativar a pessoa. Tente novamente.",
+        message: t("people.toast.reactivateError"),
       });
     }
   };
@@ -133,21 +137,21 @@ export function PeopleList() {
       <div className="page-header w-full">
         <div className="flex flex-col">
           <h1 className="page-title" id="people-title">
-            Pessoas
+            {t("people.page.title")}
           </h1>
           <p className="page-description">
-            Mantenha o cadastro de pessoas da igreja.
+            {t("people.page.subtitle")}
           </p>
         </div>
         <Can capability="editPeople">
           <div className="flex flex-wrap gap-2">
             <Link className="button button--secondary" href="/people/import">
               <Upload aria-hidden="true" className="button__icon" />
-              Importar pessoas
+              {t("people.import")}
             </Link>
             <Link className="button" href="/people/new">
               <UserRoundPlus aria-hidden="true" className="button__icon" />
-              Nova pessoa
+              {t("people.new")}
             </Link>
           </div>
         </Can>
@@ -156,7 +160,11 @@ export function PeopleList() {
       {feedback ? (
         <Alert
           variant={feedback.kind}
-          title={feedback.kind === "success" ? "Sucesso" : "Falha"}
+          title={
+            feedback.kind === "success"
+              ? t("people.alert.success")
+              : t("people.alert.failure")
+          }
         >
           {feedback.message}
         </Alert>
@@ -164,7 +172,7 @@ export function PeopleList() {
 
       <div className="toolbar">
         <TextField
-          label="Buscar"
+          label={t("common.search")}
           name="search"
           value={searchInput}
           onChange={(event) => {
@@ -175,10 +183,10 @@ export function PeopleList() {
               navigate({ search: value, page: 1 });
             }, 300);
           }}
-          hint="Nome, e-mail ou telefone"
+          hint={t("people.search.hint")}
         />
         <SelectField
-          label="Status"
+          label={t("common.status")}
           name="status"
           value={effectiveStatus}
           onChange={(event) =>
@@ -188,25 +196,25 @@ export function PeopleList() {
             })
           }
           options={[
-            { value: "", label: "Todos" },
-            { value: "ACTIVE", label: "Ativo" },
+            { value: "", label: t("people.filter.all") },
+            { value: "ACTIVE", label: t("people.filter.active") },
             ...(canListInactive
-              ? [{ value: "INACTIVE", label: "Inativo" }]
+              ? [{ value: "INACTIVE", label: t("people.filter.inactive") }]
               : []),
           ]}
         />
         <SelectField
-          label="Gênero"
+          label={t("people.field.gender")}
           name="gender"
           value={params.gender}
           onChange={(event) =>
             navigate({ gender: event.target.value, page: 1 })
           }
           options={[
-            { value: "", label: "Todos" },
-            { value: "M", label: "Masculino" },
-            { value: "F", label: "Feminino" },
-            { value: "O", label: "Outro" },
+            { value: "", label: t("people.filter.all") },
+            { value: "M", label: t("people.gender.male") },
+            { value: "F", label: t("people.gender.female") },
+            { value: "O", label: t("people.gender.other") },
           ]}
         />
         <Button
@@ -217,21 +225,21 @@ export function PeopleList() {
             navigate({ search: "", status: "", gender: "", page: 1 });
           }}
         >
-          Limpar filtros
+          {t("people.action.clearFilters")}
         </Button>
       </div>
 
       {error ? (
         <ErrorState
-          title="Não foi possível carregar as pessoas"
+          title={t("people.error.list")}
           onRetry={() => void reload()}
         >
-          Tente novamente em instantes.
+          {t("people.error.retry")}
         </ErrorState>
       ) : null}
 
       {loading && rows.length === 0 ? (
-        <div aria-label="Carregando pessoas">
+        <div aria-label={t("people.loading")}>
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
           <Skeleton width="100%" height="3rem" />
@@ -239,8 +247,8 @@ export function PeopleList() {
       ) : null}
 
       {!loading && rows.length === 0 && !error ? (
-        <EmptyState title="Nenhuma pessoa encontrada">
-          Ajuste os filtros ou cadastre uma nova pessoa.
+        <EmptyState title={t("people.emptyState.title")}>
+          {t("people.emptyState.desc")}
         </EmptyState>
       ) : null}
 
@@ -251,7 +259,7 @@ export function PeopleList() {
             columns={[
               {
                 key: "fullName",
-                header: "Nome",
+                header: t("people.column.name"),
                 render: (person) =>
                   person.status === "ACTIVE" ? (
                     <Link href={`/people/${person.id}`}>{person.fullName}</Link>
@@ -261,32 +269,32 @@ export function PeopleList() {
               },
               {
                 key: "email",
-                header: "E-mail",
+                header: t("people.column.email"),
                 render: (person) => person.email ?? "—",
               },
               {
                 key: "phone",
-                header: "Telefone",
+                header: t("people.column.phone"),
                 render: (person) => person.phone ?? "—",
               },
               {
                 key: "birthDate",
-                header: "Nascimento",
+                header: t("people.column.birthDate"),
                 render: (person) => person.birthDate ?? "—",
               },
               {
                 key: "gender",
-                header: "Gênero",
+                header: t("people.column.gender"),
                 render: (person) => person.gender ?? "—",
               },
               {
                 key: "status",
-                header: "Status",
+                header: t("common.status"),
                 render: (person) => <StatusBadge status={person.status} />,
               },
               {
                 key: "actions",
-                header: "Ações",
+                header: t("common.actions"),
                 render: (person) =>
                   person.status === "INACTIVE" ? (
                     <Can capability="changePersonStatus">
@@ -300,7 +308,7 @@ export function PeopleList() {
                           variant="secondary"
                           className="button--sm"
                         >
-                          Reativar
+                          {t("people.action.reactivate")}
                         </Button>
                       </form>
                     </Can>
@@ -310,7 +318,7 @@ export function PeopleList() {
                         className="button button--secondary button--sm"
                         href={`/people/${person.id}`}
                       >
-                        Ver detalhes
+                        {t("people.action.viewDetails")}
                       </Link>
                     </span>
                   ),

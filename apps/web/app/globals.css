@@ -2605,6 +2605,16 @@ body {
     color: var(--color-danger);
   }
 
+  .status-badge--overdue {
+    background: var(--color-danger-muted);
+    color: var(--color-danger);
+  }
+
+  .status-badge--ontime {
+    background: var(--color-success-muted);
+    color: var(--color-success);
+  }
+
   /* ─── Dialog ─── */
   .dialog-overlay {
     position: fixed;

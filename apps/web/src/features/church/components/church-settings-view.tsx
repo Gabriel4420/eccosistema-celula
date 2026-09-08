@@ -13,10 +13,12 @@ import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
 import { getChurch, getChurchSettings, updateChurch, updateChurchSettings } from "@/src/features/church/api/church-api";
 import { ChurchAddressFields } from "@/src/features/church/components/church-address-fields";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 const CHURCH_CACHE = "church";
 
 export function ChurchSettingsView() {
+  const { t } = useI18n();
   const { api } = useSession();
   const { data: church, loading, error, reload } = useRemoteQuery({
     fetcher: () => getChurch(api),
@@ -36,7 +38,7 @@ export function ChurchSettingsView() {
 
   if ((loading && !church) || (settingsLoading && !settings)) {
     return (
-      <div aria-label="Carregando igreja">
+      <div aria-label={t("church.loading.church")}>
         <Skeleton width="40%" height="2.5rem" />
         <Skeleton width="100%" height="8rem" />
       </div>
@@ -45,14 +47,14 @@ export function ChurchSettingsView() {
 
   if ((error && !church) || (settingsError && !settings)) {
     return (
-      <ErrorState title="Não foi possível carregar os dados da igreja" onRetry={() => { void reload(); void reloadSettings(); }}>
-        Tente novamente em instantes.
+      <ErrorState title={t("church.error.load")} onRetry={() => { void reload(); void reloadSettings(); }}>
+        {t("church.error.retry")}
       </ErrorState>
     );
   }
 
   if (!church || !settings) {
-    return <EmptyState title="Igreja indisponível">Os dados da igreja não puderam ser carregados.</EmptyState>;
+    return <EmptyState title={t("church.empty.title")}>{t("church.empty.desc")}</EmptyState>;
   }
 
   const handleSaveChurch = async (event: FormEvent<HTMLFormElement>) => {
@@ -103,8 +105,8 @@ export function ChurchSettingsView() {
     if (Object.keys(payload).length === 0) {
       toast({
         kind: "info",
-        title: "Nenhuma alteração",
-        description: "Não havia dados novos para salvar."
+        title: t("church.toast.noChange"),
+        description: t("church.toast.noChange.desc")
       });
       return;
     }
@@ -116,11 +118,11 @@ export function ChurchSettingsView() {
       await reload();
       toast({
         kind: "success",
-        title: "Dados atualizados",
-        description: "As informações da igreja foram salvas."
+        title: t("church.toast.savedData"),
+        description: t("church.toast.savedData.desc")
       });
     } catch {
-      setFeedback({ kind: "error", message: "Não foi possível salvar. Verifique slug, contato e endereço." });
+      setFeedback({ kind: "error", message: t("church.error.save") });
     } finally {
       setSaving(false);
     }
@@ -138,8 +140,8 @@ export function ChurchSettingsView() {
     if (Object.keys(payload).length === 0) {
       toast({
         kind: "info",
-        title: "Nenhuma alteração",
-        description: "Não havia configurações novas para salvar."
+        title: t("church.toast.noChange"),
+        description: t("church.toast.noChangeSettings.desc")
       });
       return;
     }
@@ -150,11 +152,11 @@ export function ChurchSettingsView() {
       await reloadSettings();
       toast({
         kind: "success",
-        title: "Configurações atualizadas",
-        description: "As preferências da igreja foram salvas."
+        title: t("church.toast.savedSettings"),
+        description: t("church.toast.savedSettings.desc")
       });
     } catch {
-      setFeedback({ kind: "error", message: "Não foi possível salvar as configurações. Verifique o fuso horário." });
+      setFeedback({ kind: "error", message: t("church.error.saveSettings") });
     } finally {
       setSaving(false);
     }
@@ -164,66 +166,66 @@ export function ChurchSettingsView() {
     <section aria-labelledby="church-title">
       <div className="page-header">
         <h1 className="page-title" id="church-title">
-          Igreja
+          {t("church.page.title")}
         </h1>
         <p className="page-description">
-          Dados institucionais e ajustes. A edição está disponível somente para administradores.
+          {t("church.page.description")}
         </p>
       </div>
 
       {feedback ? (
-        <Alert variant={feedback.kind} title={feedback.kind === "success" ? "Sucesso" : "Falha"}>
+        <Alert variant={feedback.kind} title={feedback.kind === "success" ? t("common.success") : t("common.failure")}>
           {feedback.message}
         </Alert>
       ) : null}
 
       <form className="fieldset" onSubmit={(event) => void handleSaveChurch(event)}>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Dados institucionais</legend>
-          <TextField label="Nome" name="name" defaultValue={church.name} required />
+          <legend className="fieldset__legend">{t("church.section.institutional")}</legend>
+          <TextField label={t("church.field.name")} name="name" defaultValue={church.name} required />
           <TextField
-            label="Identificador (slug)"
+            label={t("church.field.slug")}
             name="slug"
             defaultValue={church.slug}
-            hint="Letras minúsculas, números e hífens."
+            hint={t("church.hint.slug")}
             required
           />
-          <TextField label="E-mail" type="email" name="email" mask="email" defaultValue={church.email ?? ""} />
-          <TextField label="Telefone" name="phone" mask="phone" defaultValue={church.phone ?? ""} hint="Formato brasileiro, ex.: (11) 99999-9999." />
+          <TextField label={t("church.field.email")} type="email" name="email" mask="email" defaultValue={church.email ?? ""} />
+          <TextField label={t("church.label.phone")} name="phone" mask="phone" defaultValue={church.phone ?? ""} hint={t("church.hint.phone")} />
         </fieldset>
 
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Endereço</legend>
+          <legend className="fieldset__legend">{t("church.section.address")}</legend>
           <ChurchAddressFields address={church.address} />
         </fieldset>
 
         <Can capability="editChurch">
-          <Button type="submit" icon={Save} loading={saving} loadingLabel="Salvando…">
-            Salvar dados
+          <Button type="submit" icon={Save} loading={saving} loadingLabel={t("church.saving")}>
+            {t("church.saveData")}
           </Button>
         </Can>
       </form>
 
       <form className="fieldset" style={{ marginTop: "var(--space-6)" }} onSubmit={(event) => void handleSaveSettings(event)}>
         <fieldset className="fieldset">
-          <legend className="fieldset__legend">Configurações</legend>
+          <legend className="fieldset__legend">{t("church.section.settings")}</legend>
           <TextField
-            label="Fuso horário"
+            label={t("church.field.timezone")}
             name="timezone"
             defaultValue={settings.timezone}
-            hint="Padrão IANA, ex.: America/Sao_Paulo."
+            hint={t("church.hint.timezone")}
             required
           />
           <SelectField
-            label="Dia de início da semana"
+            label={t("church.field.weekStart")}
             name="weekStartsOn"
             defaultValue={settings.weekStartsOn}
             options={churchWeekDays.map((day) => ({ value: day, label: day }))}
             required
           />
           <Can capability="editChurch">
-            <Button type="submit" icon={Save} loading={saving} loadingLabel="Salvando…">
-              Salvar configurações
+            <Button type="submit" icon={Save} loading={saving} loadingLabel={t("church.saving")}>
+              {t("church.saveSettings")}
             </Button>
           </Can>
         </fieldset>

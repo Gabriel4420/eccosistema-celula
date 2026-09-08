@@ -9,6 +9,7 @@ import {
   subscribeToasts
 } from "@/src/shared/toast/toast-store";
 import type { Toast, ToastKind } from "@/src/shared/toast/toast-store";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 const ICONS: Record<ToastKind, LucideIcon> = {
   success: CircleCheck,
@@ -25,12 +26,13 @@ export function ToastViewport() {
     getToasts,
     () => EMPTY_TOASTS
   );
+  const { t } = useI18n();
   if (toasts.length === 0) return null;
   return (
     <div
       className="toast-viewport"
       role="region"
-      aria-label="Notificações"
+      aria-label={t("toast.ariaNotifications")}
       aria-live="polite"
     >
       {toasts.map((item) => {
@@ -52,7 +54,7 @@ export function ToastViewport() {
               type="button"
               className="toast__close"
               onClick={() => dismissToast(item.id)}
-              aria-label="Fechar notificação"
+              aria-label={t("toast.closeNotification")}
             >
               <X aria-hidden="true" />
             </button>

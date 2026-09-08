@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { FieldShell, Skeleton } from "@/src/shared/components";
 import { useSession } from "@/src/providers/session-provider";
+import { useI18n } from "@/src/shared/i18n/language-provider";
 import {
   listCellAssignmentOptions
 } from "@/src/features/cells/api/cells-api";
@@ -43,6 +44,7 @@ export function AssignmentSelect({
   required,
   disabled
 }: AssignmentSelectProps) {
+  const { t } = useI18n();
   const { api } = useSession();
   const generatedId = useId();
   const fieldId = `assignment-${generatedId}`;
@@ -194,7 +196,7 @@ export function AssignmentSelect({
               <button
                 type="button"
                 className="combobox__clear"
-                aria-label={`Limpar ${label.toLowerCase()}`}
+                aria-label={t("cells.assignment.clearLabel", { label: label.toLowerCase() })}
                 onClick={clearSelection}
                 tabIndex={-1}
               >
@@ -207,16 +209,16 @@ export function AssignmentSelect({
               id={`${fieldId}-list`}
               className="combobox__list"
               role="listbox"
-              aria-label={`Opções de ${label.toLowerCase()}`}
+              aria-label={t("cells.assignment.optionsLabel", { label: label.toLowerCase() })}
             >
               {loading ? (
                 <li className="combobox__empty">
                   <Skeleton width="100%" height="1.5rem" />
                 </li>
               ) : failed ? (
-                <li className="combobox__empty">Não foi possível carregar as opções.</li>
+                <li className="combobox__empty">{t("cells.assignment.loadError")}</li>
               ) : options.length === 0 ? (
-                <li className="combobox__empty">Nenhum candidato encontrado.</li>
+                <li className="combobox__empty">{t("cells.assignment.noCandidates")}</li>
               ) : (
                 options.map((option, index) => (
                   <li key={option.id} role="option" aria-selected={option.id === value}>

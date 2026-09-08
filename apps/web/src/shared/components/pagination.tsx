@@ -1,3 +1,7 @@
+"use client";
+
+import { useI18n } from "@/src/shared/i18n/language-provider";
+
 interface PaginationProps {
   readonly page: number;
   readonly pageSize: number;
@@ -15,13 +19,15 @@ export function Pagination({
   onPageChange,
   labels
 }: PaginationProps) {
+  const { t } = useI18n();
   const hasPrevious = page > 1;
   const hasNext = page < totalPages;
-  const info = labels?.info ?? defaultInfo;
+  const info = labels?.info ?? ((current, total, items) =>
+    t("pagination.info", { page: current, totalPages: Math.max(total, 1), from: items === 0 ? 0 : (current - 1) * pageSize + 1, to: Math.min(current * pageSize, items), totalItems: items }));
 
   return (
-    <nav className="pagination" aria-label="Paginação">
-      <p className="pagination__info">{info(page, totalPages, totalItems, pageSize)}</p>
+    <nav className="pagination" aria-label={t("pagination.aria")}>
+      <p className="pagination__info">{info(page, totalPages, totalItems)}</p>
       <div className="pagination__controls">
         <button
           type="button"
@@ -29,7 +35,7 @@ export function Pagination({
           disabled={!hasPrevious}
           onClick={() => onPageChange(page - 1)}
         >
-          {labels?.previous ?? "Anterior"}
+          {labels?.previous ?? t("pagination.prev")}
         </button>
         <button
           type="button"
@@ -37,20 +43,9 @@ export function Pagination({
           disabled={!hasNext}
           onClick={() => onPageChange(page + 1)}
         >
-          {labels?.next ?? "Próxima"}
+          {labels?.next ?? t("pagination.next")}
         </button>
       </div>
     </nav>
   );
-}
-
-function defaultInfo(
-  page: number,
-  totalPages: number,
-  totalItems: number,
-  pageSize: number
-): string {
-  const from = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
-  const to = Math.min(page * pageSize, totalItems);
-  return `Página ${page} de ${Math.max(totalPages, 1)} · ${from}–${to} de ${totalItems}`;
 }

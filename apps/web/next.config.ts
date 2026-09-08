@@ -14,13 +14,16 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  distDir: process.env.NEXT_DIST_DIR,
   reactStrictMode: true,
   transpilePackages: ["@mission-atos/config"],
   async headers() {
     const production = process.env.NODE_ENV === "production";
+    const developmentApiUrl = process.env.NEXT_PUBLIC_API_URL ?? PROXY_TARGET_DEV_DEFAULT;
+    const developmentApiWebSocketUrl = developmentApiUrl.replace(/^http/, "ws");
     const connectSrc = production
       ? "'self' https://viacep.com.br"
-      : "'self' http://localhost:3001 ws://localhost:3001 https://viacep.com.br";
+      : `'self' ${developmentApiUrl} ${developmentApiWebSocketUrl} https://viacep.com.br`;
     const onVercel = Boolean(process.env.VERCEL_ENV);
     const vercelLive = onVercel
       ? {

@@ -2,20 +2,21 @@
 
 import Link from "next/link";
 import { Can } from "@/src/shared/auth/guards";
-
-const REPORT_CARDS = [
-  { href: "/reports/pending", title: "Relatórios Pendentes", description: "Encontros concluídos sem relatório submetido", capability: "viewReports" },
-  { href: "/reports/attendance", title: "Frequência", description: "Resumo e detalhamento de frequência por célula", capability: "viewReports" },
-  { href: "/reports/visitors", title: "Visitantes", description: "Lista de visitantes e métricas de contato", capability: "viewReports" },
-  { href: "/reports/meetings", title: "Encontros", description: "Relatório consolidado de encontros por período", capability: "viewReports" }
-] as const;
+import { useI18n } from "@/src/shared/i18n/language-provider";
 
 export function ReportsHub() {
+  const { t } = useI18n();
+  const REPORT_CARDS = [
+    { href: "/reports/pending", title: t("reports.hub.card.pending"), description: t("reports.hub.card.pending.desc"), capability: "viewReports" as const },
+    { href: "/reports/attendance", title: t("reports.hub.card.attendance"), description: t("reports.hub.card.attendance.desc"), capability: "viewReports" as const },
+    { href: "/reports/visitors", title: t("reports.hub.card.visitors"), description: t("reports.hub.card.visitors.desc"), capability: "viewReports" as const },
+    { href: "/reports/meetings", title: t("reports.hub.card.meetings"), description: t("reports.hub.card.meetings.desc"), capability: "viewReports" as const }
+  ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>Relatórios</h1>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>{t("reports.hub.title")}</h1>
       <p style={{ color: "var(--color-text-secondary)" }}>
-        Selecione o tipo de relatório desejado.
+        {t("reports.hub.subtitle")}
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
         {REPORT_CARDS.map((card) => (

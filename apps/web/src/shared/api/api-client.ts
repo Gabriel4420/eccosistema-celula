@@ -56,13 +56,19 @@ export class ApiClient {
   private token: string | null = null;
   private coordinator: RefreshCoordinator | null = null;
   private sessionEndedHandler: () => void;
+  private errorHandler: (error: ApiError) => void;
 
   constructor(private readonly deps: ApiClientDependencies) {
     this.sessionEndedHandler = deps.onSessionEnded;
+    this.errorHandler = deps.onError ?? (() => undefined);
   }
 
   setSessionEndedHandler(handler: () => void): void {
     this.sessionEndedHandler = handler;
+  }
+
+  setErrorHandler(handler: (error: ApiError) => void): void {
+    this.errorHandler = handler;
   }
 
   setAccessToken(accessToken: string, expiresIn: number): void {
@@ -140,7 +146,7 @@ export class ApiClient {
           continue;
         }
         if (!(options.bearer && apiError.status === 401)) {
-          this.deps.onError?.(apiError);
+          this.errorHandler(apiError);
         }
         throw apiError;
       }

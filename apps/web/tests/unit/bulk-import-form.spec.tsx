@@ -1,12 +1,13 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { BulkImportForm } from "@/src/features/bulk-import/components/bulk-import-form";
+import { renderWithI18n } from "./helpers/render-with-i18n";
 
 jest.mock("@/src/providers/session-provider", () => ({
   useSession: () => ({ api: {} })
 }));
 
 function renderForm() {
-  render(
+  renderWithI18n(
     <BulkImportForm
       domain="people"
       title="Importar pessoas"
