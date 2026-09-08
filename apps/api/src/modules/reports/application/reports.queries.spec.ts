@@ -14,6 +14,7 @@ function principal(roles: string[], userId = "user-1"): AuthenticatedPrincipal {
 function stubRepository(overrides: Partial<ReportsRepository> = {}): ReportsRepository {
   return {
     getChurchTimezone: overrides.getChurchTimezone ?? (async () => "America/Sao_Paulo"),
+    getChurchDeadlineSettings: overrides.getChurchDeadlineSettings ?? (async () => ({ timezone: "America/Sao_Paulo", reportDeadlineHours: 48 })),
     findPendingReports: overrides.findPendingReports ?? (async () => ({ items: [], totalItems: 0 })),
     findAttendanceSummary: overrides.findAttendanceSummary ?? (async () => ({ items: [], totalItems: 0 })),
     findAttendanceDetail: overrides.findAttendanceDetail ?? (async () => ({ items: [], totalItems: 0 })),
@@ -55,6 +56,35 @@ describe("ReportsQueries", () => {
       }
     });
     await queries(repository).pendingReports(principal(["ADMIN"]), { from: "2026-07-01", to: "2026-07-31" }, 1, 20);
+  });
+
+  it("marks pending reports as overdue when the deadline has passed", async () => {
+    const repository = stubRepository({
+      findPendingReports: async () => ({
+        items: [
+          { cell: { id: "c1", code: "C-01", name: "Célula 1" }, leader: null, meetingDate: "2026-08-10", daysSinceMeeting: 21, reportStatus: "NOT_STARTED", lastReturnedAt: null },
+          { cell: { id: "c2", code: "C-02", name: "Célula 2" }, leader: null, meetingDate: "2026-08-31", daysSinceMeeting: 0, reportStatus: "DRAFT", lastReturnedAt: null }
+        ],
+        totalItems: 2
+      })
+    });
+    const result = await queries(repository).pendingReports(principal(["ADMIN"]), {}, 1, 20);
+    expect(result.items[0]?.overdue).toBe(true);
+    expect(result.items[1]?.overdue).toBe(false);
+  });
+
+  it("uses the church reportDeadlineHours when computing overdue", async () => {
+    const repository = stubRepository({
+      getChurchDeadlineSettings: async () => ({ timezone: "America/Sao_Paulo", reportDeadlineHours: 720 }),
+      findPendingReports: async () => ({
+        items: [
+          { cell: { id: "c1", code: "C-01", name: "Célula 1" }, leader: null, meetingDate: "2026-08-27", daysSinceMeeting: 4, reportStatus: "NOT_STARTED", lastReturnedAt: null }
+        ],
+        totalItems: 1
+      })
+    });
+    const result = await queries(repository).pendingReports(principal(["ADMIN"]), {}, 1, 20);
+    expect(result.items[0]?.overdue).toBe(false);
   });
 
   it("scopes the repository call to the leader cells", async () => {

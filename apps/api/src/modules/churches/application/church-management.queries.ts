@@ -2,7 +2,10 @@ import type { AuthenticatedPrincipal } from "@mission-atos/domain";
 import type { ChurchManagementAuthorization } from "./church-management.authorization";
 import { ChurchManagementError } from "./church-management.error";
 import type { ChurchManagementRepository } from "./church-management.port";
-import type { ManagedChurch } from "./church-management.types";
+import type {
+  ManagedChurch,
+  ManagedChurchSettings
+} from "./church-management.types";
 
 export class ChurchManagementQueries {
   constructor(
@@ -21,12 +24,16 @@ export class ChurchManagementQueries {
 
   async getSettings(
     principal: AuthenticatedPrincipal
-  ): Promise<Pick<ManagedChurch, "timezone" | "weekStartsOn">> {
-    const church = await this.get(principal);
-    return {
-      timezone: church.timezone,
-      weekStartsOn: church.weekStartsOn
-    };
+  ): Promise<ManagedChurchSettings> {
+    await this.get(principal);
+    const settings = await this.churches.findSettings(principal.churchId);
+    if (!settings) {
+      throw new ChurchManagementError(
+        "CHURCH_NOT_FOUND",
+        "Church settings not found"
+      );
+    }
+    return settings;
   }
 }
 

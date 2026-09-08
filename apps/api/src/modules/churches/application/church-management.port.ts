@@ -1,5 +1,6 @@
 import type {
   ManagedChurch,
+  ManagedChurchSettings,
   UpdateChurchInput,
   UpdateChurchSettingsInput
 } from "./church-management.types";
@@ -21,13 +22,15 @@ export type ChurchAuditValue =
 
 export interface ChurchManagementRepository {
   find(churchId: string): Promise<ManagedChurch | null>;
+  findSettings(churchId: string): Promise<ManagedChurchSettings | null>;
 }
 
 export interface ChurchManagementTransaction {
   isActiveAdministrator(userId: string): Promise<boolean>;
   findChurch(): Promise<ManagedChurch>;
+  findSettings(): Promise<ManagedChurchSettings>;
   updateInstitutional(input: UpdateChurchInput): Promise<ManagedChurch>;
-  updateSettings(input: UpdateChurchSettingsInput): Promise<ManagedChurch>;
+  updateSettings(input: UpdateChurchSettingsInput): Promise<ManagedChurchSettings>;
   recordAudit(input: {
     actorId: string;
     action: string;

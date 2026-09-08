@@ -16,6 +16,7 @@
     "test:attendance:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern attendance.e2e-spec.ts",
     "test:reports:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern reports.e2e-spec.ts",
     "test:dashboard:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern dashboard.e2e-spec.ts",
+    "test:settings:e2e": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.cjs --testPathPattern settings.e2e-spec.ts",
     "test:integration": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand --config jest.integration.config.cjs",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "typecheck": "tsc --noEmit && npm run typecheck:test"

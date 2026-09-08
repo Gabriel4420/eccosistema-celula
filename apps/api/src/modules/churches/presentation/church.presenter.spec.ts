@@ -20,6 +20,12 @@ const church = {
   updatedAt: new Date("2026-07-26T00:00:00.000Z")
 };
 
+const settings = {
+  timezone: "America/Sao_Paulo",
+  weekStartsOn: "SUNDAY" as const,
+  reportDeadlineHours: 48
+};
+
 describe("church presenter", () => {
   it("returns an explicit institutional allowlist", () => {
     const result = presentChurch(church);
@@ -29,9 +35,10 @@ describe("church presenter", () => {
   });
 
   it("returns only approved settings", () => {
-    expect(presentChurchSettings(church)).toEqual({
+    expect(presentChurchSettings(settings)).toEqual({
       timezone: "America/Sao_Paulo",
-      weekStartsOn: "SUNDAY"
+      weekStartsOn: "SUNDAY",
+      reportDeadlineHours: 48
     });
   });
 });

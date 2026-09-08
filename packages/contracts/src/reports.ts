@@ -84,6 +84,7 @@ const pendingReportItemSchema = z
     leader: z.object({ firstName: z.string(), lastName: z.string() }).strict().nullable(),
     meetingDate: z.string().regex(civilDatePattern),
     daysSinceMeeting: z.number().int().nonnegative(),
+    overdue: z.boolean(),
     reportStatus: z.enum(reportStatuses),
     lastReturnedAt: z.string().nullable()
   })

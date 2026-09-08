@@ -1,4 +1,7 @@
-import type { ManagedChurch } from "../application/church-management.types";
+import type {
+  ManagedChurch,
+  ManagedChurchSettings
+} from "../application/church-management.types";
 
 export function presentChurch(church: ManagedChurch) {
   return {
@@ -22,12 +25,11 @@ export function presentChurch(church: ManagedChurch) {
   };
 }
 
-export function presentChurchSettings(
-  church: Pick<ManagedChurch, "timezone" | "weekStartsOn">
-) {
+export function presentChurchSettings(settings: ManagedChurchSettings) {
   return {
-    timezone: church.timezone,
-    weekStartsOn: church.weekStartsOn
+    timezone: settings.timezone,
+    weekStartsOn: settings.weekStartsOn,
+    reportDeadlineHours: settings.reportDeadlineHours
   };
 }
 

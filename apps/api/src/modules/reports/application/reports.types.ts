@@ -20,9 +20,12 @@ export interface PendingReportRow {
   leader: { firstName: string; lastName: string } | null;
   meetingDate: string;
   daysSinceMeeting: number;
+  overdue: boolean;
   reportStatus: "NOT_STARTED" | "DRAFT" | "SUBMITTED" | "RETURNED";
   lastReturnedAt: string | null;
 }
+
+export type PendingReportRowInput = Omit<PendingReportRow, "overdue">;
 
 export interface AttendanceSummaryRow {
   cell: { id: string; code: string; name: string };

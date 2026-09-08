@@ -14,6 +14,7 @@ import { AttendanceModule } from "./modules/attendance/attendance.module";
 import { DashboardAnalyticsModule } from "./modules/dashboard-analytics/dashboard-analytics.module";
 import { ReportsModule } from "./modules/reports/reports.module";
 import { BulkImportModule } from "./modules/bulk-import/bulk-import.module";
+import { UserPreferencesModule } from "./modules/user-preferences/user-preferences.module";
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { BulkImportModule } from "./modules/bulk-import/bulk-import.module";
     AttendanceModule,
     DashboardAnalyticsModule,
     ReportsModule,
-    BulkImportModule
+    BulkImportModule,
+    UserPreferencesModule
   ],
   controllers: [HealthController],
   providers: [

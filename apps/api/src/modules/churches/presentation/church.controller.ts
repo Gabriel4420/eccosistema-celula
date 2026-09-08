@@ -117,7 +117,8 @@ function updateSettingsBodySchema() {
     additionalProperties: false,
     properties: {
       timezone: { type: "string", minLength: 1, maxLength: 64 },
-      weekStartsOn: { type: "string", enum: [...churchWeekDays] }
+      weekStartsOn: { type: "string", enum: [...churchWeekDays] },
+      reportDeadlineHours: { type: "integer", minimum: 1, maximum: 720 }
     }
   };
 }
@@ -173,10 +174,11 @@ function churchSchema() {
 function settingsSchema() {
   return {
     type: "object",
-    required: ["timezone", "weekStartsOn"],
+    required: ["timezone", "weekStartsOn", "reportDeadlineHours"],
     properties: {
       timezone: { type: "string" },
-      weekStartsOn: { type: "string", enum: [...churchWeekDays] }
+      weekStartsOn: { type: "string", enum: [...churchWeekDays] },
+      reportDeadlineHours: { type: "integer" }
     }
   };
 }

@@ -10,7 +10,9 @@ const softDeletableModels = new Set([
   "Meeting",
   "MeetingAttendance",
   "MeetingVisitor",
-  "MeetingReport"
+  "MeetingReport",
+  "ChurchSettings",
+  "UserPreferences"
 ]);
 
 const physicalDeleteOperations = new Set(["delete", "deleteMany"]);

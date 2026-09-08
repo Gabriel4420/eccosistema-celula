@@ -37,7 +37,7 @@ describe("production bootstrap", () => {
       BOOTSTRAP_ADMIN_FIRST_NAME: "Initial",
       BOOTSTRAP_ADMIN_LAST_NAME: "Administrator",
       BOOTSTRAP_ADMIN_EMAIL: email,
-      BOOTSTRAP_ADMIN_PASSWORD: "integration-password-123"
+      BOOTSTRAP_ADMIN_PASSWORD: "integration-secret-12345"
     });
     const hashPassword = jest.fn(async () => "$argon2id$bootstrap-test-hash");
 

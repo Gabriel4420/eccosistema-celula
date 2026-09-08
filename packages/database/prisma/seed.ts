@@ -47,6 +47,16 @@ async function seed(): Promise<void> {
         weekStartsOn: "SUNDAY"
       }
     });
+    await prisma.churchSettings.upsert({
+      where: { churchId: FICTIONAL_CHURCH_ID },
+      create: {
+        churchId: FICTIONAL_CHURCH_ID,
+        reportDeadlineHours: 48
+      },
+      update: {
+        reportDeadlineHours: 48
+      }
+    });
     console.info("Seed fictícia aplicada com sucesso.");
   } finally {
     await prisma.$disconnect();

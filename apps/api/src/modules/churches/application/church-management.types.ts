@@ -24,6 +24,12 @@ export interface ManagedChurch {
   updatedAt: Date;
 }
 
+export interface ManagedChurchSettings {
+  timezone: string;
+  weekStartsOn: ChurchWeekDay;
+  reportDeadlineHours: number;
+}
+
 export type UpdateChurchInput = UpdateChurchRequest;
 export type UpdateChurchSettingsInput = UpdateChurchSettingsRequest;
 

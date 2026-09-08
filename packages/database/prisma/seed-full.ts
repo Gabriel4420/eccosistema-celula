@@ -358,6 +358,18 @@ async function seed(): Promise<void> {
       }
     });
 
+    // church_settings — uma linha por igreja com o deadline padrão de 48h
+    await prisma.churchSettings.upsert({
+      where: { churchId: FICTIONAL_CHURCH_ID },
+      create: {
+        churchId: FICTIONAL_CHURCH_ID,
+        reportDeadlineHours: 48
+      },
+      update: {
+        reportDeadlineHours: 48
+      }
+    });
+
     // roles
     const roleIdsByKey: Record<string, string> = {
       ADMIN: ROLE_ADMIN_ID,
@@ -617,6 +629,25 @@ async function seed(): Promise<void> {
       },
       update: {
         roleId: ROLE_ADMIN_ID
+      }
+    });
+
+    await prisma.userPreferences.upsert({
+      where: { userId: GABRIEL_USER_ID },
+      create: {
+        userId: GABRIEL_USER_ID,
+        churchId: FICTIONAL_CHURCH_ID,
+        language: "pt-BR",
+        displayTimezone: null,
+        dateFormat: "dd/MM/yyyy",
+        theme: "system"
+      },
+      update: {
+        churchId: FICTIONAL_CHURCH_ID,
+        language: "pt-BR",
+        displayTimezone: null,
+        dateFormat: "dd/MM/yyyy",
+        theme: "system"
       }
     });
 

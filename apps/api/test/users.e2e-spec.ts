@@ -248,7 +248,7 @@ describe("user management HTTP flow", () => {
       .post("/auth/login")
       .send({
         email: `updated-${adminId}@example.test`,
-        password: "new-user-password-123",
+        password: "New-user-password-123!",
       })
       .expect(200);
     expect(

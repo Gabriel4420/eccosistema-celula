@@ -5,7 +5,7 @@ import type {
   HealthScopeInput,
   MeetingsReportRow,
   PaginatedResult,
-  PendingReportRow,
+  PendingReportRowInput,
   ReportsScope,
   VisitorMetrics,
   VisitorReportRow
@@ -17,8 +17,9 @@ export const REPORTS_NOW = Symbol("REPORTS_NOW");
 export interface ReportsRepository {
   getChurchTimezone(churchId: string): Promise<string>;
   getChurchName(churchId: string): Promise<string>;
+  getChurchDeadlineSettings(churchId: string): Promise<{ timezone: string; reportDeadlineHours: number }>;
 
-  findPendingReports(churchId: string, scope: ReportsScope, input: { from: string; to: string; status?: string; cellId?: string }, page: number, pageSize: number): Promise<PaginatedResult<PendingReportRow>>;
+  findPendingReports(churchId: string, scope: ReportsScope, input: { from: string; to: string; status?: string; cellId?: string }, page: number, pageSize: number): Promise<PaginatedResult<PendingReportRowInput>>;
 
   findAttendanceSummary(churchId: string, scope: ReportsScope, input: { from: string; to: string } & HealthScopeInput, page: number, pageSize: number): Promise<PaginatedResult<AttendanceSummaryRow>>;
 

@@ -30,6 +30,7 @@ export function presentPendingReports(result: PaginatedResult<PendingReportRow>,
     leader: item.leader ? { firstName: item.leader.firstName, lastName: item.leader.lastName } : null,
     meetingDate: item.meetingDate,
     daysSinceMeeting: item.daysSinceMeeting,
+    overdue: item.overdue,
     reportStatus: item.reportStatus,
     lastReturnedAt: item.lastReturnedAt
   }));

@@ -48,6 +48,16 @@ describe("PrismaChurchManagementRepository", () => {
       otherChurchId
     );
     await database.$executeRawUnsafe(
+      'DELETE FROM "user_preferences" WHERE "church_id" IN ($1::uuid, $2::uuid)',
+      churchId,
+      otherChurchId
+    );
+    await database.$executeRawUnsafe(
+      'DELETE FROM "church_settings" WHERE "church_id" IN ($1::uuid, $2::uuid)',
+      churchId,
+      otherChurchId
+    );
+    await database.$executeRawUnsafe(
       'DELETE FROM "user_roles" WHERE "church_id" = $1::uuid',
       churchId
     );
@@ -72,7 +82,30 @@ describe("PrismaChurchManagementRepository", () => {
       id: churchId,
       country: "BR"
     });
+    await expect(repository.findSettings(churchId)).resolves.toEqual({
+      timezone: "America/Sao_Paulo",
+      weekStartsOn: "SUNDAY",
+      reportDeadlineHours: 48
+    });
     await expect(repository.find(randomUUID())).resolves.toBeNull();
+    await expect(repository.findSettings(randomUUID())).resolves.toBeNull();
+  });
+
+  it("persists reportDeadlineHours through the settings transaction", async () => {
+    await repository.execute(churchId, async (transaction) => {
+      await transaction.updateSettings({ reportDeadlineHours: 72 });
+    });
+
+    await expect(repository.findSettings(churchId)).resolves.toMatchObject({
+      reportDeadlineHours: 72
+    });
+
+    await repository.execute(churchId, async (transaction) => {
+      await transaction.updateSettings({ reportDeadlineHours: 48 });
+    });
+    await expect(repository.findSettings(churchId)).resolves.toMatchObject({
+      reportDeadlineHours: 48
+    });
   });
 
   it("persists institutional data and audit atomically", async () => {

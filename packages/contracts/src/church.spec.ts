@@ -117,7 +117,11 @@ describe("church contracts", () => {
   });
 
   it("parses church settings envelopes", () => {
-    const settings = { timezone: "America/Sao_Paulo", weekStartsOn: "SUNDAY" };
+    const settings = {
+      timezone: "America/Sao_Paulo",
+      weekStartsOn: "SUNDAY",
+      reportDeadlineHours: 48
+    };
     expect(
       churchSettingsEnvelopeSchema.parse({ data: settings, meta: {} }).data
     ).toEqual(settings);

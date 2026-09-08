@@ -7,6 +7,7 @@ import type {
 } from "./church-management.port";
 import type {
   ManagedChurch,
+  ManagedChurchSettings,
   UpdateChurchInput,
   UpdateChurchSettingsInput
 } from "./church-management.types";
@@ -23,7 +24,11 @@ const addressFields = [
   "postalCode",
   "country"
 ] as const;
-const settingsFields = ["timezone", "weekStartsOn"] as const;
+const settingsFields = [
+  "timezone",
+  "weekStartsOn",
+  "reportDeadlineHours"
+] as const;
 
 export class ChurchManagementCommands {
   constructor(
@@ -62,11 +67,11 @@ export class ChurchManagementCommands {
   updateSettings(
     principal: AuthenticatedPrincipal,
     input: UpdateChurchSettingsInput
-  ): Promise<ManagedChurch> {
+  ): Promise<ManagedChurchSettings> {
     this.authorization.assertRole(principal);
     return this.unitOfWork.execute(principal.churchId, async (transaction) => {
       await this.assertCurrentAdministrator(transaction, principal);
-      const before = await transaction.findChurch();
+      const before = await transaction.findSettings();
       const changes = createChangeSet(
         before,
         input,
@@ -75,14 +80,14 @@ export class ChurchManagementCommands {
       );
       if (!changes) return before;
 
-      const church = await transaction.updateSettings(input);
+      const settings = await transaction.updateSettings(input);
       await transaction.recordAudit({
         actorId: principal.userId,
         action: changes.action,
         before: changes.before,
         after: changes.after
       });
-      return church;
+      return settings;
     });
   }
 
@@ -104,10 +109,11 @@ interface ChangeSet {
 }
 
 function createChangeSet<
+  TCurrent extends object,
   TInput extends object,
-  TKey extends Extract<keyof TInput, keyof ManagedChurch>
+  TKey extends Extract<keyof TInput, keyof TCurrent>
 >(
-  current: ManagedChurch,
+  current: TCurrent,
   input: TInput,
   fields: readonly TKey[],
   action: string
@@ -115,9 +121,11 @@ function createChangeSet<
   const before: { [key: string]: ChurchAuditValue } = {};
   const after: { [key: string]: ChurchAuditValue } = {};
   for (const field of fields) {
+    const currentValue = current[field] as unknown;
+    const nextValue = input[field] as unknown;
     if (
       Object.prototype.hasOwnProperty.call(input, field) &&
-      current[field] !== input[field]
+      currentValue !== nextValue
     ) {
       before[String(field)] = current[field] as ChurchAuditValue;
       after[String(field)] = input[field] as ChurchAuditValue;

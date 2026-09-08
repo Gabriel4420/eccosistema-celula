@@ -101,6 +101,14 @@ describe("church management HTTP flow", () => {
       );
     }
     await database.$executeRawUnsafe(
+      'DELETE FROM "user_preferences" WHERE "church_id" = $1::uuid',
+      churchId
+    );
+    await database.$executeRawUnsafe(
+      'DELETE FROM "church_settings" WHERE "church_id" = $1::uuid',
+      churchId
+    );
+    await database.$executeRawUnsafe(
       'DELETE FROM "churches" WHERE "id" IN ($1::uuid, $2::uuid)',
       churchId,
       otherChurchId
@@ -167,7 +175,29 @@ describe("church management HTTP flow", () => {
       .expect(200);
     expect(settings.body.data).toEqual({
       timezone: "America/Recife",
-      weekStartsOn: "MONDAY"
+      weekStartsOn: "MONDAY",
+      reportDeadlineHours: 48
+    });
+
+    const deadline = await request(app.getHttpServer())
+      .patch("/church/settings")
+      .set("Authorization", adminAuthorization)
+      .send({ reportDeadlineHours: 96 })
+      .expect(200);
+    expect(deadline.body.data).toEqual({
+      timezone: "America/Recife",
+      weekStartsOn: "MONDAY",
+      reportDeadlineHours: 96
+    });
+
+    const readBack = await request(app.getHttpServer())
+      .get("/church/settings")
+      .set("Authorization", leaderAuthorization)
+      .expect(200);
+    expect(readBack.body.data).toEqual({
+      timezone: "America/Recife",
+      weekStartsOn: "MONDAY",
+      reportDeadlineHours: 96
     });
 
     const actions = await database.auditLog.findMany({
@@ -200,6 +230,16 @@ describe("church management HTTP flow", () => {
       .patch("/church")
       .set("Authorization", adminAuthorization)
       .send({ slug: "admin" })
+      .expect(400);
+    await request(app.getHttpServer())
+      .patch("/church/settings")
+      .set("Authorization", adminAuthorization)
+      .send({ reportDeadlineHours: 0 })
+      .expect(400);
+    await request(app.getHttpServer())
+      .patch("/church/settings")
+      .set("Authorization", adminAuthorization)
+      .send({ reportDeadlineHours: 721 })
       .expect(400);
     await request(app.getHttpServer())
       .patch("/church")

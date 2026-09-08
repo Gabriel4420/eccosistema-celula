@@ -11,7 +11,10 @@ import type {
   ChurchManagementTransaction,
   ChurchManagementUnitOfWork
 } from "./church-management.port";
-import type { ManagedChurch } from "./church-management.types";
+import type {
+  ManagedChurch,
+  ManagedChurchSettings
+} from "./church-management.types";
 
 const principal: AuthenticatedPrincipal = {
   userId: crypto.randomUUID(),
@@ -43,6 +46,17 @@ function church(overrides: Partial<ManagedChurch> = {}): ManagedChurch {
   };
 }
 
+function settings(
+  overrides: Partial<ManagedChurchSettings> = {}
+): ManagedChurchSettings {
+  return {
+    timezone: "America/Sao_Paulo",
+    weekStartsOn: "SUNDAY",
+    reportDeadlineHours: 48,
+    ...overrides
+  };
+}
+
 function authorization() {
   return new ChurchManagementAuthorization(
     new ViewChurchPolicy(),
@@ -53,19 +67,22 @@ function authorization() {
 describe("church management application", () => {
   it("queries only the principal church and returns settings", async () => {
     const find = jest.fn(async () => church());
-    const repository: ChurchManagementRepository = { find };
+    const findSettings = jest.fn(async () => settings());
+    const repository: ChurchManagementRepository = { find, findSettings };
     const queries = new ChurchManagementQueries(repository, authorization());
 
     await expect(queries.getSettings(principal)).resolves.toEqual({
       timezone: "America/Sao_Paulo",
-      weekStartsOn: "SUNDAY"
+      weekStartsOn: "SUNDAY",
+      reportDeadlineHours: 48
     });
     expect(find).toHaveBeenCalledWith(principal.churchId);
+    expect(findSettings).toHaveBeenCalledWith(principal.churchId);
   });
 
   it("rejects a missing church", async () => {
     const queries = new ChurchManagementQueries(
-      { find: async () => null },
+      { find: async () => null, findSettings: async () => null },
       authorization()
     );
     await expect(queries.get(principal)).rejects.toMatchObject({
@@ -141,6 +158,42 @@ describe("church management application", () => {
       after: { weekStartsOn: "MONDAY" }
     });
   });
+
+  it("persists settings no-ops without persisting or auditing", async () => {
+    const transaction = transactionStub(church());
+    const commands = new ChurchManagementCommands(
+      unitOfWork(transaction),
+      authorization()
+    );
+
+    const before = await commands.updateSettings(principal, {
+      weekStartsOn: "SUNDAY"
+    });
+
+    expect(transaction.updateSettings).not.toHaveBeenCalled();
+    expect(transaction.recordAudit).not.toHaveBeenCalled();
+    expect(before).toEqual(settings());
+  });
+
+  it("audits reportDeadlineHours as part of settings changes", async () => {
+    const transaction = transactionStub(church());
+    const commands = new ChurchManagementCommands(
+      unitOfWork(transaction),
+      authorization()
+    );
+
+    await commands.updateSettings(principal, { reportDeadlineHours: 96 });
+
+    expect(transaction.updateSettings).toHaveBeenCalledWith({
+      reportDeadlineHours: 96
+    });
+    expect(transaction.recordAudit).toHaveBeenCalledWith({
+      actorId: principal.userId,
+      action: "CHURCH_SETTINGS_UPDATED",
+      before: { reportDeadlineHours: 48 },
+      after: { reportDeadlineHours: 96 }
+    });
+  });
 });
 
 function transactionStub(
@@ -152,15 +205,15 @@ function transactionStub(
       .fn<Promise<boolean>, [string]>()
       .mockResolvedValue(activeAdministrator),
     findChurch: jest.fn(async () => current),
+    findSettings: jest.fn(async () => settings()),
     updateInstitutional: jest.fn(async (input) => ({
       ...current,
       ...input,
       updatedAt: new Date("2026-07-26T01:00:00.000Z")
     })),
     updateSettings: jest.fn(async (input) => ({
-      ...current,
-      ...input,
-      updatedAt: new Date("2026-07-26T01:00:00.000Z")
+      ...settings(),
+      ...input
     })),
     recordAudit: jest
       .fn<

@@ -61,6 +61,23 @@ export {
   updateChurchSettingsRequestSchema
 } from "./church";
 export {
+  reportDeadlineHoursSchema,
+  settingsDateFormats,
+  settingsLocales,
+  settingsThemes,
+  updateOwnPreferencesRequestSchema,
+  userPreferencesEnvelopeSchema,
+  userPreferencesResponseSchema
+} from "./settings";
+export type {
+  SettingsDateFormat,
+  SettingsLocale,
+  SettingsTheme,
+  UpdateOwnPreferencesRequest,
+  UserPreferencesEnvelope,
+  UserPreferencesResponse
+} from "./settings";
+export {
   createPersonRequestSchema,
   listPeopleQuerySchema,
   personIdParamsSchema,

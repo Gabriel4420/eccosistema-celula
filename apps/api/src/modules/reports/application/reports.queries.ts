@@ -12,6 +12,7 @@ import type {
   VisitorReportRow
 } from "./reports.types";
 import type { ReportsRepository } from "./reports.port";
+import { isReportOverdue } from "./reports.deadline";
 
 function civilDateOf(date: Date, timezone: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
@@ -36,9 +37,9 @@ export class ReportsQueries {
     private readonly now: () => Date
   ) {}
 
-  private async resolvePeriodTz(churchId: string, input: { from?: string; to?: string }): Promise<{ from: string; to: string }> {
+  private async resolvePeriodTz(churchId: string, input: { from?: string; to?: string }, timezoneOverride?: string): Promise<{ from: string; to: string }> {
     if (input.from && input.to) return { from: input.from, to: input.to };
-    const timezone = await this.repository.getChurchTimezone(churchId);
+    const timezone = timezoneOverride ?? await this.repository.getChurchTimezone(churchId);
     const to = civilDateOf(this.now(), timezone);
     const from = addCivilDays(to, -(DEFAULT_PERIOD_DAYS - 1));
     return { from, to };
@@ -46,8 +47,17 @@ export class ReportsQueries {
 
   async pendingReports(principal: AuthenticatedPrincipal, input: { from?: string; to?: string; status?: string; cellId?: string }, page: number, pageSize: number): Promise<PaginatedResult<PendingReportRow>> {
     const scope = this.authorization.resolveListScope(principal);
-    const period = await this.resolvePeriodTz(principal.churchId, input);
-    return this.repository.findPendingReports(principal.churchId, scope, { ...period, status: input.status, cellId: input.cellId }, page, pageSize);
+    const settings = await this.repository.getChurchDeadlineSettings(principal.churchId);
+    const period = await this.resolvePeriodTz(principal.churchId, input, settings.timezone);
+    const result = await this.repository.findPendingReports(principal.churchId, scope, { ...period, status: input.status, cellId: input.cellId }, page, pageSize);
+    const now = this.now();
+    return {
+      items: result.items.map((item) => ({
+        ...item,
+        overdue: isReportOverdue(item.meetingDate, settings.timezone, settings.reportDeadlineHours, now)
+      })),
+      totalItems: result.totalItems
+    };
   }
 
   async attendanceSummary(principal: AuthenticatedPrincipal, input: { from?: string; to?: string; cellId?: string; status?: string; health?: string }, page: number, pageSize: number): Promise<PaginatedResult<AttendanceSummaryRow>> {

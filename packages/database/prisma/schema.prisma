@@ -98,36 +98,38 @@ model Church {
   sessions              Session[]
   idempotencyRequests   IdempotencyRequest[]
   reportExports         ReportExport[]
+  churchSettings        ChurchSettings?
 
   @@index([deletedAt], map: "churches_deleted_at_idx")
   @@map("churches")
 }
 
 model User {
-  id                    String                 @id @default(uuid()) @db.Uuid
-  churchId              String                 @map("church_id") @db.Uuid
-  firstName             String                 @map("first_name") @db.VarChar(100)
-  lastName              String                 @map("last_name") @db.VarChar(100)
-  email                 String                 @db.VarChar(320)
-  passwordHash          String                 @map("password_hash") @db.VarChar(255)
-  profilePhoto          Bytes?                 @map("profile_photo")
-  profilePhotoContentType String?               @map("profile_photo_content_type") @db.VarChar(32)
-  profilePhotoUpdatedAt DateTime?               @map("profile_photo_updated_at") @db.Timestamptz(3)
-  status                UserStatus
-  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt             DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt             DateTime?              @map("deleted_at") @db.Timestamptz(3)
-  church                Church                 @relation(fields: [churchId], references: [id], onDelete: Restrict)
-  userRoles             UserRole[]
-  supervisedAssignments SupervisorAssignment[] @relation("AssignmentSupervisor")
-  leaderAssignments     SupervisorAssignment[] @relation("AssignmentLeader")
-  ledCells              Cell[]                 @relation("CellLeader")
-  traineeCells          Cell[]                 @relation("CellTraineeLeader")
-  submittedReports      MeetingReport[]
-  auditLogs             AuditLog[]
-  sessions              Session[]
-  idempotencyRequests   IdempotencyRequest[]
-  exportedReports       ReportExport[]
+  id                      String                 @id @default(uuid()) @db.Uuid
+  churchId                String                 @map("church_id") @db.Uuid
+  firstName               String                 @map("first_name") @db.VarChar(100)
+  lastName                String                 @map("last_name") @db.VarChar(100)
+  email                   String                 @db.VarChar(320)
+  passwordHash            String                 @map("password_hash") @db.VarChar(255)
+  profilePhoto            Bytes?                 @map("profile_photo")
+  profilePhotoContentType String?                @map("profile_photo_content_type") @db.VarChar(32)
+  profilePhotoUpdatedAt   DateTime?              @map("profile_photo_updated_at") @db.Timestamptz(3)
+  status                  UserStatus
+  createdAt               DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt               DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  church                  Church                 @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  userRoles               UserRole[]
+  supervisedAssignments   SupervisorAssignment[] @relation("AssignmentSupervisor")
+  leaderAssignments       SupervisorAssignment[] @relation("AssignmentLeader")
+  ledCells                Cell[]                 @relation("CellLeader")
+  traineeCells            Cell[]                 @relation("CellTraineeLeader")
+  submittedReports        MeetingReport[]
+  auditLogs               AuditLog[]
+  sessions                Session[]
+  idempotencyRequests     IdempotencyRequest[]
+  exportedReports         ReportExport[]
+  preferences             UserPreferences?
 
   @@unique([id, churchId], map: "users_id_church_id_key")
   @@unique([churchId, email], map: "users_church_id_email_key")
@@ -442,14 +444,14 @@ model IdempotencyRequest {
 }
 
 model ReportExport {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  churchId    String   @map("church_id") @db.Uuid
-  exportedBy  String   @map("exported_by") @db.Uuid
-  reportType  String   @map("report_type") @db.VarChar(50)
-  format      String   @db.VarChar(10)
-  scope       Json     @default("{}")
-  rowCount    Int      @map("row_count") @default(0)
-  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamptz(3)
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  churchId   String   @map("church_id") @db.Uuid
+  exportedBy String   @map("exported_by") @db.Uuid
+  reportType String   @map("report_type") @db.VarChar(50)
+  format     String   @db.VarChar(10)
+  scope      Json     @default("{}")
+  rowCount   Int      @default(0) @map("row_count")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   church   Church @relation(fields: [churchId], references: [id], onDelete: Restrict)
   exporter User   @relation(fields: [exportedBy], references: [id], onDelete: Restrict)
@@ -458,4 +460,40 @@ model ReportExport {
   @@index([churchId, reportType], map: "report_exports_church_type_idx")
   @@index([exportedBy], map: "report_exports_exported_by_idx")
   @@map("report_exports")
+}
+
+model ChurchSettings {
+  id                  String    @id @default(uuid()) @db.Uuid
+  churchId            String    @map("church_id") @db.Uuid
+  reportDeadlineHours Int       @default(48) @map("report_deadline_hours")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(3)
+  church              Church    @relation(fields: [churchId], references: [id], onDelete: Restrict)
+
+  @@unique([churchId], map: "church_settings_church_id_key")
+  @@unique([id, churchId], map: "church_settings_id_church_id_key")
+  @@index([churchId, deletedAt], map: "church_settings_church_id_deleted_at_idx")
+  @@map("church_settings")
+}
+
+model UserPreferences {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  churchId        String    @map("church_id") @db.Uuid
+  language        String    @default("pt-BR") @db.VarChar(10)
+  displayTimezone String?   @map("display_timezone") @db.VarChar(64)
+  dateFormat      String    @default("dd/MM/yyyy") @map("date_format") @db.VarChar(16)
+  theme           String    @default("system") @db.VarChar(10)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(3)
+  user            User      @relation(fields: [userId, churchId], references: [id, churchId], onDelete: Restrict)
+
+  @@unique([userId], map: "user_preferences_user_id_key")
+  @@unique([userId, churchId], map: "user_preferences_user_id_church_id_key")
+  @@unique([id, churchId], map: "user_preferences_id_church_id_key")
+  @@index([churchId], map: "user_preferences_church_id_idx")
+  @@index([churchId, deletedAt], map: "user_preferences_church_id_deleted_at_idx")
+  @@map("user_preferences")
 }

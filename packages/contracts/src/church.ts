@@ -120,7 +120,8 @@ export const updateChurchRequestSchema = z
 export const updateChurchSettingsRequestSchema = z
   .object({
     timezone: z.string().trim().min(1).max(64).refine(isIanaTimezone, "Invalid IANA timezone").optional(),
-    weekStartsOn: z.enum(churchWeekDays).optional()
+    weekStartsOn: z.enum(churchWeekDays).optional(),
+    reportDeadlineHours: z.coerce.number().int().min(1).max(720).optional()
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
@@ -154,7 +155,8 @@ export const churchEnvelopeSchema = z.object({
 
 export const churchSettingsResponseSchema = z.object({
   timezone: z.string(),
-  weekStartsOn: z.enum(churchWeekDays)
+  weekStartsOn: z.enum(churchWeekDays),
+  reportDeadlineHours: z.number()
 }).strict();
 
 export const churchSettingsEnvelopeSchema = z.object({

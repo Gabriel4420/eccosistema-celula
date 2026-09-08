@@ -27,7 +27,6 @@ describe("reports HTTP flow", () => {
   let app: INestApplication;
   let adminAuth: string;
   let leaderAuth: string;
-  let otherAdminAuth: string;
 
   beforeAll(async () => {
     Object.assign(process.env, {
@@ -49,7 +48,7 @@ describe("reports HTTP flow", () => {
     await database.role.create({ data: { id: randomUUID(), churchId: otherChurchId, name: "ADMIN" } });
 
     await database.cell.create({ data: { id: cellId, churchId, code: "RPT-E2E", name: "Reports Cell", status: "ACTIVE", leaderId, meetingDay: "SUNDAY", meetingTime: new Date("1970-01-01T19:00:00Z"), address: "Test" } });
-    await database.cell.create({ data: { id: otherCellId, churchId: otherChurchId, code: "ORPT-E2E", name: "Other Cell", status: "ACTIVE", meetingDay: "SUNDAY", meetingTime: new Date("1970-01-01T19:00:00Z"), address: "Other tenant" } });
+    await database.cell.create({ data: { id: otherCellId, churchId: otherChurchId, code: "ORPT-E2E", name: "Other Cell", status: "ACTIVE", leaderId: otherAdminId, meetingDay: "SUNDAY", meetingTime: new Date("1970-01-01T19:00:00Z"), address: "Other tenant" } });
     await database.person.createMany({ data: [
       { id: personId, churchId, fullName: "Person One", phone: "+5511999999999" },
       { id: otherPersonId, churchId: otherChurchId, fullName: "Other Person" }
@@ -66,12 +65,11 @@ describe("reports HTTP flow", () => {
     await app.init();
     adminAuth = await loginAs(adminId);
     leaderAuth = await loginAs(leaderId);
-    otherAdminAuth = await loginAs(otherAdminId);
   });
 
   afterAll(async () => {
     if (app) await app.close();
-    for (const table of ["report_exports", "idempotency_requests", "sessions", "audit_logs", "meeting_visitors", "meeting_attendances", "meetings", "cell_memberships", "people", "cells", "user_roles", "roles", "users"]) {
+    for (const table of ["report_exports", "idempotency_requests", "sessions", "audit_logs", "meeting_visitors", "meeting_attendances", "meeting_reports", "meetings", "cell_memberships", "people", "user_preferences", "church_settings", "cells", "user_roles", "roles", "users"]) {
       await database.$executeRawUnsafe(`DELETE FROM "${table}" WHERE "church_id" IN ($1::uuid, $2::uuid)`, churchId, otherChurchId);
     }
     await database.$executeRaw`DELETE FROM "churches" WHERE "id" = ${churchId}::uuid`;
@@ -80,7 +78,7 @@ describe("reports HTTP flow", () => {
   });
 
   async function loginAs(userId: string) {
-    const res = await request(app.getHttpServer()).post("/auth/login").send({ email: `${userId}@example.test`, password }).expect(201);
+    const res = await request(app.getHttpServer()).post("/auth/login").send({ email: `${userId}@example.test`, password }).expect(200);
     return `Bearer ${res.body.data.accessToken as string}`;
   }
 
@@ -91,9 +89,10 @@ describe("reports HTTP flow", () => {
   it("lists pending reports scoped to the church and isolates the other tenant", async () => {
     const res = await request(app.getHttpServer()).get("/reports/pending").set("Authorization", adminAuth).expect(200);
     expect(res.body.data).toBeInstanceOf(Array);
-    const resOther = await request(app.getHttpServer()).get("/reports/pending").set("Authorization", otherAdminAuth).expect(200);
+    const pendingMeetingIds = (res.body.data as Array<{ cell: { id: string } }>).map((item) => item.cell.id);
+    expect(pendingMeetingIds).toContain(cellId);
+    expect(pendingMeetingIds).not.toContain(otherCellId);
     expect(res.body.meta).toHaveProperty("totalItems");
-    expect(resOther.body.data).toBeInstanceOf(Array);
   });
 
   it("returns attendance summary and detail for the church", async () => {

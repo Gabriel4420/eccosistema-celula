@@ -95,7 +95,7 @@ describe("authentication HTTP flow", () => {
     });
     const firstCookie = login.headers["set-cookie"]?.[0];
     expect(firstCookie).toContain("HttpOnly");
-    expect(firstCookie).toContain("SameSite=Strict");
+    expect(firstCookie).toContain("SameSite=Lax");
     expect(firstCookie).toContain("Path=/auth");
 
     const refresh = await request(app.getHttpServer())

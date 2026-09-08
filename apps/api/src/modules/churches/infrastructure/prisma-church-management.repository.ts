@@ -10,9 +10,12 @@ import type {
 } from "../application/church-management.port";
 import type {
   ManagedChurch,
+  ManagedChurchSettings,
   UpdateChurchInput,
   UpdateChurchSettingsInput
 } from "../application/church-management.types";
+
+const DEFAULT_REPORT_DEADLINE_HOURS = 48;
 
 const churchSelect = {
   id: true,
@@ -48,6 +51,21 @@ export class PrismaChurchManagementRepository
       select: churchSelect
     });
     return church ? mapChurch(church) : null;
+  }
+
+  async findSettings(
+    churchId: string
+  ): Promise<ManagedChurchSettings | null> {
+    const church = await this.database.church.findFirst({
+      where: { id: churchId, deletedAt: null },
+      select: {
+        timezone: true,
+        weekStartsOn: true,
+        churchSettings: { select: { reportDeadlineHours: true } }
+      }
+    });
+    if (!church) return null;
+    return mapSettings(church);
   }
 
   async execute<T>(
@@ -138,6 +156,21 @@ class PrismaChurchManagementTransaction
     return mapChurch(church);
   }
 
+  async findSettings(): Promise<ManagedChurchSettings> {
+    const church = await this.transaction.church.findFirst({
+      where: { id: this.churchId, deletedAt: null },
+      select: {
+        timezone: true,
+        weekStartsOn: true,
+        churchSettings: { select: { reportDeadlineHours: true } }
+      }
+    });
+    if (!church) {
+      throw new ChurchManagementError("CHURCH_NOT_FOUND", "Church not found");
+    }
+    return mapSettings(church);
+  }
+
   async updateInstitutional(
     input: UpdateChurchInput
   ): Promise<ManagedChurch> {
@@ -151,13 +184,29 @@ class PrismaChurchManagementTransaction
 
   async updateSettings(
     input: UpdateChurchSettingsInput
-  ): Promise<ManagedChurch> {
-    const church = await this.transaction.church.update({
-      where: { id: this.churchId },
-      data: input,
-      select: churchSelect
-    });
-    return mapChurch(church);
+  ): Promise<ManagedChurchSettings> {
+    if (input.timezone !== undefined || input.weekStartsOn !== undefined) {
+      await this.transaction.church.update({
+        where: { id: this.churchId },
+        data: {
+          timezone: input.timezone,
+          weekStartsOn: input.weekStartsOn
+        }
+      });
+    }
+    if (input.reportDeadlineHours !== undefined) {
+      await this.transaction.churchSettings.upsert({
+        where: { churchId: this.churchId },
+        create: {
+          churchId: this.churchId,
+          reportDeadlineHours: input.reportDeadlineHours
+        },
+        update: {
+          reportDeadlineHours: input.reportDeadlineHours
+        }
+      });
+    }
+    return this.findSettings();
   }
 
   async recordAudit(input: {
@@ -207,6 +256,27 @@ function mapChurch(church: {
   updatedAt: Date;
 }): ManagedChurch {
   return { ...church };
+}
+
+function mapSettings(church: {
+  timezone: string;
+  weekStartsOn:
+    | "MONDAY"
+    | "TUESDAY"
+    | "WEDNESDAY"
+    | "THURSDAY"
+    | "FRIDAY"
+    | "SATURDAY"
+    | "SUNDAY";
+  churchSettings: { reportDeadlineHours: number } | null;
+}): ManagedChurchSettings {
+  return {
+    timezone: church.timezone,
+    weekStartsOn: church.weekStartsOn,
+    reportDeadlineHours:
+      church.churchSettings?.reportDeadlineHours ??
+      DEFAULT_REPORT_DEADLINE_HOURS
+  };
 }
 
 function isPrismaCode(error: unknown, code: string): boolean {

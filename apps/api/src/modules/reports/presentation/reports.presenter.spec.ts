@@ -8,6 +8,7 @@ describe("reports presenter", () => {
       leader: { firstName: "Ana", lastName: "Souza" },
       meetingDate: "2026-08-10",
       daysSinceMeeting: 21,
+      overdue: true,
       reportStatus: "DRAFT",
       lastReturnedAt: null
     }];

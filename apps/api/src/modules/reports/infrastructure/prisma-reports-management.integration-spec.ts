@@ -19,6 +19,7 @@ describe("PrismaReportsRepository", () => {
   const memberId = randomUUID();
   const deletedMemberId = randomUUID();
   const visitorId = randomUUID();
+  const meetingId = "00000000-0000-4000-8000-000000000001";
 
   beforeAll(async () => {
     await database.church.create({ data: { id: churchId, name: "Reports Repo", slug: `reports-repo-${churchId}` } });
@@ -33,12 +34,12 @@ describe("PrismaReportsRepository", () => {
     await database.user.create({ data: mkUser(otherAdminId, otherChurchId, "Other") });
 
     await database.cell.create({ data: {
-      id: cellId, churchId, code: `RPT-${churchId.slice(0, 4)}`, name: "Célula de Frequência",
+      id: cellId, churchId, code: `RPT-${churchId.slice(0, 4).toUpperCase()}`, name: "Célula de Frequência",
       status: "ACTIVE", leaderId, meetingDay: "SUNDAY", meetingTime: new Date("2000-01-01T19:00:00.000Z"), address: "Rua A"
     } });
     await database.cell.create({ data: {
-      id: otherCellId, churchId: otherChurchId, code: `ORP-${otherChurchId.slice(0, 4)}`, name: "Célula Outra Igreja",
-      status: "ACTIVE", meetingDay: "SUNDAY", meetingTime: new Date("2000-01-01T19:00:00.000Z"), address: "Rua B"
+      id: otherCellId, churchId: otherChurchId, code: `ORP-${otherChurchId.slice(0, 4).toUpperCase()}`, name: "Célula Outra Igreja",
+      status: "ACTIVE", leaderId: otherAdminId, meetingDay: "SUNDAY", meetingTime: new Date("2000-01-01T19:00:00.000Z"), address: "Rua B"
     } });
 
     const mkPerson = (id: string, fullName: string, church: string, deleted = false) => ({
@@ -53,13 +54,13 @@ describe("PrismaReportsRepository", () => {
     await database.cellMembership.create({ data: { churchId, personId: deletedMemberId, cellId, status: "ACTIVE", joinedAt: new Date("2026-01-01T00:00:00.000Z") } });
 
     await database.meeting.create({ data: {
-      id: "meeting-1", churchId, cellId, meetingDate: new Date("2026-08-10T00:00:00.000Z"), status: "COMPLETED"
+      id: meetingId, churchId, cellId, meetingDate: new Date("2026-08-10T00:00:00.000Z"), status: "COMPLETED"
     } });
     await database.meetingAttendance.create({ data: {
-      id: randomUUID(), churchId, meetingId: "meeting-1", personId: memberId, attendanceStatus: "PRESENT"
+      id: randomUUID(), churchId, meetingId: meetingId, personId: memberId, attendanceStatus: "PRESENT"
     } });
     await database.meetingAttendance.create({ data: {
-      id: randomUUID(), churchId, meetingId: "meeting-1", personId: deletedMemberId, attendanceStatus: "PRESENT"
+      id: randomUUID(), churchId, meetingId: meetingId, personId: deletedMemberId, attendanceStatus: "PRESENT"
     } });
   });
 
@@ -78,11 +79,11 @@ describe("PrismaReportsRepository", () => {
   });
 
   it("isolates attendance summary to the church and excludes deleted people while counting visitors", async () => {
-    await database.meetingVisitor.create({ data: {
-      id: randomUUID(), churchId, meetingId: "meeting-1", personId: visitorId
-    } });
     await database.meetingAttendance.create({ data: {
-      id: randomUUID(), churchId, meetingId: "meeting-1", personId: visitorId, attendanceStatus: "PRESENT"
+      id: randomUUID(), churchId, meetingId: meetingId, personId: visitorId, attendanceStatus: "PRESENT"
+    } });
+    await database.meetingVisitor.create({ data: {
+      id: randomUUID(), churchId, meetingId: meetingId, personId: visitorId
     } });
 
     const churchScope: ReportsScope = { kind: "church" };
@@ -93,7 +94,7 @@ describe("PrismaReportsRepository", () => {
     expect(row?.totalMeetings).toBe(1);
     expect(row?.attendanceRate).toBe(100);
     expect(row?.totalVisitors).toBe(1);
-    expect(row?.averagePresent).toBe(2);
+    expect(row?.averagePresent).toBe(3);
     expect(result.items.some((item) => item.cell.id === otherCellId)).toBe(false);
   });
 
@@ -116,10 +117,10 @@ describe("PrismaReportsRepository", () => {
 
   it("orders pending reports by days since meeting descending and returns submittedAt for returned reports", async () => {
     await database.meetingReport.create({ data: {
-      id: randomUUID(), churchId, meetingId: "meeting-1", status: "DRAFT"
+      id: randomUUID(), churchId, meetingId: meetingId, status: "DRAFT"
     } });
 
-    const secondMeetingId = "meeting-2";
+    const secondMeetingId = "00000000-0000-4000-8000-000000000002";
     await database.meeting.create({ data: {
       id: secondMeetingId, churchId, cellId, meetingDate: new Date("2026-08-01T00:00:00.000Z"), status: "COMPLETED"
     } });

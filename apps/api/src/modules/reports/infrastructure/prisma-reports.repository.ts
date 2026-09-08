@@ -9,7 +9,7 @@ import type {
   HealthScopeInput,
   MeetingsReportRow,
   PaginatedResult,
-  PendingReportRow,
+  PendingReportRowInput,
   ReportsScope,
   VisitorMetrics,
   VisitorReportRow
@@ -18,6 +18,7 @@ import type { ReportsRepository } from "../application/reports.port";
 import { ReportsError } from "../application/reports.error";
 
 const DEFAULT_TIMEZONE = "America/Sao_Paulo";
+const DEFAULT_REPORT_DEADLINE_HOURS = 48;
 
 interface MembershipRow {
   cellId: string;
@@ -50,6 +51,20 @@ export class PrismaReportsRepository implements ReportsRepository {
     return church?.timezone ?? DEFAULT_TIMEZONE;
   }
 
+  async getChurchDeadlineSettings(churchId: string): Promise<{ timezone: string; reportDeadlineHours: number }> {
+    const church = await this.database.church.findFirst({
+      where: { id: churchId },
+      select: {
+        timezone: true,
+        churchSettings: { select: { reportDeadlineHours: true } }
+      }
+    });
+    return {
+      timezone: church?.timezone ?? DEFAULT_TIMEZONE,
+      reportDeadlineHours: church?.churchSettings?.reportDeadlineHours ?? DEFAULT_REPORT_DEADLINE_HOURS
+    };
+  }
+
   async getChurchName(churchId: string): Promise<string> {
     const church = await this.database.church.findFirst({
       where: { id: churchId },
@@ -64,7 +79,7 @@ export class PrismaReportsRepository implements ReportsRepository {
     input: { from: string; to: string; status?: string; cellId?: string },
     page: number,
     pageSize: number
-  ): Promise<PaginatedResult<PendingReportRow>> {
+  ): Promise<PaginatedResult<PendingReportRowInput>> {
     const startedAt = Date.now();
     return this.database.$transaction(async (transaction) => {
       const cellIds = await this.resolveScopeCellIds(transaction, churchId, scope);
@@ -78,7 +93,8 @@ export class PrismaReportsRepository implements ReportsRepository {
       if (!filteredCellIds.length) {
         return { items: [], totalItems: 0 };
       }
-      const { start: from, end: to } = civilDayBounds(input.from, DEFAULT_TIMEZONE);
+      const from = civilDayBounds(input.from, DEFAULT_TIMEZONE).start;
+      const to = civilDayBounds(input.to, DEFAULT_TIMEZONE).end;
       const meetings = await transaction.meeting.findMany({
         where: {
           churchId,
@@ -126,7 +142,7 @@ export class PrismaReportsRepository implements ReportsRepository {
         : [];
       const leaderMap = new Map(leaders.map((leader) => [leader.id, leader]));
       const now = new Date();
-      const items: PendingReportRow[] = filtered.map((meeting) => {
+      const items: PendingReportRowInput[] = filtered.map((meeting) => {
         const cell = cellMap.get(meeting.cellId);
         const leader = cell?.leaderId ? leaderMap.get(cell.leaderId) ?? null : null;
         const meetingCivil = meeting.meetingDate.toISOString().slice(0, 10);
@@ -167,7 +183,8 @@ export class PrismaReportsRepository implements ReportsRepository {
       if (!filteredCellIds.length) {
         return { items: [], totalItems: 0 };
       }
-      const { start: from, end: to } = civilDayBounds(input.from, DEFAULT_TIMEZONE);
+      const from = civilDayBounds(input.from, DEFAULT_TIMEZONE).start;
+      const to = civilDayBounds(input.to, DEFAULT_TIMEZONE).end;
       const meetings = await transaction.meeting.findMany({
         where: {
           churchId,
@@ -384,7 +401,8 @@ export class PrismaReportsRepository implements ReportsRepository {
       if (!filteredCellIds.length) {
         return { items: [], totalItems: 0, metrics: { total: 0, contactPendingCount: 0, topCell: null } };
       }
-      const { start: from, end: to } = civilDayBounds(input.from, DEFAULT_TIMEZONE);
+      const from = civilDayBounds(input.from, DEFAULT_TIMEZONE).start;
+      const to = civilDayBounds(input.to, DEFAULT_TIMEZONE).end;
       const meetings = await transaction.meeting.findMany({
         where: {
           churchId,
@@ -494,7 +512,8 @@ export class PrismaReportsRepository implements ReportsRepository {
       if (!filteredCellIds.length) {
         return { items: [], totalItems: 0 };
       }
-      const { start: from, end: to } = civilDayBounds(input.from, DEFAULT_TIMEZONE);
+      const from = civilDayBounds(input.from, DEFAULT_TIMEZONE).start;
+      const to = civilDayBounds(input.to, DEFAULT_TIMEZONE).end;
       const meetingWhere: Record<string, unknown> = {
         churchId,
         cellId: { in: filteredCellIds },
