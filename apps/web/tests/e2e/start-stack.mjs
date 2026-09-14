@@ -35,7 +35,8 @@ const webEnvironment = {
   NODE_ENV: "development",
   NEXT_DIST_DIR: ".next-e2e",
   NEXT_PUBLIC_API_URL: apiUrl,
-  API_PROXY_TARGET: apiUrl
+  API_PROXY_TARGET: apiUrl,
+  NEXT_PUBLIC_VLIBRAS_ENABLED: "false"
 };
 
 function spawnServer(command, args, environment, name) {
