@@ -34,18 +34,21 @@ const nextConfig: NextConfig = {
         }
       : { script: "", connect: "", img: "", frame: "" };
     const vlibras = "https://vlibras.gov.br";
+    const vlibrasSub = "https://*.vlibras.gov.br";
+    const vlibrasCdn = "https://cdn.jsdelivr.net";
     const directives = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${vlibras}${vercelLive.script}`,
-      "style-src 'self' 'unsafe-inline'",
-      `img-src 'self' blob: data: ${vlibras}${vercelLive.img}`,
-      "font-src 'self' data:",
-      `connect-src ${connectSrc} ${vlibras}${vercelLive.connect}`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${vlibras} ${vlibrasCdn}${vercelLive.script}`,
+      `style-src 'self' 'unsafe-inline' ${vlibras} ${vlibrasCdn}`,
+      `img-src 'self' blob: data: ${vlibras} ${vlibrasCdn}${vercelLive.img}`,
+      `font-src 'self' data: ${vlibras} ${vlibrasCdn}`,
+      `connect-src ${connectSrc} ${vlibras} ${vlibrasSub} ${vlibrasCdn}${vercelLive.connect}`,
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      `frame-src 'self' ${vlibras}${vercelLive.frame}`,
+      `frame-src 'self' ${vlibras} ${vlibrasCdn}${vercelLive.frame}`,
+      `media-src 'self' blob: data: ${vlibras} ${vlibrasSub} ${vlibrasCdn}`,
     ];
     if (production) directives.push("upgrade-insecure-requests");
     return [
