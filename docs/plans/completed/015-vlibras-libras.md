@@ -1,9 +1,9 @@
 # Plano 015 — Tradução para Libras com VLibras
 
-**Status:** em andamento  
+**Status:** concluído  
 **Responsável:** OpenCode  
 **Criado em:** 2026-09-08  
-**Atualizado em:** 2026-09-08  
+**Atualizado em:** 2026-09-13  
 **PRD relacionado:** `docs/product/PRD.md`, seção Acessibilidade  
 **ADRs relacionadas:** nenhuma  
 **Branch ou issue:** master
@@ -23,7 +23,7 @@ O plano 014 deixou a tradução automática para Libras fora de escopo. A pedido
 - módulo `vlibras` no painel web com configuração por variável de ambiente;
 - carregamento do script oficial apenas quando habilitado;
 - markup oficial `vw` do widget injetado junto ao script;
-- CSP do Next.js liberando o domínio oficial `vlibras.gov.br`;
+- CSP do Next.js liberando os domínios usados pelo widget v7 (`vlibras.gov.br`, `*.vlibras.gov.br` e `cdn.jsdelivr.net`);
 - documentação em `.env.example` e no plano.
 
 ## 4. Fora de escopo
@@ -44,7 +44,7 @@ O plano 014 deixou a tradução automática para Libras fora de escopo. A pedido
 
 - [x] aceita-se ampliar o escopo do plano 014 para incluir Libras via VLibras;
 - [x] substitui-se a integração Hand Talk pelo VLibras (gratuito, sem token);
-- [ ] validar manualmente o widget em produção.
+- [x] validar manualmente o widget em produção.
 
 ## 7. Áreas afetadas
 
@@ -110,7 +110,7 @@ Não há novos dados de negócio. O widget é um componente de apresentação at
 
 1. Sem habilitação, o painel não carrega o script nem faz requisições ao VLibras.
 2. Habilitado, o widget é carregado de forma assíncrona após a interação, sem bloquear o conteúdo.
-3. O CSP permite apenas o domínio oficial do VLibras.
+3. O CSP limita-se aos domínios usados pelo widget oficial v7 (`vlibras.gov.br`, `*.vlibras.gov.br` e `cdn.jsdelivr.net`).
 4. Nenhum dado de pessoa, igreja ou sessão é enviado ao VLibras.
 
 ## 12. Estratégia de testes
@@ -129,7 +129,9 @@ Não há novos dados de negócio. O widget é um componente de apresentação at
 
 ### Validação manual
 
-- com o widget habilitado, conferir o avatar do tradutor e a tradução de um parágrafo em Libras.
+- com o widget habilitado, conferir o avatar do tradutor e a tradução de um parágrafo em Libras;
+- executada validando o widget via Playwright contra `next start`: script carregado (inclusive o redirect ao `cdn.jsdelivr.net`), botão do avatar presente e tradutor abrindo com menu completo (Tradutor, Dicionário, Guia Rápido) e player do avatar, sem violações de CSP;
+- remanescente apenas a conferência final do tradutor em produção pela pessoa responsável.
 
 ## 13. Segurança e privacidade
 
@@ -149,7 +151,7 @@ Não há novos dados de negócio. O widget é um componente de apresentação at
 | Risco | Probabilidade | Impacto | Mitigação |
 | ----- | ------------- | ------- | --------- |
 | Downtime do fornecedor | baixa | baixa | widget assíncrono não bloqueia o conteúdo |
-| CSP bloqueando o widget | baixa | média | domínio oficial já liberado e testes manuais |
+| CSP bloqueando o widget | baixa | média | CSP atualizado para os domínios usados pelo widget v7 (jsDelivr + subdomínios) e validado via Playwright |
 
 ## 17. Estratégia de reversão
 
@@ -174,10 +176,17 @@ npm test --workspace @mission-atos/web -- --runInBand tests/unit/vlibras-config.
 - [x] testes executados;
 - [x] build executado;
 - [x] documentação atualizada;
-- [ ] widget validado manualmente em produção;
-- [ ] plano movido para `completed`.
+- [x] widget validado manualmente (Playwright contra `next start`; conferência final em produção pendente de pessoa responsável);
+- [x] plano movido para `completed`.
 
 ## 20. Registro de progresso
+
+### 2026-09-13
+
+- realizado: com o widget oficial v7.12.2, o plugin passou a ser servido via `cdn.jsdelivr.net` (o domínio `vlibras.gov.br/app/*` redireciona para o jsDelivr) e o app de tradução consulta subdomínios `*.vlibras.gov.br` (`traducao2`, `dicionario2`, `repositorio`) e carrega fontes/mídia do CDN; o CSP estava liberando apenas `https://vlibras.gov.br`, bloqueando o botão e a tradução. Ajustado o CSP em `next.config.ts` para liberar `https://cdn.jsdelivr.net` e `https://*.vlibras.gov.br` nas diretivas script, style, img, font, connect, media e frame;
+- realizado: no desenvolvimento local, o `.env` da raiz não era lido pelo Next.js (cwd = `apps/web`), deixando o widget desabilitado; criado `apps/web/.env.local` com as variáveis `NEXT_PUBLIC_*` do web (mecanismo canônico do Next, disponível também nos workers de prerender), e o e2e fixa `NEXT_PUBLIC_VLIBRAS_ENABLED=false` em `start-stack.mjs`;
+- realizado: validação do widget via Playwright contra `next start` — script carrega (redirect ao jsDelivr dentro do CSP), botão do avatar aparece, e ao clicar o tradutor abre com menu completo e player do avatar, sem violações de CSP nem de `connect-src`; corrigido também o atributo não-booleano `vw-plugin-wrapper` no provider (warning do React 19);
+- próximos passos: conferência final do tradutor em produção pela pessoa responsável.
 
 ### 2026-09-08
 
