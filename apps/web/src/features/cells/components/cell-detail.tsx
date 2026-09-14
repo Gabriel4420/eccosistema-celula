@@ -1,12 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { PauseCircle, Play, Save, Trash2, UserCog } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  GraduationCap,
+  PauseCircle,
+  Play,
+  Save,
+  ShieldCheck,
+  Trash2,
+  UserCog,
+  UserRound
+} from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useState } from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { updateCellRequestSchema } from "@mission-atos/contracts";
-import { Alert, Button, Dialog, EmptyState, ErrorState, SelectField, Skeleton, TextField } from "@/src/shared/components";
+import { Alert, ErrorState, EmptyState } from "@/src/shared/components";
 import { ApiError } from "@/src/shared/api/api-error";
 import { cacheStore } from "@/src/shared/cache/cache";
 import { useRemoteQuery } from "@/src/shared/hooks/use-remote-query";
@@ -22,13 +33,47 @@ import {
   updateCellTraineeLeader
 } from "@/src/features/cells/api/cells-api";
 import type { CellMeetingDay } from "@/src/features/cells/api/cells-api";
-import { formatCellDay, formatCellTimestamp } from "@/src/features/cells/lib/format";
+import { formatCellDay, formatCellStatus, formatCellTimestamp } from "@/src/features/cells/lib/format";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  ConfirmDialog,
+  DescriptionItem,
+  DescriptionList,
+  DialogFooter,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Separator,
+  Skeleton
+} from "@/src/shared/ui";
 import { AssignmentSelect } from "./assignment-select";
-import { CellStatusBadge } from "./cell-status-badge";
+import { CellMembers } from "./cell-members";
 
 const CELLS_CACHE = "cells";
 
 type ConfirmAction = "none" | "status" | "leader" | "trainee" | "remove-trainee";
+
+interface EditFormValues {
+  code: string;
+  name: string;
+  meetingDay: CellMeetingDay;
+  meetingTime: string;
+  address: string;
+}
 
 export function CellDetail() {
   const { t, locale } = useI18n();
@@ -36,7 +81,7 @@ export function CellDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const DAYS: ReadonlyArray<{ readonly value: string; readonly label: string }> = [
+  const DAYS: ReadonlyArray<{ readonly value: CellMeetingDay; readonly label: string }> = [
     { value: "MONDAY", label: t("cells.day.monday") },
     { value: "TUESDAY", label: t("cells.day.tuesday") },
     { value: "WEDNESDAY", label: t("cells.day.wednesday") },
@@ -53,12 +98,27 @@ export function CellDetail() {
     ttlMs: 20_000
   });
 
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
-  const [meetingDay, setMeetingDay] = useState("");
-  const [meetingTime, setMeetingTime] = useState("");
-  const [address, setAddress] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const editForm = useForm<EditFormValues>({
+    defaultValues: {
+      code: "",
+      name: "",
+      meetingDay: "WEDNESDAY",
+      meetingTime: "",
+      address: ""
+    }
+  });
+
+  useEffect(() => {
+    if (!cell) return;
+    editForm.reset({
+      code: cell.code,
+      name: cell.name,
+      meetingDay: cell.meetingDay,
+      meetingTime: cell.meetingTime,
+      address: cell.address
+    });
+  }, [cell, editForm]);
+
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>("none");
   const [leaderDraft, setLeaderDraft] = useState<string | null>(null);
   const [supervisorDraft, setSupervisorDraft] = useState<string | null>(null);
@@ -68,9 +128,9 @@ export function CellDetail() {
 
   if (loading && !cell) {
     return (
-      <div aria-label={t("cells.detail.loading")}>
-        <Skeleton width="40%" height="2.5rem" />
-        <Skeleton width="100%" height="8rem" />
+      <div className="space-y-4" aria-label={t("cells.detail.loading")}>
+        <Skeleton className="h-9 w-2/3 max-w-md" />
+        <Skeleton className="h-56 w-full" />
       </div>
     );
   }
@@ -93,28 +153,24 @@ export function CellDetail() {
   const canEditMeeting =
     capabilities.editCellSchedule &&
     (cell.leader?.id === me || cell.traineeLeader?.id === me || cell.supervisor?.id === me);
+  const canEdit = canEditGeneral || canEditMeeting;
 
-  const dirtyCode = code !== "" && code !== cell.code;
-  const dirtyName = name !== "" && name !== cell.name;
-  const dirtyDay = meetingDay !== "" && meetingDay !== cell.meetingDay;
-  const dirtyTime = meetingTime !== "" && meetingTime !== cell.meetingTime;
-  const dirtyAddress = address !== "" && address !== cell.address;
-  const hasEdits = dirtyCode || dirtyName || dirtyDay || dirtyTime || dirtyAddress;
+  const dirtyFields = editForm.formState.dirtyFields;
+  const hasEdits =
+    dirtyFields.code || dirtyFields.name || dirtyFields.meetingDay || dirtyFields.meetingTime || dirtyFields.address;
 
-  const handleSaveEdits = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSaveEdits: SubmitHandler<EditFormValues> = async (values) => {
     setFeedback(null);
-    setFieldErrors({});
     const payload: Record<string, string> = {};
-    if (dirtyCode) payload.code = code.trim();
-    if (dirtyName) payload.name = name.trim();
-    if (dirtyDay) payload.meetingDay = meetingDay;
-    if (dirtyTime) payload.meetingTime = meetingTime.trim();
-    if (dirtyAddress) payload.address = address.trim();
+    if (dirtyFields.code) payload.code = values.code.trim();
+    if (dirtyFields.name) payload.name = values.name.trim();
+    if (dirtyFields.meetingDay) payload.meetingDay = values.meetingDay;
+    if (dirtyFields.meetingTime) payload.meetingTime = values.meetingTime.trim();
+    if (dirtyFields.address) payload.address = values.address.trim();
     if (Object.keys(payload).length === 0) return;
     const parsed = updateCellRequestSchema.safeParse(payload);
     if (!parsed.success) {
-      setFieldErrors({ form: t("cells.detail.error.form") });
+      setFeedback({ kind: "error", message: t("cells.detail.error.form") });
       return;
     }
     setBusy(true);
@@ -123,11 +179,6 @@ export function CellDetail() {
       cacheStore(CELLS_CACHE).invalidatePrefix("detail");
       cacheStore(CELLS_CACHE).invalidatePrefix("page");
       await reload();
-      setCode("");
-      setName("");
-      setMeetingDay("");
-      setMeetingTime("");
-      setAddress("");
       toast({
         kind: "success",
         title: t("cells.detail.toast.updated"),
@@ -230,18 +281,38 @@ export function CellDetail() {
     setConfirmAction("trainee");
   };
 
+  const statusVariant =
+    cell.status === "ACTIVE"
+      ? ("success" as const)
+      : cell.status === "FORMING"
+        ? ("secondary" as const)
+        : cell.status === "SUSPENDED"
+          ? ("warning" as const)
+          : ("destructive" as const);
+
   return (
-    <section aria-labelledby="cell-title">
-      <div className="page-header">
-        <h1 className="page-title" id="cell-title">
-          {cell.name}
-        </h1>
-        <Link className="breadcrumbs__link" href="/cells">
-          {t("cells.detail.back")}
-        </Link>
-        <Link className="button button--secondary" href={`/cells/${id}/meetings`}>
-          {t("cells.detail.viewMeetings")}
-        </Link>
+    <section aria-labelledby="cell-title" className="space-y-6">
+      <Link
+        href="/cells"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+      >
+        <ArrowLeft className="size-4" aria-hidden="true" />
+        {t("cells.detail.back")}
+      </Link>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 id="cell-title" className="text-2xl font-bold tracking-tight text-foreground">
+              {cell.name}
+            </h1>
+            <Badge variant={statusVariant}>{formatCellStatus(cell.status, t)}</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">{cell.code}</p>
+        </div>
+        <Button variant="outline" icon={CalendarDays} asChild>
+          <Link href={`/cells/${id}/meetings`}>{t("cells.detail.viewMeetings")}</Link>
+        </Button>
       </div>
 
       {feedback ? (
@@ -250,152 +321,233 @@ export function CellDetail() {
         </Alert>
       ) : null}
 
-      <div className="detail-list" style={{ marginBottom: "var(--space-5)" }}>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.column.code")}</span>
-          <span className="detail-list__value">{cell.code}</span>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-6">
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle className="text-base">{t("cells.detail.section.info")}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <DescriptionList>
+                <DescriptionItem label={t("cells.column.code")} value={cell.code} />
+                <DescriptionItem
+                  label={t("common.status")}
+                  value={<Badge variant={statusVariant}>{formatCellStatus(cell.status, t)}</Badge>}
+                />
+                <DescriptionItem
+                  label={t("cells.column.leader")}
+                  value={cell.leader?.name ?? <span className="text-muted-foreground">—</span>}
+                />
+                <DescriptionItem
+                  label={t("cells.detail.label.supervisor")}
+                  value={cell.supervisor?.name ?? <span className="text-muted-foreground">—</span>}
+                />
+                <DescriptionItem
+                  label={t("cells.detail.label.trainee")}
+                  value={cell.traineeLeader?.name ?? <span className="text-muted-foreground">—</span>}
+                />
+                <DescriptionItem
+                  label={t("cells.detail.label.meeting")}
+                  value={t("cells.detail.meetingAt", {
+                    day: formatCellDay(cell.meetingDay, t),
+                    time: cell.meetingTime
+                  })}
+                />
+                <DescriptionItem
+                  label={t("cells.detail.label.address")}
+                  value={cell.address}
+                />
+                <DescriptionItem
+                  label={t("cells.detail.label.created")}
+                  value={formatCellTimestamp(cell.createdAt, locale)}
+                />
+                <DescriptionItem
+                  label={t("cells.detail.label.updated")}
+                  value={formatCellTimestamp(cell.updatedAt, locale)}
+                />
+              </DescriptionList>
+            </CardContent>
+
+            {canEdit ? (
+              <>
+                <Separator className="mt-0" />
+                <Form {...editForm}>
+                  <form onSubmit={editForm.handleSubmit(handleSaveEdits)}>
+                    <div className="space-y-5 p-6">
+                      <p className="text-sm font-semibold text-foreground">{t("cells.detail.edit")}</p>
+                      {canEditGeneral ? (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <FormField
+                            control={editForm.control}
+                            name="code"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("cells.column.code")}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="CEL-001" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={editForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("cells.detail.field.name")}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder={t("cells.detail.field.name")} {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      ) : null}
+                      {canEditMeeting ? (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <FormField
+                            control={editForm.control}
+                            name="meetingDay"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("cells.detail.field.meetingDay")}</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder={t("cells.detail.field.meetingDay")} />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {DAYS.map((day) => (
+                                      <SelectItem key={day.value} value={day.value}>
+                                        {day.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={editForm.control}
+                            name="meetingTime"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("cells.detail.field.time")}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="19:30" {...field} />
+                                </FormControl>
+                                <FormDescription>{t("cells.detail.time.hint")}</FormDescription>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={editForm.control}
+                            name="address"
+                            render={({ field }) => (
+                              <FormItem className="sm:col-span-2">
+                                <FormLabel>{t("cells.detail.field.address")}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder={t("cells.detail.field.address")} {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      ) : null}
+                      <Button type="submit" icon={Save} disabled={!hasEdits} loading={busy} loadingLabel={t("common.saving")}>
+                        {t("cells.detail.saveChanges")}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </>
+            ) : null}
+          </Card>
+
+          <CellMembers cellId={id} />
         </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("common.status")}</span>
-          <CellStatusBadge status={cell.status} />
-        </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.column.leader")}</span>
-          <span className="detail-list__value">{cell.leader?.name ?? "—"}</span>
-        </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.detail.label.supervisor")}</span>
-          <span className="detail-list__value">{cell.supervisor?.name ?? "—"}</span>
-        </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.detail.label.trainee")}</span>
-          <span className="detail-list__value">{cell.traineeLeader?.name ?? "—"}</span>
-        </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.detail.label.meeting")}</span>
-          <span className="detail-list__value">
-            {t("cells.detail.meetingAt", { day: formatCellDay(cell.meetingDay, t), time: cell.meetingTime })}
-          </span>
-        </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.detail.label.address")}</span>
-          <span className="detail-list__value">{cell.address}</span>
-        </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.detail.label.created")}</span>
-          <span className="detail-list__value">{formatCellTimestamp(cell.createdAt, locale)}</span>
-        </div>
-        <div className="detail-list__item">
-          <span className="detail-list__label">{t("cells.detail.label.updated")}</span>
-          <span className="detail-list__value">{formatCellTimestamp(cell.updatedAt, locale)}</span>
-        </div>
+
+        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle className="text-base">{t("cells.detail.section.actions")}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2 pt-6">
+              {canManage ? (
+                <>
+                  {cell.status === "ACTIVE" ? (
+                    <Button variant="destructive" icon={PauseCircle} className="w-full justify-start" onClick={() => setConfirmAction("status")}>
+                      {t("cells.detail.status.suspend")}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" icon={Play} className="w-full justify-start" onClick={() => setConfirmAction("status")}>
+                      {cell.status === "FORMING" ? t("cells.detail.status.activate") : t("cells.detail.status.reactivate")}
+                    </Button>
+                  )}
+                  <Button variant="outline" icon={UserCog} className="w-full justify-start" onClick={openLeaderDialog}>
+                    {t("cells.detail.changeLeader")}
+                  </Button>
+                  {cell.traineeLeader ? (
+                    <>
+                      <Button variant="outline" icon={UserCog} className="w-full justify-start" onClick={openTraineeDialog}>
+                        {t("cells.detail.changeTrainee")}
+                      </Button>
+                      <Button variant="outline" icon={Trash2} className="w-full justify-start text-destructive hover:text-destructive" onClick={() => setConfirmAction("remove-trainee")}>
+                        {t("cells.detail.removeTrainee")}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" icon={UserCog} className="w-full justify-start" onClick={openTraineeDialog}>
+                      {t("cells.detail.assignTrainee")}
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t("cells.detail.noManage")}</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle className="text-base">{t("cells.detail.section.leader")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <LeadershipRow
+                icon={UserRound}
+                label={t("cells.column.leader")}
+                name={cell.leader?.name}
+              />
+              <LeadershipRow
+                icon={ShieldCheck}
+                label={t("cells.detail.label.supervisor")}
+                name={cell.supervisor?.name}
+              />
+              <LeadershipRow
+                icon={GraduationCap}
+                label={t("cells.detail.label.trainee")}
+                name={cell.traineeLeader?.name}
+              />
+            </CardContent>
+          </Card>
+        </aside>
       </div>
 
-      {canEditGeneral || canEditMeeting ? (
-        <form className="fieldset" onSubmit={(event) => void handleSaveEdits(event)}>
-          <fieldset className="fieldset">
-            <legend className="fieldset__legend">{t("cells.detail.edit")}</legend>
-            {canEditGeneral ? (
-              <>
-                <TextField
-                  label={t("cells.column.code")}
-                  name="code"
-                  value={code === "" ? cell.code : code}
-                  onChange={(event) => setCode(event.target.value)}
-                  error={fieldErrors.code}
-                  required
-                />
-                <TextField
-                  label={t("cells.detail.field.name")}
-                  name="name"
-                  value={name === "" ? cell.name : name}
-                  onChange={(event) => setName(event.target.value)}
-                  error={fieldErrors.name}
-                  required
-                />
-              </>
-            ) : null}
-            {canEditMeeting ? (
-              <>
-                <SelectField
-                  label={t("cells.detail.field.meetingDay")}
-                  name="meetingDay"
-                  value={(meetingDay === "" ? cell.meetingDay : meetingDay) as CellMeetingDay}
-                  onChange={(event) => setMeetingDay(event.target.value)}
-                  error={fieldErrors.meetingDay}
-                  options={DAYS}
-                  required
-                />
-                <TextField
-                  label={t("cells.detail.field.time")}
-                  name="meetingTime"
-                  value={meetingTime === "" ? cell.meetingTime : meetingTime}
-                  onChange={(event) => setMeetingTime(event.target.value)}
-                  hint={t("cells.detail.time.hint")}
-                  error={fieldErrors.meetingTime}
-                  required
-                />
-                <TextField
-                  label={t("cells.detail.field.address")}
-                  name="address"
-                  value={address === "" ? cell.address : address}
-                  onChange={(event) => setAddress(event.target.value)}
-                  error={fieldErrors.address}
-                  required
-                />
-              </>
-            ) : null}
-            {fieldErrors.form ? <Alert variant="error">{fieldErrors.form}</Alert> : null}
-            <Button type="submit" icon={Save} disabled={!hasEdits} loading={busy} loadingLabel={t("common.saving")}>
-              {t("cells.detail.saveChanges")}
-            </Button>
-          </fieldset>
-        </form>
-      ) : null}
-
-      {canManage ? (
-        <div className="toolbar" style={{ marginTop: "var(--space-6)" }}>
-          {cell.status === "ACTIVE" ? (
-            <Button variant="danger" icon={PauseCircle} onClick={() => setConfirmAction("status")}>
-              {t("cells.detail.status.suspend")}
-            </Button>
-          ) : (
-            <Button variant="secondary" icon={Play} onClick={() => setConfirmAction("status")}>
-              {cell.status === "FORMING" ? t("cells.detail.status.activate") : t("cells.detail.status.reactivate")}
-            </Button>
-          )}
-          <Button variant="secondary" icon={UserCog} onClick={openLeaderDialog}>
-            {t("cells.detail.changeLeader")}
-          </Button>
-          {cell.traineeLeader ? (
-            <>
-              <Button variant="secondary" icon={UserCog} onClick={openTraineeDialog}>
-                {t("cells.detail.changeTrainee")}
-              </Button>
-              <Button variant="secondary" icon={Trash2} onClick={() => setConfirmAction("remove-trainee")}>
-                {t("cells.detail.removeTrainee")}
-              </Button>
-            </>
-          ) : (
-            <Button variant="secondary" icon={UserCog} onClick={openTraineeDialog}>
-              {t("cells.detail.assignTrainee")}
-            </Button>
-          )}
-        </div>
-      ) : null}
-
-      <Dialog
-        open={confirmAction !== "none"}
-        onClose={() => setConfirmAction("none")}
+      <ConfirmDialog
+        open={confirmAction === "status"}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction("none");
+        }}
         title={statusTitle}
         description={statusDescription}
       >
-        <div className="dialog-panel__actions">
-          <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
+        <DialogFooter className="mt-2">
+          <Button variant="outline" onClick={() => setConfirmAction("none")} disabled={busy}>
             {t("common.cancel")}
           </Button>
           <Button
-            variant={cell.status === "ACTIVE" ? "danger" : "primary"}
+            variant={cell.status === "ACTIVE" ? "destructive" : "default"}
             disabled={busy}
             loading={busy}
             loadingLabel={t("cells.detail.dialog.confirming")}
@@ -403,33 +555,37 @@ export function CellDetail() {
           >
             {t("cells.detail.dialog.confirm")}
           </Button>
-        </div>
-      </Dialog>
+        </DialogFooter>
+      </ConfirmDialog>
 
-      <Dialog
+      <ConfirmDialog
         open={confirmAction === "leader"}
-        onClose={() => setConfirmAction("none")}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction("none");
+        }}
         title={t("cells.detail.dialog.changeLeader.title")}
         description={t("cells.detail.dialog.changeLeader.desc")}
       >
-        <AssignmentSelect
-          label={t("cells.column.leader")}
-          kind="LEADER"
-          value={leaderDraft}
-          onChange={setLeaderDraft}
-          currentLabel={cell.leader?.name}
-          required
-        />
-        <AssignmentSelect
-          label={t("cells.detail.label.supervisor")}
-          kind="SUPERVISOR"
-          value={supervisorDraft}
-          onChange={setSupervisorDraft}
-          currentLabel={cell.supervisor?.name}
-          required
-        />
-        <div className="dialog-panel__actions">
-          <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
+        <div className="space-y-4">
+          <AssignmentSelect
+            label={t("cells.column.leader")}
+            kind="LEADER"
+            value={leaderDraft}
+            onChange={setLeaderDraft}
+            currentLabel={cell.leader?.name}
+            required
+          />
+          <AssignmentSelect
+            label={t("cells.detail.label.supervisor")}
+            kind="SUPERVISOR"
+            value={supervisorDraft}
+            onChange={setSupervisorDraft}
+            currentLabel={cell.supervisor?.name}
+            required
+          />
+        </div>
+        <DialogFooter className="mt-2">
+          <Button variant="outline" onClick={() => setConfirmAction("none")} disabled={busy}>
             {t("common.cancel")}
           </Button>
           <Button
@@ -440,12 +596,14 @@ export function CellDetail() {
           >
             {t("cells.detail.dialog.confirm")}
           </Button>
-        </div>
-      </Dialog>
+        </DialogFooter>
+      </ConfirmDialog>
 
-      <Dialog
+      <ConfirmDialog
         open={confirmAction === "trainee"}
-        onClose={() => setConfirmAction("none")}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction("none");
+        }}
         title={t("cells.detail.dialog.trainee.title")}
         description={t("cells.detail.dialog.trainee.desc")}
       >
@@ -456,8 +614,8 @@ export function CellDetail() {
           onChange={setTraineeDraft}
           currentLabel={cell.traineeLeader?.name}
         />
-        <div className="dialog-panel__actions">
-          <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
+        <DialogFooter className="mt-2">
+          <Button variant="outline" onClick={() => setConfirmAction("none")} disabled={busy}>
             {t("common.cancel")}
           </Button>
           <Button
@@ -468,21 +626,23 @@ export function CellDetail() {
           >
             {t("cells.detail.dialog.confirm")}
           </Button>
-        </div>
-      </Dialog>
+        </DialogFooter>
+      </ConfirmDialog>
 
-      <Dialog
+      <ConfirmDialog
         open={confirmAction === "remove-trainee"}
-        onClose={() => setConfirmAction("none")}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction("none");
+        }}
         title={t("cells.detail.dialog.removeTrainee.title")}
         description={t("cells.detail.dialog.removeTrainee.desc")}
       >
-        <div className="dialog-panel__actions">
-          <Button variant="secondary" onClick={() => setConfirmAction("none")} disabled={busy}>
+        <DialogFooter className="mt-2">
+          <Button variant="outline" onClick={() => setConfirmAction("none")} disabled={busy}>
             {t("common.cancel")}
           </Button>
           <Button
-            variant="danger"
+            variant="destructive"
             disabled={busy}
             loading={busy}
             loadingLabel={t("cells.detail.dialog.confirming")}
@@ -493,9 +653,31 @@ export function CellDetail() {
           >
             {t("cells.detail.dialog.removeTrainee.confirm")}
           </Button>
-        </div>
-      </Dialog>
+        </DialogFooter>
+      </ConfirmDialog>
     </section>
+  );
+}
+
+function LeadershipRow({
+  icon: Icon,
+  label,
+  name
+}: {
+  readonly icon: typeof UserRound;
+  readonly label: string;
+  readonly name: string | undefined | null;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Icon className="size-4" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="truncate text-sm font-medium text-foreground">{name ?? "—"}</p>
+      </div>
+    </div>
   );
 }
 
