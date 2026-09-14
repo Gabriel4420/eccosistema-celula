@@ -7,7 +7,11 @@ import { Skeleton } from "@/src/shared/components";
 import { useSession } from "@/src/providers/session-provider";
 import { AnalyticsOverview } from "@/src/features/analytics/components/analytics-overview";
 import { useI18n } from "@/src/shared/i18n/language-provider";
-import type { TranslationKey, TranslationParams } from "@/src/shared/i18n/dictionaries";
+import { Analytics } from "@vercel/analytics/next";
+import type {
+  TranslationKey,
+  TranslationParams,
+} from "@/src/shared/i18n/dictionaries";
 
 interface Shortcut {
   readonly titleKey: TranslationKey;
@@ -22,28 +26,28 @@ const SHORTCUTS: readonly Shortcut[] = [
     titleKey: "nav.profile",
     descriptionKey: "dash.shortcut.profile",
     href: "/profile",
-    icon: <IconProfile />
+    icon: <IconProfile />,
   },
   {
     titleKey: "nav.settings",
     descriptionKey: "dash.shortcut.settings",
     href: "/settings",
-    icon: <IconChurch />
+    icon: <IconChurch />,
   },
   {
     titleKey: "nav.people",
     descriptionKey: "dash.shortcut.people",
     href: "/people",
     icon: <IconPeople />,
-    capability: "editPeople"
+    capability: "editPeople",
   },
   {
     titleKey: "nav.cells",
     descriptionKey: "dash.shortcut.cells",
     href: "/cells",
     icon: <IconCells />,
-    capability: "viewCells"
-  }
+    capability: "viewCells",
+  },
 ];
 
 const ADMIN_SHORTCUTS: readonly Shortcut[] = [
@@ -51,15 +55,15 @@ const ADMIN_SHORTCUTS: readonly Shortcut[] = [
     titleKey: "nav.users",
     descriptionKey: "dash.shortcut.users",
     href: "/users",
-    icon: <IconUsers />
-  }
+    icon: <IconUsers />,
+  },
 ];
 
 const ROLE_KEYS: Readonly<Record<string, TranslationKey>> = {
   ADMIN: "role.admin",
   PASTOR: "role.pastor",
   SUPERVISOR: "role.supervisor",
-  LEADER: "role.leader"
+  LEADER: "role.leader",
 };
 
 export default function DashboardPage() {
@@ -83,11 +87,18 @@ export default function DashboardPage() {
       <div className="dashboard-hero">
         <div className="dashboard-hero__content">
           <p className="dashboard-hero__eyebrow">{t("dash.overview")}</p>
-          <h1 className="dashboard-hero__title dark:text-white" id="dashboard-title">{t("dash.title")}</h1>
-          <p className="dashboard-hero__description">
-            {t("dash.description")}
-          </p>
-          {roleLabel ? <span className="dashboard-hero__role">{t("dash.access", { role: roleLabel } as TranslationParams)}</span> : null}
+          <h1
+            className="dashboard-hero__title dark:text-white"
+            id="dashboard-title"
+          >
+            {t("dash.title")}
+          </h1>
+          <p className="dashboard-hero__description">{t("dash.description")}</p>
+          {roleLabel ? (
+            <span className="dashboard-hero__role">
+              {t("dash.access", { role: roleLabel } as TranslationParams)}
+            </span>
+          ) : null}
         </div>
         <div className="dashboard-hero__network" aria-hidden="true">
           <span className="network-node network-node--center" />
@@ -101,9 +112,15 @@ export default function DashboardPage() {
       </div>
       <Can capability="viewAnalytics">
         <AnalyticsOverview />
+        <Analytics />
       </Can>
       <div className="dashboard-section-heading px-20">
-        <div><p className="dashboard-section-heading__eyebrow">{t("dash.quickAccess")}</p><h2>{t("dash.quickAccess.hint")}</h2></div>
+        <div>
+          <p className="dashboard-section-heading__eyebrow">
+            {t("dash.quickAccess")}
+          </p>
+          <h2>{t("dash.quickAccess.hint")}</h2>
+        </div>
         <p>{t("dash.quickAccess.choose")}</p>
       </div>
       <div className="dashboard-grid">
@@ -117,12 +134,19 @@ export default function DashboardPage() {
             <span className="dashboard-card__icon" aria-hidden="true">
               {shortcut.icon}
             </span>
-            <span className="dashboard-card__title">{t(shortcut.titleKey)}</span>
-            <span className="dashboard-card__description">{t(shortcut.descriptionKey)}</span>
+            <span className="dashboard-card__title">
+              {t(shortcut.titleKey)}
+            </span>
+            <span className="dashboard-card__description">
+              {t(shortcut.descriptionKey)}
+            </span>
           </Link>
         ))}
         {ADMIN_SHORTCUTS.map((shortcut, index) => (
-          <Can key={shortcut.href} capability={shortcut.capability ?? "manageUsers"}>
+          <Can
+            key={shortcut.href}
+            capability={shortcut.capability ?? "manageUsers"}
+          >
             <Link
               className="dashboard-card"
               href={shortcut.href}
@@ -131,8 +155,12 @@ export default function DashboardPage() {
               <span className="dashboard-card__icon" aria-hidden="true">
                 {shortcut.icon}
               </span>
-              <span className="dashboard-card__title">{t(shortcut.titleKey)}</span>
-              <span className="dashboard-card__description">{t(shortcut.descriptionKey)}</span>
+              <span className="dashboard-card__title">
+                {t(shortcut.titleKey)}
+              </span>
+              <span className="dashboard-card__description">
+                {t(shortcut.descriptionKey)}
+              </span>
             </Link>
           </Can>
         ))}
