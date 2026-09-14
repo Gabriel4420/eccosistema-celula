@@ -59,7 +59,80 @@ const relatedUserSchema = z
   })
   .strict();
 
+export const membershipStatuses = ["ACTIVE", "INACTIVE", "TRANSFERRED"] as const;
+
+export const relatedCellSchema = z
+  .object({
+    id: z.uuid(),
+    code: z.string(),
+    name: z.string()
+  })
+  .strict();
+
 export const cellIdParamsSchema = z.object({ id: z.uuid() }).strict();
+
+export const cellMemberIdParamsSchema = z
+  .object({ id: z.uuid(), personId: z.uuid() })
+  .strict();
+
+export const listCellMembersQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+    search: z.string().trim().max(200).optional(),
+    status: z.enum(membershipStatuses).default("ACTIVE")
+  })
+  .strict();
+
+export const cellMemberReasonSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .optional()
+  .transform((value) => (value ? value : undefined));
+
+export const createCellMemberRequestSchema = z
+  .object({
+    personId: z.uuid(),
+    reason: cellMemberReasonSchema
+  })
+  .strict();
+
+export const removeCellMemberRequestSchema = z
+  .object({ reason: cellMemberReasonSchema })
+  .strict();
+
+export const cellMemberResponseSchema = z
+  .object({
+    personId: z.uuid(),
+    fullName: z.string(),
+    phone: z.string().nullable(),
+    joinedAt: z.iso.datetime(),
+    status: z.enum(membershipStatuses),
+    reason: z.string().nullable()
+  })
+  .strict();
+
+export const cellMemberItemEnvelopeSchema = z
+  .object({
+    data: cellMemberResponseSchema,
+    meta: z.object({}).strict()
+  })
+  .strict();
+
+export const cellMembersPageEnvelopeSchema = z
+  .object({
+    data: z.array(cellMemberResponseSchema),
+    meta: z
+      .object({
+        page: z.number().int().min(1),
+        pageSize: z.number().int().min(1).max(100),
+        totalItems: z.number().int().nonnegative(),
+        totalPages: z.number().int().nonnegative()
+      })
+      .strict()
+  })
+  .strict();
 
 export const idempotencyKeySchema = z.uuid();
 
@@ -136,6 +209,7 @@ export const cellResponseSchema = z
     leader: relatedUserSchema.nullable(),
     supervisor: relatedUserSchema.nullable(),
     traineeLeader: relatedUserSchema.nullable(),
+    memberCount: z.number().int().nonnegative(),
     meetingDay: z.enum(daysOfWeek),
     meetingTime: z.string().regex(meetingTimePattern),
     address: z.string(),
@@ -221,3 +295,11 @@ export type CellAssignmentOption = z.infer<typeof cellAssignmentOptionSchema>;
 export type CellAssignmentOptionsEnvelope = z.infer<
   typeof cellAssignmentOptionsEnvelopeSchema
 >;
+export type CreateCellMemberRequest = z.infer<typeof createCellMemberRequestSchema>;
+export type RemoveCellMemberRequest = z.infer<typeof removeCellMemberRequestSchema>;
+export type ListCellMembersQuery = z.infer<typeof listCellMembersQuerySchema>;
+export type CellMemberParams = z.infer<typeof cellMemberIdParamsSchema>;
+export type CellMemberStatus = (typeof membershipStatuses)[number];
+export type CellMemberResponse = z.infer<typeof cellMemberResponseSchema>;
+export type CellMemberItemEnvelope = z.infer<typeof cellMemberItemEnvelopeSchema>;
+export type CellMembersPageEnvelope = z.infer<typeof cellMembersPageEnvelopeSchema>;

@@ -1,5 +1,11 @@
 export type PersonStatus = "ACTIVE" | "INACTIVE";
 
+export interface PersonCellLink {
+  id: string;
+  code: string;
+  name: string;
+}
+
 export interface ManagedPerson {
   id: string;
   churchId: string;
@@ -9,6 +15,7 @@ export interface ManagedPerson {
   birthDate: Date | null;
   gender: string | null;
   observations: string | null;
+  currentCell: PersonCellLink | null;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;

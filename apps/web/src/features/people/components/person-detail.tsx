@@ -201,6 +201,20 @@ export function PersonDetail() {
         </div>
         <div className="detail-list__item">
           <span className="detail-list__label">
+            {t("people.column.cell")}
+          </span>
+          <span className="detail-list__value">
+            {person.currentCell ? (
+              <Link href={`/cells/${person.currentCell.id}`}>
+                {person.currentCell.name}
+              </Link>
+            ) : (
+              t("people.detail.withoutCell")
+            )}
+          </span>
+        </div>
+        <div className="detail-list__item">
+          <span className="detail-list__label">
             {t("people.column.email")}
           </span>
           <span className="detail-list__value">{person.email ?? "—"}</span>

@@ -11,6 +11,10 @@ export type CellsManagementErrorCode =
   | "CELL_CODE_CONFLICT"
   | "CELL_LEADERSHIP_CONFLICT"
   | "CELL_STATUS_TRANSITION_INVALID"
+  | "CELL_MEMBER_PERSON_NOT_FOUND"
+  | "CELL_MEMBER_NOT_FOUND"
+  | "CELL_MEMBER_ALREADY_ASSOCIATED"
+  | "CELL_MEMBER_REASON_REQUIRED"
   | "IDEMPOTENCY_KEY_CONFLICT";
 
 export class CellsManagementError extends PublicApplicationError<CellsManagementErrorCode> {

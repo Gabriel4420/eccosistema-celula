@@ -51,7 +51,7 @@ export class PeopleManagementCommands {
           after: { cellId: cell.id, status: "ACTIVE" }
         });
       }
-      return person;
+      return cell ? (await transaction.findPerson(person.id)) ?? person : person;
     });
   }
 

@@ -48,6 +48,7 @@ function baseCell(overrides: Partial<ManagedCell> = {}): ManagedCell {
     leader: { id: "leader-1", name: "Líder" },
     supervisor: { id: "supervisor-1", name: "Supervisor" },
     traineeLeader: null,
+    memberCount: 0,
     meetingDay: "WEDNESDAY",
     meetingTime: new Date("1970-01-01T19:30:00.000Z"),
     address: "Rua das Flores, 10",
@@ -97,6 +98,11 @@ function transactionMocks(overrides: Partial<CellsManagementTransaction> = {}) {
     "updateCell",
     "findActiveSupervisorAssignment",
     "createSupervisorAssignment",
+    "findMembershipPerson",
+    "findActiveMembership",
+    "findCellMembership",
+    "createMembership",
+    "closeMembership",
     "findIdempotencyRequest",
     "createIdempotencyRequest",
     "recordAudit"
@@ -114,6 +120,11 @@ function transactionMocks(overrides: Partial<CellsManagementTransaction> = {}) {
     updateCell: mocks.updateCell,
     findActiveSupervisorAssignment: mocks.findActiveSupervisorAssignment,
     createSupervisorAssignment: mocks.createSupervisorAssignment,
+    findMembershipPerson: mocks.findMembershipPerson,
+    findActiveMembership: mocks.findActiveMembership,
+    findCellMembership: mocks.findCellMembership,
+    createMembership: mocks.createMembership,
+    closeMembership: mocks.closeMembership,
     findIdempotencyRequest: mocks.findIdempotencyRequest,
     createIdempotencyRequest: mocks.createIdempotencyRequest,
     recordAudit: mocks.recordAudit,
@@ -733,6 +744,281 @@ describe("cells management commands", () => {
       ).rejects.toEqual(
         new CellsManagementError("CELL_LEADERSHIP_CONFLICT", "Leader and trainee leader must be different")
       );
+    });
+  });
+
+  describe("addMember", () => {
+    it("adds a person without an active membership elsewhere", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findMembershipPerson.mockResolvedValue({
+        id: "person-1",
+        fullName: "João da Silva",
+        phone: null
+      });
+      mocks.findCellMembership.mockResolvedValue(null);
+      mocks.findActiveMembership.mockResolvedValue(null);
+      mocks.createMembership.mockResolvedValue({
+        personId: "person-1",
+        fullName: "João da Silva",
+        phone: null,
+        joinedAt: new Date("2026-09-13T12:00:00.000Z"),
+        status: "ACTIVE"
+      });
+
+      const result = await commands(transaction).addMember(manager, "cell-1", "person-1");
+
+      expect(mocks.createMembership).toHaveBeenCalledWith({
+        personId: "person-1",
+        cellId: "cell-1",
+        joinedAt: expect.any(Date)
+      });
+      expect(mocks.closeMembership).not.toHaveBeenCalled();
+      expect(mocks.recordAudit).toHaveBeenCalledWith(
+        expect.objectContaining({ action: "CELL_MEMBER_ADDED", entityId: "cell-1" })
+      );
+      expect(result.status).toBe("ACTIVE");
+    });
+
+    it("transfers the person when already active in another cell", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findMembershipPerson.mockResolvedValue({
+        id: "person-1",
+        fullName: "João da Silva",
+        phone: "11999999999"
+      });
+      mocks.findCellMembership.mockResolvedValue(null);
+      mocks.findActiveMembership.mockResolvedValue({
+        id: "membership-old",
+        cellId: "cell-9"
+      });
+      mocks.createMembership.mockResolvedValue({
+        personId: "person-1",
+        fullName: "João da Silva",
+        phone: "11999999999",
+        joinedAt: new Date("2026-09-13T12:00:00.000Z"),
+        status: "ACTIVE"
+      });
+
+      await commands(transaction).addMember(manager, "cell-1", "person-1");
+
+      expect(mocks.closeMembership).toHaveBeenCalledWith(
+        "membership-old",
+        "TRANSFERRED",
+        expect.any(Date),
+        null
+      );
+      expect(mocks.recordAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "CELL_MEMBER_ADDED",
+          after: expect.objectContaining({ movedFromCellId: "cell-9" })
+        })
+      );
+    });
+
+    it("requires a reason when a LEADER transfers a person", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.hasActiveRole.mockResolvedValue(true);
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findMembershipPerson.mockResolvedValue({
+        id: "person-1",
+        fullName: "João da Silva",
+        phone: null
+      });
+      mocks.findCellMembership.mockResolvedValue(null);
+      mocks.findActiveMembership.mockResolvedValue({
+        id: "membership-old",
+        cellId: "cell-9"
+      });
+
+      await expect(
+        commands(transaction).addMember(leaderPrincipal, "cell-1", "person-1")
+      ).rejects.toEqual(
+        new CellsManagementError(
+          "CELL_MEMBER_REASON_REQUIRED",
+          "Transfer and removal require a reason for LEADER and PASTOR roles"
+        )
+      );
+      expect(mocks.closeMembership).not.toHaveBeenCalled();
+      expect(mocks.createMembership).not.toHaveBeenCalled();
+    });
+
+    it("records the transfer reason for a LEADER", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.hasActiveRole.mockResolvedValue(true);
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findMembershipPerson.mockResolvedValue({
+        id: "person-1",
+        fullName: "João da Silva",
+        phone: null
+      });
+      mocks.findCellMembership.mockResolvedValue(null);
+      mocks.findActiveMembership.mockResolvedValue({
+        id: "membership-old",
+        cellId: "cell-9"
+      });
+      mocks.createMembership.mockResolvedValue({
+        personId: "person-1",
+        fullName: "João da Silva",
+        phone: null,
+        joinedAt: new Date("2026-09-13T12:00:00.000Z"),
+        status: "ACTIVE",
+        reason: null
+      });
+
+      await commands(transaction).addMember(leaderPrincipal, "cell-1", "person-1", "Solicitou mudança de horário");
+
+      expect(mocks.closeMembership).toHaveBeenCalledWith(
+        "membership-old",
+        "TRANSFERRED",
+        expect.any(Date),
+        "Solicitou mudança de horário"
+      );
+    });
+
+    it("rejects a person that is already an active member of this cell", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findMembershipPerson.mockResolvedValue({
+        id: "person-1",
+        fullName: "João da Silva",
+        phone: null
+      });
+      mocks.findCellMembership.mockResolvedValue({
+        id: "membership-1",
+        cellId: "cell-1",
+        personId: "person-1",
+        status: "ACTIVE"
+      });
+
+      await expect(
+        commands(transaction).addMember(manager, "cell-1", "person-1")
+      ).rejects.toEqual(
+        new CellsManagementError(
+          "CELL_MEMBER_ALREADY_ASSOCIATED",
+          "Person is already an active member of this cell"
+        )
+      );
+      expect(mocks.createMembership).not.toHaveBeenCalled();
+    });
+
+    it("rejects a person outside the church", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findMembershipPerson.mockResolvedValue(null);
+
+      await expect(
+        commands(transaction).addMember(manager, "cell-1", "person-999")
+      ).rejects.toEqual(
+        new CellsManagementError("CELL_MEMBER_PERSON_NOT_FOUND", "Person not found in the authenticated church")
+      );
+    });
+  });
+
+  describe("removeMember", () => {
+    it("deactivates the active membership and records audit", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findCellMembership.mockResolvedValue({
+        id: "membership-1",
+        cellId: "cell-1",
+        personId: "person-1",
+        status: "ACTIVE"
+      });
+
+      await commands(transaction).removeMember(manager, "cell-1", "person-1");
+
+      expect(mocks.closeMembership).toHaveBeenCalledWith(
+        "membership-1",
+        "INACTIVE",
+        expect.any(Date),
+        null
+      );
+      expect(mocks.recordAudit).toHaveBeenCalledWith(
+        expect.objectContaining({ action: "CELL_MEMBER_REMOVED" })
+      );
+    });
+
+    it("requires a reason when a LEADER removes a member", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.hasActiveRole.mockResolvedValue(true);
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findCellMembership.mockResolvedValue({
+        id: "membership-1",
+        cellId: "cell-1",
+        personId: "person-1",
+        status: "ACTIVE"
+      });
+
+      await expect(
+        commands(transaction).removeMember(leaderPrincipal, "cell-1", "person-1")
+      ).rejects.toEqual(
+        new CellsManagementError(
+          "CELL_MEMBER_REASON_REQUIRED",
+          "Transfer and removal require a reason for LEADER and PASTOR roles"
+        )
+      );
+      expect(mocks.closeMembership).not.toHaveBeenCalled();
+    });
+
+    it("records the removal reason for a PASTOR", async () => {
+      const pastor: AuthenticatedPrincipal = {
+        userId: "pastor-1",
+        churchId: "church-1",
+        sessionId: "session-1",
+        roles: ["PASTOR"]
+      };
+      const { transaction, mocks } = transactionMocks();
+      mocks.hasActiveRole.mockResolvedValue(true);
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findCellMembership.mockResolvedValue({
+        id: "membership-1",
+        cellId: "cell-1",
+        personId: "person-1",
+        status: "ACTIVE"
+      });
+
+      await commands(transaction).removeMember(pastor, "cell-1", "person-1", "Mudou de igreja");
+
+      expect(mocks.closeMembership).toHaveBeenCalledWith(
+        "membership-1",
+        "INACTIVE",
+        expect.any(Date),
+        "Mudou de igreja"
+      );
+      expect(mocks.recordAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "CELL_MEMBER_REMOVED",
+          after: expect.objectContaining({ reason: "Mudou de igreja" })
+        })
+      );
+    });
+
+    it("rejects when there is no active membership in the cell", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.findCell.mockResolvedValue(baseCell());
+      mocks.findCellMembership.mockResolvedValue(null);
+
+      await expect(
+        commands(transaction).removeMember(manager, "cell-1", "person-1")
+      ).rejects.toEqual(
+        new CellsManagementError(
+          "CELL_MEMBER_NOT_FOUND",
+          "Active membership not found for this person in the cell"
+        )
+      );
+    });
+
+    it("requires edit scope for the cell", async () => {
+      const { transaction, mocks } = transactionMocks();
+      mocks.findCell.mockResolvedValue(
+        baseCell({ leader: { id: "other-leader", name: "Outro" }, supervisor: null })
+      );
+
+      await expect(
+        commands(transaction).removeMember(leaderPrincipal, "cell-1", "person-1")
+      ).rejects.toEqual(new CellsManagementError("CELL_ACCESS_DENIED", "Access is not allowed"));
     });
   });
 });

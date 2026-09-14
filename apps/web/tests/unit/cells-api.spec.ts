@@ -1,9 +1,12 @@
 import type { ApiClient } from "@/src/shared/api/api-client";
 import {
+  addCellMember,
   createCell,
   getCell,
   listCellAssignmentOptions,
+  listCellMembers,
   listCells,
+  removeCellMember,
   updateCell,
   updateCellLeader,
   updateCellStatus,
@@ -154,6 +157,92 @@ describe("cells-api", () => {
       method: "GET",
       path: "/users/cell-assignment-options",
       query: { kind: "LEADER", page: 1, pageSize: 20, search: "lí" }
+    });
+  });
+
+  it("lists cell members with pagination and status filter", async () => {
+    const member = {
+      personId: TRAINEE_ID,
+      fullName: "Maria",
+      phone: null,
+      joinedAt: "2026-08-01T19:00:00.000Z",
+      status: "ACTIVE"
+    };
+    requestMock.mockResolvedValue({
+      data: { data: [member], meta: PAGE_META },
+      meta: {}
+    });
+    const result = await listCellMembers(api, CELL_ID, {
+      page: 1,
+      pageSize: 10,
+      status: "ACTIVE"
+    });
+    expect(result.data).toEqual({ data: [member], meta: PAGE_META });
+    expect(requestOptions()).toMatchObject({
+      method: "GET",
+      path: `/cells/${CELL_ID}/members`,
+      query: { page: 1, pageSize: 10, search: "", status: "ACTIVE" }
+    });
+  });
+
+  it("adds a member to a cell", async () => {
+    requestMock.mockResolvedValue({
+      data: {
+        personId: TRAINEE_ID,
+        fullName: "Maria",
+        phone: null,
+        joinedAt: "2026-08-01T19:00:00.000Z",
+        status: "ACTIVE",
+        reason: null
+      },
+      meta: {}
+    });
+    const result = await addCellMember(api, CELL_ID, TRAINEE_ID);
+    expect(result.personId).toBe(TRAINEE_ID);
+    expect(requestOptions()).toMatchObject({
+      method: "POST",
+      path: `/cells/${CELL_ID}/members`,
+      body: { personId: TRAINEE_ID }
+    });
+  });
+
+  it("adds a member with a transfer reason", async () => {
+    requestMock.mockResolvedValue({
+      data: {
+        personId: TRAINEE_ID,
+        fullName: "Maria",
+        phone: null,
+        joinedAt: "2026-08-01T19:00:00.000Z",
+        status: "ACTIVE",
+        reason: null
+      },
+      meta: {}
+    });
+    await addCellMember(api, CELL_ID, TRAINEE_ID, "Solicitou mudança de célula");
+    expect(requestOptions()).toMatchObject({
+      method: "POST",
+      path: `/cells/${CELL_ID}/members`,
+      body: { personId: TRAINEE_ID, reason: "Solicitou mudança de célula" }
+    });
+  });
+
+  it("removes a member from a cell", async () => {
+    requestMock.mockResolvedValue({ data: null, meta: {} });
+    await removeCellMember(api, CELL_ID, TRAINEE_ID);
+    expect(requestOptions()).toMatchObject({
+      method: "DELETE",
+      path: `/cells/${CELL_ID}/members/${TRAINEE_ID}`,
+      body: {}
+    });
+  });
+
+  it("removes a member with a reason", async () => {
+    requestMock.mockResolvedValue({ data: null, meta: {} });
+    await removeCellMember(api, CELL_ID, TRAINEE_ID, "Mudou de igreja");
+    expect(requestOptions()).toMatchObject({
+      method: "DELETE",
+      path: `/cells/${CELL_ID}/members/${TRAINEE_ID}`,
+      body: { reason: "Mudou de igreja" }
     });
   });
 });

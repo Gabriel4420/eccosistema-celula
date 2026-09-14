@@ -1,10 +1,15 @@
 import {
   cellAssignmentOptionsEnvelopeSchema,
   cellItemEnvelopeSchema,
+  cellMemberItemEnvelopeSchema,
+  cellMembersPageEnvelopeSchema,
   cellsPageEnvelopeSchema,
+  createCellMemberRequestSchema,
   createCellRequestSchema,
   listCellAssignmentOptionsQuerySchema,
+  listCellMembersQuerySchema,
   listCellsQuerySchema,
+  removeCellMemberRequestSchema,
   updateCellLeaderRequestSchema,
   updateCellRequestSchema,
   updateCellStatusRequestSchema,
@@ -12,6 +17,8 @@ import {
 } from "@mission-atos/contracts";
 import type {
   CellAssignmentOption,
+  CellMemberResponse,
+  CellMembersPageEnvelope,
   CellResponse,
   CellsPageEnvelope,
   CreateCellRequest,
@@ -31,6 +38,7 @@ export type CellMeetingDay =
   | "SATURDAY"
   | "SUNDAY";
 export type CellAssignmentKind = "SUPERVISOR" | "LEADER" | "TRAINEE";
+export type CellMemberStatus = "ACTIVE" | "INACTIVE" | "TRANSFERRED";
 
 export interface CellListParams {
   readonly page: number;
@@ -186,4 +194,69 @@ export async function listCellAssignmentOptions(
     schema: cellAssignmentOptionsEnvelopeSchema
   });
   return envelope.data;
+}
+
+export interface CellMemberListParams {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly search?: string;
+  readonly status?: CellMemberStatus;
+}
+
+export async function listCellMembers(
+  api: ApiClient,
+  cellId: string,
+  params: CellMemberListParams
+): Promise<CellMembersPageEnvelope> {
+  const query = listCellMembersQuerySchema.parse(params);
+  return api.request({
+    method: "GET",
+    path: `/cells/${cellId}/members`,
+    query: {
+      page: query.page,
+      pageSize: query.pageSize,
+      search: query.search ?? "",
+      status: query.status ?? "ACTIVE"
+    },
+    bearer: true,
+    allowRetry: true,
+    schema: cellMembersPageEnvelopeSchema
+  });
+}
+
+export async function addCellMember(
+  api: ApiClient,
+  cellId: string,
+  personId: string,
+  reason?: string
+): Promise<CellMemberResponse> {
+  const payload = createCellMemberRequestSchema.parse({
+    personId,
+    ...(reason ? { reason } : {})
+  });
+  const envelope = await api.request({
+    method: "POST",
+    path: `/cells/${cellId}/members`,
+    body: payload,
+    bearer: true,
+    schema: cellMemberItemEnvelopeSchema
+  });
+  return envelope.data;
+}
+
+export async function removeCellMember(
+  api: ApiClient,
+  cellId: string,
+  personId: string,
+  reason?: string
+): Promise<void> {
+  const payload = removeCellMemberRequestSchema.parse({
+    ...(reason ? { reason } : {})
+  });
+  await api.request({
+    method: "DELETE",
+    path: `/cells/${cellId}/members/${personId}`,
+    body: payload,
+    bearer: true
+  });
 }

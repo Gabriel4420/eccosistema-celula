@@ -7,7 +7,7 @@ import type { PeopleManagementTransaction, PeopleManagementUnitOfWork } from "./
 import { ManagePersonPolicy, ManagePersonStatusPolicy, ViewInactivePeoplePolicy, ViewPersonObservationsPolicy, ViewPersonPolicy } from "../domain/people-management.policy";
 
 const principal: AuthenticatedPrincipal = { userId: "admin", churchId: "church", sessionId: "session", roles: ["ADMIN"] };
-const person = { id: "person", churchId: "church", fullName: "Pessoa", phone: null, email: null, birthDate: null, gender: null, observations: null, deletedAt: null, createdAt: new Date(), updatedAt: new Date() };
+const person = { id: "person", churchId: "church", fullName: "Pessoa", phone: null, email: null, birthDate: null, gender: null, observations: null, currentCell: null, deletedAt: null, createdAt: new Date(), updatedAt: new Date() };
 
 describe("people commands", () => {
   it("creates person and audit in the unit of work", async () => {
@@ -29,9 +29,11 @@ describe("people commands", () => {
   it("creates the optional cell membership in the same unit of work", async () => {
     const transaction = transactionMock();
     transaction.findCellByCode.mockResolvedValue({ id: "cell" });
+    const linkedPerson = { ...person, currentCell: { id: "cell", code: "CEL-001", name: "Célula Esperança" } };
+    transaction.findPerson.mockResolvedValue(linkedPerson);
     const commands = new PeopleManagementCommands(unitOfWork(transaction), authorization());
 
-    await commands.create(
+    const result = await commands.create(
       principal,
       { fullName: "Pessoa", phone: null, email: null, birthDate: null, gender: null, observations: null },
       "CEL-001"
@@ -42,6 +44,8 @@ describe("people commands", () => {
       action: "PERSON_CELL_MEMBERSHIP_CREATED",
       entityId: "person"
     }));
+    expect(transaction.findPerson).toHaveBeenCalledWith("person");
+    expect(result).toEqual(linkedPerson);
   });
 
   it("rejects an unknown cell before creating the person", async () => {

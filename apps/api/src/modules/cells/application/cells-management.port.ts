@@ -1,7 +1,10 @@
 import type {
   CellCreateInput,
   CellListScope,
+  CellMember,
+  CellMemberPage,
   CellPage,
+  ListCellMembersInput,
   ListCellsInput,
   ManagedCell
 } from "./cells-management.types";
@@ -16,6 +19,11 @@ export interface CellsManagementRepository {
     input: ListCellsInput
   ): Promise<CellPage>;
   find(churchId: string, cellId: string): Promise<ManagedCell | null>;
+  listMembers(
+    churchId: string,
+    cellId: string,
+    input: ListCellMembersInput
+  ): Promise<CellMemberPage>;
 }
 
 export interface CandidateUser {
@@ -49,6 +57,24 @@ export interface CellUpdateData {
   traineeLeaderId?: string | null;
 }
 
+export interface MembershipPerson {
+  id: string;
+  fullName: string;
+  phone: string | null;
+}
+
+export interface ActiveMembership {
+  id: string;
+  cellId: string;
+}
+
+export interface CellMembership {
+  id: string;
+  cellId: string;
+  personId: string;
+  status: CellMember["status"];
+}
+
 export interface CellsManagementTransaction {
   hasActiveRole(userId: string, roles: readonly string[]): Promise<boolean>;
   findActiveRoleNames(userId: string): Promise<ReadonlyArray<string>>;
@@ -61,6 +87,20 @@ export interface CellsManagementTransaction {
   createSupervisorAssignment(
     supervisorId: string,
     leaderId: string
+  ): Promise<void>;
+  findMembershipPerson(personId: string): Promise<MembershipPerson | null>;
+  findActiveMembership(personId: string): Promise<ActiveMembership | null>;
+  findCellMembership(cellId: string, personId: string): Promise<CellMembership | null>;
+  createMembership(input: {
+    personId: string;
+    cellId: string;
+    joinedAt: Date;
+  }): Promise<CellMember>;
+  closeMembership(
+    membershipId: string,
+    status: "INACTIVE" | "TRANSFERRED",
+    leftAt: Date,
+    reason?: string | null
   ): Promise<void>;
   findIdempotencyRequest(actorId: string, key: string): Promise<IdempotencyRecord | null>;
   createIdempotencyRequest(input: {

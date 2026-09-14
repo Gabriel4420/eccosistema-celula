@@ -14,6 +14,8 @@ export interface Capabilities {
   readonly editCellSchedule: boolean;
   readonly changeCellStatus: boolean;
   readonly changeCellLeadership: boolean;
+  readonly manageCellMembers: boolean;
+  readonly requiresCellMemberReason: boolean;
   readonly viewMeetings: boolean;
   readonly createMeetings: boolean;
   readonly editMeetings: boolean;
@@ -37,6 +39,8 @@ export function capabilitiesFor(principal: SessionPrincipal | null): Capabilitie
     editCellSchedule: principal !== null,
     changeCellStatus: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
     changeCellLeadership: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR),
+    manageCellMembers: principal !== null,
+    requiresCellMemberReason: hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),
     viewMeetings: principal !== null,
     createMeetings: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),
     editMeetings: hasRole(roles, ROLE_ADMIN) || hasRole(roles, ROLE_PASTOR) || hasRole(roles, "LEADER"),

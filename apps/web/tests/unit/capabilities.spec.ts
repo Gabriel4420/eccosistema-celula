@@ -7,6 +7,8 @@ const NO_CELLS = {
   editCellSchedule: false,
   changeCellStatus: false,
   changeCellLeadership: false,
+  manageCellMembers: false,
+  requiresCellMemberReason: false,
   viewMeetings: false,
   createMeetings: false,
   editMeetings: false,
@@ -48,6 +50,8 @@ describe("capabilitiesFor", () => {
       editCellSchedule: true,
       changeCellStatus: true,
       changeCellLeadership: true,
+      manageCellMembers: true,
+      requiresCellMemberReason: false,
       viewMeetings: true,
       createMeetings: true,
       editMeetings: true,
@@ -67,6 +71,7 @@ describe("capabilitiesFor", () => {
     expect(pastor.createCells).toBe(true);
     expect(pastor.changeCellStatus).toBe(true);
     expect(pastor.changeCellLeadership).toBe(true);
+    expect(pastor.requiresCellMemberReason).toBe(true);
     expect(pastor.viewMeetings).toBe(true);
     expect(pastor.createMeetings).toBe(true);
     expect(pastor.editMeetings).toBe(true);
@@ -88,6 +93,8 @@ describe("capabilitiesFor", () => {
     expect(supervisor.editCellGeneralData).toBe(false);
     expect(supervisor.changeCellStatus).toBe(false);
     expect(supervisor.changeCellLeadership).toBe(false);
+    expect(supervisor.manageCellMembers).toBe(true);
+    expect(supervisor.requiresCellMemberReason).toBe(false);
     expect(supervisor.viewMeetings).toBe(true);
     expect(supervisor.createMeetings).toBe(false);
     expect(supervisor.editMeetings).toBe(false);
@@ -100,6 +107,8 @@ describe("capabilitiesFor", () => {
     expect(leader.editCellGeneralData).toBe(false);
     expect(leader.changeCellStatus).toBe(false);
     expect(leader.changeCellLeadership).toBe(false);
+    expect(leader.manageCellMembers).toBe(true);
+    expect(leader.requiresCellMemberReason).toBe(true);
     expect(leader.viewMeetings).toBe(true);
     expect(leader.createMeetings).toBe(true);
     expect(leader.editMeetings).toBe(true);

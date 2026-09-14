@@ -2,9 +2,12 @@ import { normalizeCellCode as domainNormalizeCellCode } from "../../domain/src/c
 import {
   cellAssignmentOptionsEnvelopeSchema,
   cellItemEnvelopeSchema,
+  cellMembersPageEnvelopeSchema,
+  createCellMemberRequestSchema,
   cellsPageEnvelopeSchema,
   createCellRequestSchema,
   listCellAssignmentOptionsQuerySchema,
+  listCellMembersQuerySchema,
   listCellsQuerySchema,
   normalizeCellCode,
   updateCellLeaderRequestSchema,
@@ -131,6 +134,7 @@ describe("cells contracts", () => {
       leader: { id: uuid(), name: "Líder" },
       supervisor: null,
       traineeLeader: null,
+      memberCount: 0,
       meetingDay: "WEDNESDAY",
       meetingTime: "19:30",
       address: "Rua das Flores, 10",
@@ -157,6 +161,38 @@ describe("cells contracts", () => {
     expect(() => listCellAssignmentOptionsQuerySchema.parse({ kind: "PASTOR" })).toThrow();
     expect(cellAssignmentOptionsEnvelopeSchema.parse({
       data: [{ id: uuid(), name: "Nome" }],
+      meta: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 }
+    }).data).toHaveLength(1);
+  });
+
+  it("validates cell membership contracts", () => {
+    expect(listCellMembersQuerySchema.parse({})).toEqual({
+      page: 1, pageSize: 20, status: "ACTIVE"
+    });
+    expect(createCellMemberRequestSchema.parse({ personId: uuid() })).toEqual({
+      personId: expect.any(String)
+    });
+    expect(createCellMemberRequestSchema.parse({ personId: uuid(), reason: "Transferido por plantão" })).toEqual({
+      personId: expect.any(String),
+      reason: "Transferido por plantão"
+    });
+    expect(createCellMemberRequestSchema.parse({ personId: uuid(), reason: "   " })).toEqual({
+      personId: expect.any(String)
+    });
+    expect(createCellMemberRequestSchema.parse({ personId: "not-a-uuid" })).toThrow();
+    expect(() => createCellMemberRequestSchema.parse({ personId: uuid(), cellId: uuid() })).toThrow();
+    expect(() => createCellMemberRequestSchema.parse({ personId: uuid(), reason: "x".repeat(501) })).toThrow();
+    expect(removeCellMemberRequestSchema.parse({ reason: "Mudou de igreja" })).toEqual({
+      reason: "Mudou de igreja"
+    });
+    expect(removeCellMemberRequestSchema.parse({})).toEqual({});
+    expect(() => removeCellMemberRequestSchema.parse({ cellId: uuid() })).toThrow();
+    const member = {
+      personId: uuid(), fullName: "Maria", phone: null,
+      joinedAt: iso(), status: "ACTIVE", reason: null
+    };
+    expect(cellMembersPageEnvelopeSchema.parse({
+      data: [member],
       meta: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 }
     }).data).toHaveLength(1);
   });

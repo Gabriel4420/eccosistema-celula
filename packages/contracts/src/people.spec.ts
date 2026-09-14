@@ -56,10 +56,23 @@ describe("people contracts", () => {
   it("validates public item and collection envelopes", () => {
     const data = {
       id: crypto.randomUUID(), fullName: "Pessoa", phone: null, email: null,
-      birthDate: null, gender: null, status: "ACTIVE", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      birthDate: null, gender: null, status: "ACTIVE",
+      currentCell: { id: crypto.randomUUID(), code: "CEL-001", name: "Célula Esperança" },
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     };
     expect(personItemEnvelopeSchema.parse({ data, meta: {} }).data).toEqual(data);
     expect(peoplePageEnvelopeSchema.parse({ data: [data], meta: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 } }).data).toHaveLength(1);
     expect(() => personItemEnvelopeSchema.parse({ data: { ...data, churchId: crypto.randomUUID() }, meta: {} })).toThrow();
+  });
+
+  it("normalizes an optional cellCode on create and rejects unknown membership payloads", () => {
+    expect(createPersonRequestSchema.parse({
+      fullName: "Pessoa", cellCode: "  célula   esperança "
+    }).cellCode).toBe("CELULA-ESPERANCA");
+    expect(createPersonRequestSchema.parse({ fullName: "Pessoa" }).cellCode).toBeUndefined();
+    expect(() => createPersonRequestSchema.parse({
+      fullName: "Pessoa", cellCode: "!!!"
+    })).toThrow();
+    expect(() => updatePersonRequestSchema.parse({ cellCode: "CEL-001" })).toThrow();
   });
 });

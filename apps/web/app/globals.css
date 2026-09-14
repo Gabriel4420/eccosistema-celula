@@ -2734,6 +2734,60 @@ html[data-accessibility-focus="enhanced"] :focus-visible {
     border-top: 1px solid var(--color-border);
   }
 
+  /* ─── Add-member selection dialog ─── */
+  .selection-list {
+    display: grid;
+    gap: var(--space-2);
+    max-height: min(45vh, 24rem);
+    overflow-y: auto;
+    padding-right: var(--space-1);
+    overscroll-behavior: contain;
+  }
+
+  .selection-list__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+  }
+
+  .selection-list__info {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .selection-list__title {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .selection-list__subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    overflow-wrap: anywhere;
+  }
+
+  .selection-list__empty {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    padding: var(--space-3) 0;
+  }
+
+  .cell-member__reason {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    margin-top: var(--space-1);
+    overflow-wrap: anywhere;
+  }
+
   /* ─── User detail modal ─── */
   .user-modal {
     width: min(100%, 32rem);

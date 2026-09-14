@@ -22,6 +22,7 @@ function cell(overrides: Partial<ManagedCell> = {}): ManagedCell {
     leader: { id: "leader-1", name: "Líder" },
     supervisor: { id: "supervisor-1", name: "Supervisor" },
     traineeLeader: null,
+    memberCount: 0,
     meetingDay: "WEDNESDAY",
     meetingTime: new Date("1970-01-01T19:30:00.000Z"),
     address: "Rua das Flores, 10",

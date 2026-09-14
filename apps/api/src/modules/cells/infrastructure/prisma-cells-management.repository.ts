@@ -3,19 +3,25 @@ import type { RuntimeDatabaseClient } from "@mission-atos/database";
 import { DATABASE_CLIENT } from "../../identity/identity.tokens";
 import { CellsManagementError } from "../application/cells-management.error";
 import type {
+  ActiveMembership,
   CandidateUser,
+  CellMembership,
   CellsManagementRepository,
   CellsManagementTransaction,
   CellsManagementUnitOfWork,
   CellUpdateData,
   IdempotencyRecord,
+  MembershipPerson,
   SupervisorAssignment
 } from "../application/cells-management.port";
 import { parseTime } from "../application/cells-management.time";
 import type {
   CellCreateInput,
   CellListScope,
+  CellMember,
+  CellMemberPage,
   CellPage,
+  ListCellMembersInput,
   ListCellsInput,
   ManagedCell
 } from "../application/cells-management.types";
@@ -35,7 +41,8 @@ const cellSelect = {
   updatedAt: true,
   deletedAt: true,
   leader: { select: { id: true, firstName: true, lastName: true } },
-  traineeLeader: { select: { id: true, firstName: true, lastName: true } }
+  traineeLeader: { select: { id: true, firstName: true, lastName: true } },
+  _count: { select: { memberships: { where: { status: "ACTIVE", deletedAt: null } } } }
 } as const;
 
 const supervisorSelect = {
@@ -127,6 +134,59 @@ export class PrismaCellsManagementRepository
     return mapCell(cell, supervisor);
   }
 
+  async listMembers(
+    churchId: string,
+    cellId: string,
+    input: ListCellMembersInput
+  ): Promise<CellMemberPage> {
+    const startedAt = Date.now();
+    const terms = input.search?.split(/\s+/).filter(Boolean) ?? [];
+    const where = {
+      churchId,
+      cellId,
+      status: input.status,
+      deletedAt: null,
+      ...(terms.length
+        ? {
+            person: {
+              AND: terms.map((term) => ({
+                OR: [
+                  { fullName: { contains: term, mode: "insensitive" as const } },
+                  { phone: { contains: term, mode: "insensitive" as const } }
+                ]
+              }))
+            }
+          }
+        : {})
+    };
+    const [items, totalItems] = await this.database.$transaction([
+      this.database.cellMembership.findMany({
+        where,
+        select: {
+          personId: true,
+          joinedAt: true,
+          status: true,
+          reason: true,
+          person: { select: { id: true, fullName: true, phone: true } }
+        },
+        orderBy: [{ joinedAt: "desc" }, { personId: "asc" }],
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize
+      }),
+      this.database.cellMembership.count({ where })
+    ], { isolationLevel: "RepeatableRead" });
+    const members: CellMember[] = items.map((item) => ({
+      personId: item.personId,
+      fullName: item.person.fullName,
+      phone: item.person.phone,
+      joinedAt: item.joinedAt,
+      status: item.status,
+      reason: item.reason
+    }));
+    this.logger.log(JSON.stringify({ operation: "cells.listMembers", result: "success", durationMs: Date.now() - startedAt, itemCount: members.length, cellId }));
+    return { items: members, totalItems };
+  }
+
   async execute<T>(
     churchId: string,
     work: (transaction: CellsManagementTransaction) => Promise<T>
@@ -205,6 +265,7 @@ type CellRow = {
   deletedAt: Date | null;
   leader: { id: string; firstName: string; lastName: string } | null;
   traineeLeader: { id: string; firstName: string; lastName: string } | null;
+  _count: { memberships: number };
 };
 
 class PrismaCellsManagementTransaction implements CellsManagementTransaction {
@@ -338,6 +399,78 @@ class PrismaCellsManagementTransaction implements CellsManagementTransaction {
     });
   }
 
+  async findMembershipPerson(personId: string): Promise<MembershipPerson | null> {
+    const person = await this.transaction.person.findFirst({
+      where: { id: personId, churchId: this.churchId, deletedAt: null },
+      select: { id: true, fullName: true, phone: true }
+    });
+    return person ?? null;
+  }
+
+  async findActiveMembership(personId: string): Promise<ActiveMembership | null> {
+    const membership = await this.transaction.cellMembership.findFirst({
+      where: {
+        churchId: this.churchId,
+        personId,
+        status: "ACTIVE",
+        deletedAt: null,
+        leftAt: null
+      },
+      select: { id: true, cellId: true }
+    });
+    return membership ?? null;
+  }
+
+  async findCellMembership(cellId: string, personId: string): Promise<CellMembership | null> {
+    const membership = await this.transaction.cellMembership.findFirst({
+      where: { churchId: this.churchId, cellId, personId, deletedAt: null },
+      select: { id: true, cellId: true, personId: true, status: true }
+    });
+    return membership ?? null;
+  }
+
+  async createMembership(input: {
+    personId: string;
+    cellId: string;
+    joinedAt: Date;
+  }): Promise<CellMember> {
+    const membership = await this.transaction.cellMembership.create({
+      data: {
+        churchId: this.churchId,
+        personId: input.personId,
+        cellId: input.cellId,
+        status: "ACTIVE",
+        joinedAt: input.joinedAt
+      },
+      select: {
+        personId: true,
+        joinedAt: true,
+        status: true,
+        person: { select: { fullName: true, phone: true } }
+      }
+    });
+    return {
+      personId: membership.personId,
+      fullName: membership.person.fullName,
+      phone: membership.person.phone,
+      joinedAt: membership.joinedAt,
+      status: membership.status,
+      reason: null
+    };
+  }
+
+  async closeMembership(
+    membershipId: string,
+    status: "INACTIVE" | "TRANSFERRED",
+    leftAt: Date,
+    reason?: string | null
+  ): Promise<void> {
+    await this.transaction.cellMembership.update({
+      where: { id: membershipId },
+      data: { status, leftAt, reason: reason ?? null }
+    });
+  }
+
   async findIdempotencyRequest(actorId: string, key: string): Promise<IdempotencyRecord | null> {
     const record = await this.transaction.idempotencyRequest.findFirst({
       where: { churchId: this.churchId, actorId, operation: "cell:create", key },
@@ -422,6 +555,7 @@ function mapCell(
     traineeLeader: cell.traineeLeader
       ? { id: cell.traineeLeader.id, name: `${cell.traineeLeader.firstName} ${cell.traineeLeader.lastName}`.trim() }
       : null,
+    memberCount: cell._count.memberships,
     meetingDay: cell.meetingDay,
     meetingTime: cell.meetingTime,
     address: cell.address,

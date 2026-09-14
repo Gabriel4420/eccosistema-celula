@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cellCodePattern, normalizeCellCode, relatedCellSchema } from "./cells";
 import { normalizeChurchPhone, normalizeChurchText } from "./church";
 
 const nullable = <T extends z.ZodType>(schema: T) =>
@@ -15,6 +16,10 @@ const birthDateSchema = nullable(z.string().date().refine(
 ));
 const genderSchema = nullable(z.string().trim().min(1).max(50));
 const observationsSchema = nullable(z.string().trim().min(1).max(10_000));
+const cellCodeSchema = z
+  .string()
+  .transform(normalizeCellCode)
+  .pipe(z.string().min(1).max(50).regex(cellCodePattern));
 
 export const personIdParamsSchema = z.object({ id: z.uuid() }).strict();
 
@@ -32,7 +37,8 @@ export const createPersonRequestSchema = z.object({
   email: emailSchema.optional(),
   birthDate: birthDateSchema.optional(),
   gender: genderSchema.optional(),
-  observations: observationsSchema.optional()
+  observations: observationsSchema.optional(),
+  cellCode: cellCodeSchema.optional()
 }).strict();
 
 export const updatePersonRequestSchema = z.object({
@@ -56,6 +62,7 @@ export const personResponseSchema = z.object({
   birthDate: z.string().date().nullable(),
   gender: z.string().nullable(),
   status: z.enum(["ACTIVE", "INACTIVE"]),
+  currentCell: relatedCellSchema.nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   observations: z.string().nullable().optional()

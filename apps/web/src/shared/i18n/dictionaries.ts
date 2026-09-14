@@ -295,6 +295,7 @@ export type TranslationKey =
   | "people.detail.section.contact"
   | "people.detail.section.address"
   | "people.detail.section.links"
+  | "people.detail.withoutCell"
   | "people.detail.field.birthDate"
   | "people.detail.field.notes"
   | "people.toast.updated"
@@ -338,8 +339,40 @@ export type TranslationKey =
   | "cells.detail.newMeeting"
   | "cells.detail.print"
   | "cells.detail.section.info"
+  | "cells.detail.section.actions"
   | "cells.detail.section.leader"
   | "cells.detail.section.members"
+  | "cells.members.loading"
+  | "cells.members.empty"
+  | "cells.members.empty.desc"
+  | "cells.members.add"
+  | "cells.members.add.title"
+  | "cells.members.add.desc"
+  | "cells.members.search"
+  | "cells.members.search.hint"
+  | "cells.members.reason"
+  | "cells.members.reason.hint"
+  | "cells.members.reason.required"
+  | "cells.members.error.reasonRequired"
+  | "cells.members.noCandidates"
+  | "cells.members.searchFailed"
+  | "cells.members.transferHint"
+  | "cells.members.column.joined"
+  | "cells.members.remove"
+  | "cells.members.remove.title"
+  | "cells.members.remove.desc"
+  | "cells.members.toast.added"
+  | "cells.members.toast.added.desc"
+  | "cells.members.toast.removed"
+  | "cells.members.toast.removed.desc"
+  | "cells.members.error.load"
+  | "cells.members.error.alreadyMember"
+  | "cells.members.error.generic"
+  | "cells.members.status.all"
+  | "cells.members.status.active"
+  | "cells.members.status.inactive"
+  | "cells.members.status.transferred"
+  | "cells.members.rowActions"
   | "cells.detail.section.recentMeetings"
   | "cells.detail.field.code"
   | "cells.status.formative"
@@ -740,6 +773,7 @@ export type TranslationKey =
   | "cells.detail.changeTrainee"
   | "cells.detail.removeTrainee"
   | "cells.detail.assignTrainee"
+  | "cells.detail.noManage"
   | "cells.detail.dialog.confirming"
   | "cells.detail.dialog.confirm"
   | "cells.detail.dialog.changeLeader.title"
@@ -1478,6 +1512,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.detail.section.contact": "Contato",
     "people.detail.section.address": "Endereço",
     "people.detail.section.links": "Vínculos",
+    "people.detail.withoutCell": "Sem célula",
     "people.detail.field.birthDate": "Data de nascimento",
     "people.detail.field.notes": "Observações",
     "people.toast.updated": "Pessoa atualizada",
@@ -1520,9 +1555,41 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.detail.newMeeting": "Novo encontro",
     "cells.detail.print": "Imprimir relatório",
     "cells.detail.section.info": "Informações",
+    "cells.detail.section.actions": "Ações",
     "cells.detail.section.leader": "Líder",
     "cells.detail.section.members": "Membros",
     "cells.detail.section.recentMeetings": "Encontros recentes",
+    "cells.members.loading": "Carregando membros",
+    "cells.members.empty": "Nenhum membro encontrado",
+    "cells.members.empty.desc": "Adicione uma pessoa a esta célula para acompanhar a participação.",
+    "cells.members.add": "Adicionar membro",
+    "cells.members.add.title": "Adicionar membro",
+    "cells.members.add.desc": "A pessoa passa a fazer parte da célula. Se estiver ativa em outra célula, será transferida automaticamente.",
+    "cells.members.search": "Buscar pessoa",
+    "cells.members.search.hint": "Digite o nome, telefone ou e-mail.",
+    "cells.members.reason": "Motivo",
+    "cells.members.reason.hint": "Obrigatório para líderes e pastores na transferência e na remoção.",
+    "cells.members.reason.required": "Informe o motivo.",
+    "cells.members.error.reasonRequired": "Líderes e pastores devem informar um motivo para transferência ou remoção.",
+    "cells.members.noCandidates": "Nenhuma pessoa disponível para adicionar.",
+    "cells.members.searchFailed": "Não foi possível buscar pessoas.",
+    "cells.members.transferHint": "Está em {cell} — será transferida",
+    "cells.members.column.joined": "Entrou em",
+    "cells.members.remove": "Remover",
+    "cells.members.remove.title": "Remover membro",
+    "cells.members.remove.desc": "O vínculo de {name} com esta célula será encerrado, sem excluir a pessoa.",
+    "cells.members.toast.added": "Membro adicionado",
+    "cells.members.toast.added.desc": "{name} agora faz parte desta célula.",
+    "cells.members.toast.removed": "Membro removido",
+    "cells.members.toast.removed.desc": "O vínculo de {name} com esta célula foi encerrado.",
+    "cells.members.error.load": "Não foi possível carregar os membros.",
+    "cells.members.error.alreadyMember": "A pessoa já é membro ativo desta célula.",
+    "cells.members.error.generic": "Não foi possível concluir a ação {action}.",
+    "cells.members.status.all": "Todos",
+    "cells.members.status.active": "Ativo",
+    "cells.members.status.inactive": "Inativo",
+    "cells.members.status.transferred": "Transferido",
+    "cells.members.rowActions": "Ações de {name}",
     "cells.detail.field.code": "Código",
     "cells.status.formative": "Em formação",
     "cells.status.active": "Ativa",
@@ -1914,6 +1981,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.detail.changeTrainee": "Alterar líder em treinamento",
     "cells.detail.removeTrainee": "Remover líder em treinamento",
     "cells.detail.assignTrainee": "Atribuir líder em treinamento",
+    "cells.detail.noManage": "Você não tem permissão para gerenciar esta célula.",
     "cells.detail.dialog.confirming": "Confirmando…",
     "cells.detail.dialog.confirm": "Confirmar",
     "cells.detail.dialog.changeLeader.title": "Alterar líder",
@@ -2636,6 +2704,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.detail.section.contact": "Contact",
     "people.detail.section.address": "Address",
     "people.detail.section.links": "Links",
+    "people.detail.withoutCell": "No cell",
     "people.detail.field.birthDate": "Birth date",
     "people.detail.field.notes": "Notes",
     "people.toast.updated": "Person updated",
@@ -2678,9 +2747,41 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.detail.newMeeting": "New meeting",
     "cells.detail.print": "Print report",
     "cells.detail.section.info": "Information",
+    "cells.detail.section.actions": "Actions",
     "cells.detail.section.leader": "Leader",
     "cells.detail.section.members": "Members",
     "cells.detail.section.recentMeetings": "Recent meetings",
+    "cells.members.loading": "Loading members",
+    "cells.members.empty": "No members found",
+    "cells.members.empty.desc": "Add a person to this cell to track participation.",
+    "cells.members.add": "Add member",
+    "cells.members.add.title": "Add member",
+    "cells.members.add.desc": "The person joins this cell. If active in another cell, they will be transferred automatically.",
+    "cells.members.search": "Search person",
+    "cells.members.search.hint": "Type a name, phone, or email.",
+    "cells.members.reason": "Reason",
+    "cells.members.reason.hint": "Required for leaders and pastors on transfer and removal.",
+    "cells.members.reason.required": "Enter a reason.",
+    "cells.members.error.reasonRequired": "Leaders and pastors must provide a reason for transfer or removal.",
+    "cells.members.noCandidates": "No person is available to add.",
+    "cells.members.searchFailed": "Could not search people.",
+    "cells.members.transferHint": "Is in {cell} — will be transferred",
+    "cells.members.column.joined": "Joined on",
+    "cells.members.remove": "Remove",
+    "cells.members.remove.title": "Remove member",
+    "cells.members.remove.desc": "The link of {name} with this cell will be closed, without deleting the person.",
+    "cells.members.toast.added": "Member added",
+    "cells.members.toast.added.desc": "{name} is now part of this cell.",
+    "cells.members.toast.removed": "Member removed",
+    "cells.members.toast.removed.desc": "The link of {name} with this cell was closed.",
+    "cells.members.error.load": "Could not load the members.",
+    "cells.members.error.alreadyMember": "The person is already an active member of this cell.",
+    "cells.members.error.generic": "Could not complete the action {action}.",
+    "cells.members.status.all": "All",
+    "cells.members.status.active": "Active",
+    "cells.members.status.inactive": "Inactive",
+    "cells.members.status.transferred": "Transferred",
+    "cells.members.rowActions": "Actions for {name}",
     "cells.detail.field.code": "Code",
     "cells.status.formative": "Formative",
     "cells.status.active": "Active",
@@ -3072,6 +3173,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.detail.changeTrainee": "Change trainee leader",
     "cells.detail.removeTrainee": "Remove trainee leader",
     "cells.detail.assignTrainee": "Assign trainee leader",
+    "cells.detail.noManage": "You don't have permission to manage this cell.",
     "cells.detail.dialog.confirming": "Confirming…",
     "cells.detail.dialog.confirm": "Confirm",
     "cells.detail.dialog.changeLeader.title": "Change leader",
@@ -3794,6 +3896,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.detail.section.contact": "Contacto",
     "people.detail.section.address": "Dirección",
     "people.detail.section.links": "Vínculos",
+    "people.detail.withoutCell": "Sin célula",
     "people.detail.field.birthDate": "Fecha de nacimiento",
     "people.detail.field.notes": "Observaciones",
     "people.toast.updated": "Persona actualizada",
@@ -3836,9 +3939,41 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.detail.newMeeting": "Nuevo encuentro",
     "cells.detail.print": "Imprimir informe",
     "cells.detail.section.info": "Información",
+    "cells.detail.section.actions": "Acciones",
     "cells.detail.section.leader": "Líder",
     "cells.detail.section.members": "Miembros",
     "cells.detail.section.recentMeetings": "Encuentros recientes",
+    "cells.members.loading": "Cargando miembros",
+    "cells.members.empty": "No se encontraron miembros",
+    "cells.members.empty.desc": "Agrega una persona a esta célula para acompañar su participación.",
+    "cells.members.add": "Agregar miembro",
+    "cells.members.add.title": "Agregar miembro",
+    "cells.members.add.desc": "La persona pasa a formar parte de la célula. Si está activa en otra célula, será transferida automáticamente.",
+    "cells.members.search": "Buscar persona",
+    "cells.members.search.hint": "Escribe un nombre, teléfono o correo.",
+    "cells.members.reason": "Motivo",
+    "cells.members.reason.hint": "Obligatorio para líderes y pastores en la transferencia y la remoción.",
+    "cells.members.reason.required": "Ingresa el motivo.",
+    "cells.members.error.reasonRequired": "Líderes y pastores deben informar un motivo para la transferencia o remoción.",
+    "cells.members.noCandidates": "No hay ninguna persona disponible para agregar.",
+    "cells.members.searchFailed": "No se pudieron buscar personas.",
+    "cells.members.transferHint": "Está en {cell} — será transferida",
+    "cells.members.column.joined": "Ingresó el",
+    "cells.members.remove": "Quitar",
+    "cells.members.remove.title": "Quitar miembro",
+    "cells.members.remove.desc": "El vínculo de {name} con esta célula se cerrará, sin eliminar a la persona.",
+    "cells.members.toast.added": "Miembro agregado",
+    "cells.members.toast.added.desc": "{name} ahora forma parte de esta célula.",
+    "cells.members.toast.removed": "Miembro quitado",
+    "cells.members.toast.removed.desc": "El vínculo de {name} con esta célula se cerró.",
+    "cells.members.error.load": "No se pudieron cargar los miembros.",
+    "cells.members.error.alreadyMember": "La persona ya es miembro activo de esta célula.",
+    "cells.members.error.generic": "No se pudo completar la acción {action}.",
+    "cells.members.status.all": "Todos",
+    "cells.members.status.active": "Activo",
+    "cells.members.status.inactive": "Inactivo",
+    "cells.members.status.transferred": "Transferido",
+    "cells.members.rowActions": "Acciones de {name}",
     "cells.detail.field.code": "Código",
     "cells.status.formative": "En formación",
     "cells.status.active": "Activa",
@@ -4230,6 +4365,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.detail.changeTrainee": "Cambiar líder en formación",
     "cells.detail.removeTrainee": "Quitar líder en formación",
     "cells.detail.assignTrainee": "Asignar líder en formación",
+    "cells.detail.noManage": "No tienes permiso para gestionar esta célula.",
     "cells.detail.dialog.confirming": "Confirmando…",
     "cells.detail.dialog.confirm": "Confirmar",
     "cells.detail.dialog.changeLeader.title": "Cambiar líder",

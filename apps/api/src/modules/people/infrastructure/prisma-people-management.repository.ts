@@ -27,7 +27,13 @@ const personSelect = {
   observations: true,
   deletedAt: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
+  memberships: {
+    where: { status: "ACTIVE", deletedAt: null, leftAt: null },
+    orderBy: { joinedAt: "desc" },
+    take: 1,
+    select: { cell: { select: { id: true, code: true, name: true } } }
+  }
 } as const;
 
 @Injectable()
@@ -266,8 +272,10 @@ function mapPerson(person: {
   email: string | null; birthDate: Date | null; gender: string | null;
   observations: string | null; deletedAt: Date | null;
   createdAt: Date; updatedAt: Date;
+  memberships: Array<{ cell: { id: string; code: string; name: string } }>;
 }): ManagedPerson {
-  return { ...person };
+  const { memberships, ...rest } = person;
+  return { ...rest, currentCell: memberships[0]?.cell ?? null };
 }
 
 function isPrismaCode(error: unknown, code: string): boolean {

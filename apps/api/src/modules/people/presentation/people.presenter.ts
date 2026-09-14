@@ -6,6 +6,7 @@ export function presentPerson(person: ManagedPerson, includeObservations: boolea
     id: person.id, fullName: person.fullName, phone: person.phone, email: person.email,
     birthDate: person.birthDate?.toISOString().slice(0, 10) ?? null,
     gender: person.gender,
+    currentCell: person.currentCell,
     status: person.deletedAt ? "INACTIVE" as const : "ACTIVE" as const,
     createdAt: person.createdAt.toISOString(), updatedAt: person.updatedAt.toISOString()
   };

@@ -35,6 +35,7 @@ const cell: ManagedCell = {
   leader: { id: "leader-1", name: "Líder" },
   supervisor: { id: "supervisor-1", name: "Supervisor" },
   traineeLeader: null,
+  memberCount: 0,
   meetingDay: "WEDNESDAY",
   meetingTime: new Date("1970-01-01T19:30:00.000Z"),
   address: "Rua das Flores, 10",
@@ -56,7 +57,8 @@ describe("cells management queries", () => {
     const page: CellPage = { items: [cell], totalItems: 1 };
     const repository: CellsManagementRepository = {
       list: jest.fn(async () => page),
-      find: jest.fn()
+      find: jest.fn(),
+      listMembers: jest.fn()
     };
 
     const result = await new CellsManagementQueries(repository, auth()).list(churchPrincipal, {
@@ -77,7 +79,8 @@ describe("cells management queries", () => {
   it("resolves a leader scope for listing", async () => {
     const repository: CellsManagementRepository = {
       list: jest.fn(async () => ({ items: [], totalItems: 0 })),
-      find: jest.fn()
+      find: jest.fn(),
+      listMembers: jest.fn()
     };
 
     await new CellsManagementQueries(repository, auth()).list(leaderPrincipal, {
@@ -97,7 +100,8 @@ describe("cells management queries", () => {
   it("fails closed when the principal has no approved role", async () => {
     const repository: CellsManagementRepository = {
       list: jest.fn(),
-      find: jest.fn()
+      find: jest.fn(),
+      listMembers: jest.fn()
     };
 
     expect(() =>
@@ -112,7 +116,8 @@ describe("cells management queries", () => {
   it("returns the cell for a viewable resource", async () => {
     const repository: CellsManagementRepository = {
       list: jest.fn(),
-      find: jest.fn(async () => cell)
+      find: jest.fn(async () => cell),
+      listMembers: jest.fn()
     };
 
     await expect(new CellsManagementQueries(repository, auth()).get(churchPrincipal, "cell-1")).resolves.toEqual(cell);
@@ -121,7 +126,8 @@ describe("cells management queries", () => {
   it("throws CELL_NOT_FOUND for an unknown cell", async () => {
     const repository: CellsManagementRepository = {
       list: jest.fn(),
-      find: jest.fn(async () => null)
+      find: jest.fn(async () => null),
+      listMembers: jest.fn()
     };
 
     await expect(
@@ -132,7 +138,8 @@ describe("cells management queries", () => {
   it("denies viewing a cell outside the principal scope", async () => {
     const repository: CellsManagementRepository = {
       list: jest.fn(),
-      find: jest.fn(async () => cell)
+      find: jest.fn(async () => cell),
+      listMembers: jest.fn()
     };
     const stranger: AuthenticatedPrincipal = {
       userId: "stranger-1",
@@ -144,5 +151,47 @@ describe("cells management queries", () => {
     await expect(
       new CellsManagementQueries(repository, auth()).get(stranger, "cell-1")
     ).rejects.toEqual(new CellsManagementError("CELL_ACCESS_DENIED", "Access is not allowed"));
+  });
+
+  it("lists members of a viewable cell", async () => {
+    const membersPage = {
+      items: [{ personId: "person-1", fullName: "João", phone: null, joinedAt: new Date(), status: "ACTIVE" as const, reason: null }],
+      totalItems: 1
+    };
+    const repository: CellsManagementRepository = {
+      list: jest.fn(),
+      find: jest.fn(async () => cell),
+      listMembers: jest.fn(async () => membersPage)
+    };
+
+    const result = await new CellsManagementQueries(repository, auth()).listMembers(churchPrincipal, "cell-1", {
+      page: 1,
+      pageSize: 10,
+      status: "ACTIVE"
+    });
+
+    expect(repository.listMembers).toHaveBeenCalledWith(
+      "church-1",
+      "cell-1",
+      expect.objectContaining({ page: 1, pageSize: 10, status: "ACTIVE" })
+    );
+    expect(result).toEqual(membersPage);
+  });
+
+  it("throws CELL_NOT_FOUND when listing members of an unknown cell", async () => {
+    const repository: CellsManagementRepository = {
+      list: jest.fn(),
+      find: jest.fn(async () => null),
+      listMembers: jest.fn()
+    };
+
+    await expect(
+      new CellsManagementQueries(repository, auth()).listMembers(churchPrincipal, "missing", {
+        page: 1,
+        pageSize: 10,
+        status: "ACTIVE"
+      })
+    ).rejects.toEqual(new CellsManagementError("CELL_NOT_FOUND", "Cell not found"));
+    expect(repository.listMembers).not.toHaveBeenCalled();
   });
 });

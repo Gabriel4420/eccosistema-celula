@@ -1,4 +1,4 @@
-import type { CellStatus, DayOfWeek } from "@mission-atos/domain";
+import type { CellStatus, DayOfWeek, MembershipStatus } from "@mission-atos/domain";
 
 export interface ManagedRelatedUser {
   id: string;
@@ -14,6 +14,7 @@ export interface ManagedCell {
   leader: ManagedRelatedUser | null;
   supervisor: ManagedRelatedUser | null;
   traineeLeader: ManagedRelatedUser | null;
+  memberCount: number;
   meetingDay: DayOfWeek;
   meetingTime: Date;
   address: string;
@@ -45,6 +46,27 @@ export type CellListScope =
   | { kind: "church" }
   | { kind: "supervisor"; userId: string }
   | { kind: "leader"; userId: string };
+
+export interface CellMember {
+  personId: string;
+  fullName: string;
+  phone: string | null;
+  joinedAt: Date;
+  status: MembershipStatus;
+  reason: string | null;
+}
+
+export interface CellMemberPage {
+  items: CellMember[];
+  totalItems: number;
+}
+
+export interface ListCellMembersInput {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status: MembershipStatus;
+}
 
 export interface CellCreateInput {
   code: string;

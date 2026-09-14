@@ -15,6 +15,7 @@ import type {
 } from "./cells-management.port";
 import type {
   CellCreateInput,
+  CellMember,
   CellUpdateInput,
   ManagedCell
 } from "./cells-management.types";
@@ -311,6 +312,104 @@ export class CellsManagementCommands {
       throw new CellsManagementError("CELL_NOT_FOUND", "Cell not found");
     }
     return cell;
+  }
+
+  addMember(
+    principal: AuthenticatedPrincipal,
+    cellId: string,
+    personId: string,
+    reason?: string | null
+  ): Promise<CellMember> {
+    return this.unitOfWork.execute(principal.churchId, async (transaction) => {
+      const cell = await this.requireCell(transaction, cellId);
+      this.authorization.assertCanEdit(principal, cell);
+      const person = await transaction.findMembershipPerson(personId);
+      if (!person) {
+        throw new CellsManagementError(
+          "CELL_MEMBER_PERSON_NOT_FOUND",
+          "Person not found in the authenticated church"
+        );
+      }
+      const current = await transaction.findCellMembership(cellId, personId);
+      if (current?.status === "ACTIVE") {
+        throw new CellsManagementError(
+          "CELL_MEMBER_ALREADY_ASSOCIATED",
+          "Person is already an active member of this cell"
+        );
+      }
+      const elsewhere = await transaction.findActiveMembership(personId);
+      const currentMembership = elsewhere && elsewhere.cellId !== cellId ? elsewhere : null;
+      const movedFrom = currentMembership?.cellId ?? null;
+      if (currentMembership) {
+        await this.assertTransferReason(transaction, principal, reason);
+        await transaction.closeMembership(
+          currentMembership.id,
+          "TRANSFERRED",
+          new Date(),
+          reason ?? null
+        );
+      }
+      const membership = await transaction.createMembership({
+        personId,
+        cellId,
+        joinedAt: new Date()
+      });
+      await transaction.recordAudit({
+        actorId: principal.userId,
+        entityId: cellId,
+        action: "CELL_MEMBER_ADDED",
+        before: { personId },
+        after: {
+          personId,
+          status: "ACTIVE",
+          ...(movedFrom ? { movedFromCellId: movedFrom } : {}),
+          ...(reason ? { reason } : {})
+        }
+      });
+      return membership;
+    });
+  }
+
+  removeMember(
+    principal: AuthenticatedPrincipal,
+    cellId: string,
+    personId: string,
+    reason?: string | null
+  ): Promise<void> {
+    return this.unitOfWork.execute(principal.churchId, async (transaction) => {
+      const cell = await this.requireCell(transaction, cellId);
+      this.authorization.assertCanEdit(principal, cell);
+      const membership = await transaction.findCellMembership(cellId, personId);
+      if (!membership || membership.status !== "ACTIVE") {
+        throw new CellsManagementError(
+          "CELL_MEMBER_NOT_FOUND",
+          "Active membership not found for this person in the cell"
+        );
+      }
+      await this.assertTransferReason(transaction, principal, reason);
+      await transaction.closeMembership(membership.id, "INACTIVE", new Date(), reason ?? null);
+      await transaction.recordAudit({
+        actorId: principal.userId,
+        entityId: cellId,
+        action: "CELL_MEMBER_REMOVED",
+        before: { personId, status: "ACTIVE" },
+        after: { personId, status: "INACTIVE", ...(reason ? { reason } : {}) }
+      });
+    });
+  }
+
+  private async assertTransferReason(
+    transaction: CellsManagementTransaction,
+    principal: AuthenticatedPrincipal,
+    reason: string | null | undefined
+  ): Promise<void> {
+    const requiresReason = await transaction.hasActiveRole(principal.userId, ["LEADER", "PASTOR"]);
+    if (requiresReason && !reason) {
+      throw new CellsManagementError(
+        "CELL_MEMBER_REASON_REQUIRED",
+        "Transfer and removal require a reason for LEADER and PASTOR roles"
+      );
+    }
   }
 
   private async assertLeadershipEligibility(

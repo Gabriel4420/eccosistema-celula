@@ -222,6 +222,11 @@ export function CellsList() {
                 render: (cell) => cell.supervisor?.name ?? "—",
               },
               {
+                key: "members",
+                header: t("cells.column.members"),
+                render: (cell) => cell.memberCount,
+              },
+              {
                 key: "meeting",
                 header: t("cells.column.meeting"),
                 render: (cell) =>

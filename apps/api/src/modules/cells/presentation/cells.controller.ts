@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -22,20 +23,25 @@ import {
 } from "@nestjs/swagger";
 import {
   cellIdParamsSchema,
+  cellMemberIdParamsSchema,
+  createCellMemberRequestSchema,
   createCellRequestSchema,
   idempotencyKeySchema,
+  listCellMembersQuerySchema,
   listCellsQuerySchema,
+  removeCellMemberRequestSchema,
   updateCellLeaderRequestSchema,
   updateCellRequestSchema,
   updateCellStatusRequestSchema,
   updateCellTraineeLeaderRequestSchema
 } from "@mission-atos/contracts";
+import { membershipStatuses } from "@mission-atos/contracts";
 import type { AuthenticatedPrincipal } from "@mission-atos/domain";
 import { CurrentPrincipal } from "../../permissions/presentation/decorators/current-principal.decorator";
 import { Roles } from "../../permissions/presentation/decorators/roles.decorator";
 import { CellsManagementCommands } from "../application/cells-management.commands";
 import { CellsManagementQueries } from "../application/cells-management.queries";
-import { presentCellItem, presentCellPage } from "./cells.presenter";
+import { presentCellItem, presentCellMemberItem, presentCellMemberPage, presentCellPage } from "./cells.presenter";
 
 const cellStatuses = ["FORMING", "ACTIVE", "SUSPENDED", "CLOSED"] as const;
 const daysOfWeek = [
@@ -255,6 +261,79 @@ export class CellsController {
       await this.commands.updateTraineeLeader(principal, id, traineeLeaderId)
     );
   }
+
+  @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER")
+  @Get(":id/members")
+  @ApiOperation({ summary: "List members of a cell within the actor scope" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiQuery({ name: "page", required: false, type: Number, minimum: 1 })
+  @ApiQuery({ name: "pageSize", required: false, type: Number, minimum: 1, maximum: 100 })
+  @ApiQuery({ name: "search", required: false, type: String, maxLength: 200 })
+  @ApiQuery({ name: "status", required: false, enum: ["ACTIVE", "INACTIVE", "TRANSFERRED"] })
+  @ApiResponse({ status: 200, description: "Paginated members within the actor scope", schema: cellMembersPageEnvelopeSchema() })
+  @ApiResponse({ status: 400, description: "Invalid filters", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 401, description: "Authentication required", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 403, description: "Cell is outside the actor scope", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 404, description: "Cell not found in the authenticated church", schema: errorEnvelopeSchema() })
+  async listMembers(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown,
+    @Query() query: unknown
+  ) {
+    const { id } = cellIdParamsSchema.parse(params);
+    const input = listCellMembersQuerySchema.parse(query);
+    return presentCellMemberPage(
+      await this.queries.listMembers(principal, id, input),
+      input.page,
+      input.pageSize
+    );
+  }
+
+  @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER")
+  @Post(":id/members")
+  @HttpCode(201)
+  @ApiOperation({ summary: "Add a person to a cell; transfers the person automatically when already active elsewhere" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiBody({ schema: createCellMemberBodySchema() })
+  @ApiResponse({ status: 201, description: "Membership created or person transferred", schema: cellMemberEnvelopeSchema() })
+  @ApiResponse({ status: 400, description: "Invalid body or UUID", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 401, description: "Authentication required", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 403, description: "Cell is outside the actor scope", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 404, description: "Cell or person not found", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 409, description: "Person is already an active member of this cell", schema: errorEnvelopeSchema() })
+  async addMember(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown,
+    @Body() body: unknown
+  ) {
+    const { id } = cellIdParamsSchema.parse(params);
+    const { personId, reason } = createCellMemberRequestSchema.parse(body);
+    return presentCellMemberItem(
+      await this.commands.addMember(principal, id, personId, reason)
+    );
+  }
+
+  @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER")
+  @Delete(":id/members/:personId")
+  @HttpCode(204)
+  @ApiOperation({ summary: "Remove a person from a cell (deactivates the membership)" })
+  @ApiParam({ name: "id", format: "uuid" })
+  @ApiParam({ name: "personId", format: "uuid" })
+  @ApiBody({ schema: removeCellMemberBodySchema() })
+  @ApiResponse({ status: 204, description: "Membership deactivated" })
+  @ApiResponse({ status: 400, description: "Invalid UUID or missing reason", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 401, description: "Authentication required", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 403, description: "Cell is outside the actor scope", schema: errorEnvelopeSchema() })
+  @ApiResponse({ status: 404, description: "Cell or active membership not found", schema: errorEnvelopeSchema() })
+  async removeMember(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param() params: unknown,
+    @Body() body: unknown
+  ) {
+    const { id, personId } = cellMemberIdParamsSchema.parse(params);
+    const { reason } = removeCellMemberRequestSchema.parse(body);
+    await this.commands.removeMember(principal, id, personId, reason);
+  }
 }
 
 function requireIdempotencyKey(value: string | undefined): string {
@@ -272,7 +351,7 @@ function cellSchema() {
     type: "object",
     required: [
       "id", "code", "name", "status", "leader", "supervisor", "traineeLeader",
-      "meetingDay", "meetingTime", "address", "createdAt", "updatedAt"
+      "memberCount", "meetingDay", "meetingTime", "address", "createdAt", "updatedAt"
     ],
     additionalProperties: false,
     properties: {
@@ -283,6 +362,7 @@ function cellSchema() {
       leader: { ...relatedUser, nullable: true },
       supervisor: { ...relatedUser, nullable: true },
       traineeLeader: { ...relatedUser, nullable: true },
+      memberCount: { type: "integer", minimum: 0 },
       meetingDay: { type: "string", enum: [...daysOfWeek] },
       meetingTime: { type: "string", example: "19:30" },
       address: { type: "string" },
@@ -372,6 +452,80 @@ function updateCellBodySchema() {
       meetingDay: { type: "string", enum: [...daysOfWeek] },
       meetingTime: { type: "string", example: "19:30" },
       address: { type: "string", minLength: 1, maxLength: 500 }
+    }
+  };
+}
+
+function membershipStatusSchema() {
+  return { type: "string", enum: [...membershipStatuses] };
+}
+
+function cellMemberSchema() {
+  return {
+    type: "object",
+    required: ["personId", "fullName", "phone", "joinedAt", "status"],
+    additionalProperties: false,
+    properties: {
+      personId: { type: "string", format: "uuid" },
+      fullName: { type: "string" },
+      phone: { type: "string", nullable: true },
+      joinedAt: { type: "string", format: "date-time" },
+      status: membershipStatusSchema(),
+      reason: { type: "string", nullable: true }
+    }
+  };
+}
+
+function cellMemberEnvelopeSchema() {
+  return {
+    type: "object",
+    required: ["data", "meta"],
+    properties: {
+      data: cellMemberSchema(),
+      meta: { type: "object", additionalProperties: false }
+    }
+  };
+}
+
+function cellMembersPageEnvelopeSchema() {
+  return {
+    type: "object",
+    required: ["data", "meta"],
+    properties: {
+      data: { type: "array", items: cellMemberSchema() },
+      meta: {
+        type: "object",
+        required: ["page", "pageSize", "totalItems", "totalPages"],
+        properties: {
+          page: { type: "integer", minimum: 1 },
+          pageSize: { type: "integer", minimum: 1 },
+          totalItems: { type: "integer", minimum: 0 },
+          totalPages: { type: "integer", minimum: 0 }
+        }
+      }
+    }
+  };
+}
+
+function createCellMemberBodySchema() {
+  return {
+    type: "object",
+    required: ["personId"],
+    additionalProperties: false,
+    properties: {
+      personId: { type: "string", format: "uuid" },
+      reason: { type: "string", maxLength: 500 }
+    }
+  };
+}
+
+function removeCellMemberBodySchema() {
+  return {
+    type: "object",
+    required: [],
+    additionalProperties: false,
+    properties: {
+      reason: { type: "string", maxLength: 500 }
     }
   };
 }

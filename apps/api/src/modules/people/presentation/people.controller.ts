@@ -55,7 +55,7 @@ export class PeopleController {
   async create(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: unknown) {
     const input = createPersonRequestSchema.parse(body);
     const command = { fullName: input.fullName, phone: input.phone ?? null, email: input.email ?? null, birthDate: input.birthDate ?? null, gender: input.gender ?? null, observations: input.observations ?? null };
-    return { data: presentPerson(await this.commands.create(principal, command), this.authorization.canViewObservations(principal)), meta: {} };
+    return { data: presentPerson(await this.commands.create(principal, command, input.cellCode), this.authorization.canViewObservations(principal)), meta: {} };
   }
 
   @Roles("ADMIN", "PASTOR") @Patch(":id")
@@ -91,14 +91,18 @@ function personBodySchema(required: boolean) {
   return { type: "object", additionalProperties: false, ...(required ? { required: ["fullName"] } : { minProperties: 1 }), properties: {
     fullName: { type: "string", minLength: 1, maxLength: 200 }, phone: { type: "string", nullable: true, maxLength: 32 },
     email: { type: "string", nullable: true, format: "email", maxLength: 320 }, birthDate: { type: "string", nullable: true, format: "date" },
-    gender: { type: "string", nullable: true, maxLength: 50 }, observations: { type: "string", nullable: true, maxLength: 10000 }
+    gender: { type: "string", nullable: true, maxLength: 50 }, observations: { type: "string", nullable: true, maxLength: 10000 },
+    cellCode: { type: "string", nullable: true, minLength: 1, maxLength: 50, description: "Optional cell to link on creation" }
   } };
 }
 
-function personSchema() { return { type: "object", additionalProperties: false, required: ["id", "fullName", "phone", "email", "birthDate", "gender", "status", "createdAt", "updatedAt"], properties: {
+function cellLinkSchema() { return { type: "object", additionalProperties: false, required: ["id", "code", "name"], properties: { id: { type: "string", format: "uuid" }, code: { type: "string" }, name: { type: "string" } } }; }
+
+function personSchema() { return { type: "object", additionalProperties: false, required: ["id", "fullName", "phone", "email", "birthDate", "gender", "currentCell", "status", "createdAt", "updatedAt"], properties: {
   id: { type: "string", format: "uuid" }, fullName: { type: "string" },
   phone: { type: "string", nullable: true }, email: { type: "string", nullable: true },
   birthDate: { type: "string", format: "date", nullable: true }, gender: { type: "string", nullable: true },
+  currentCell: { ...cellLinkSchema(), nullable: true },
   status: { type: "string", enum: ["ACTIVE", "INACTIVE"] },
   createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
   observations: { type: "string", nullable: true, description: "Only ADMIN and PASTOR" }
