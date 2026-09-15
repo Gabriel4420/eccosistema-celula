@@ -310,8 +310,11 @@ export function CellDetail() {
           </div>
           <p className="text-sm text-muted-foreground">{cell.code}</p>
         </div>
-        <Button variant="outline" icon={CalendarDays} asChild>
-          <Link href={`/cells/${id}/meetings`}>{t("cells.detail.viewMeetings")}</Link>
+        <Button variant="outline" asChild>
+          <Link href={`/cells/${id}/meetings`}>
+            <CalendarDays className="size-4" aria-hidden="true" />
+            {t("cells.detail.viewMeetings")}
+          </Link>
         </Button>
       </div>
 

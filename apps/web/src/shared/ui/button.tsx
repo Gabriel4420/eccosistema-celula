@@ -51,20 +51,26 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot : "button";
+  if (asChild) {
+    return (
+      <Slot
+        className={cn(buttonVariants({ variant, size }), className)}
+        aria-busy={loading || undefined}
+        {...props}
+      >
+        {children}
+      </Slot>
+    );
+  }
   return (
-    <Comp
+    <button
       className={cn(buttonVariants({ variant, size }), className)}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...props}
     >
-      {loading ? (
-        <Loader2 className="animate-spin" aria-hidden="true" />
-      ) : Icon ? (
-        <Icon aria-hidden="true" />
-      ) : null}
+      {loading ? <Loader2 className="animate-spin" aria-hidden="true" /> : Icon ? <Icon aria-hidden="true" /> : null}
       {loading && loadingLabel ? <span>{loadingLabel}</span> : children}
-    </Comp>
+    </button>
   );
 }

@@ -36,9 +36,10 @@ const nextConfig: NextConfig = {
     const vlibras = "https://vlibras.gov.br";
     const vlibrasSub = "https://*.vlibras.gov.br";
     const vlibrasCdn = "https://cdn.jsdelivr.net";
+    const vercelAnalytics = onVercel ? " https://va.vercel-scripts.com" : "";
     const directives = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${vlibras} ${vlibrasCdn}${vercelLive.script}`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${vlibras} ${vlibrasCdn}${vercelLive.script}${vercelAnalytics}`,
       `style-src 'self' 'unsafe-inline' ${vlibras} ${vlibrasCdn}`,
       `img-src 'self' blob: data: ${vlibras} ${vlibrasCdn}${vercelLive.img}`,
       `font-src 'self' data: ${vlibras} ${vlibrasCdn}`,
