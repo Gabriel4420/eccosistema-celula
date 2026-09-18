@@ -26,13 +26,16 @@ export function postRefresh(baseUrl: string): Promise<AuthResponse | null> {
   const pending = pendingRefreshes.get(baseUrl);
   if (pending) return pending;
   // Serialize cookie rotation across tabs as well as StrictMode mounts.
-  const refresh = () => requestRefresh(baseUrl);
-  const operation = typeof navigator !== "undefined" && navigator.locks
-    ? navigator.locks.request(`mission-atos-refresh:${baseUrl}`, refresh)
-    : refresh();
-  const request = operation.finally(() => pendingRefreshes.delete(baseUrl));
+  const request = withRefreshLock(baseUrl).finally(() => pendingRefreshes.delete(baseUrl));
   pendingRefreshes.set(baseUrl, request);
   return request;
+}
+
+async function withRefreshLock(baseUrl: string): Promise<AuthResponse | null> {
+  if (typeof navigator === "undefined" || !navigator.locks) {
+    return requestRefresh(baseUrl);
+  }
+  return navigator.locks.request(`mission-atos-refresh:${baseUrl}`, () => requestRefresh(baseUrl));
 }
 
 async function requestRefresh(baseUrl: string): Promise<AuthResponse | null> {
