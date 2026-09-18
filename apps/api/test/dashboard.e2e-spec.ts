@@ -185,6 +185,99 @@ describe("dashboard analytics HTTP flow", () => {
   }
 });
 
+describe("dashboard forming cells scope flow", () => {
+  const databaseUrl = safeTestDatabaseUrl();
+  const churchId = randomUUID();
+  const timezone = "America/Sao_Paulo";
+  const database = createRuntimeClient({ DATABASE_URL: databaseUrl });
+  let app: INestApplication;
+
+  const leaderId = randomUUID();
+  const supervisorId = randomUUID();
+  const withAttendanceCellId = randomUUID();
+  const withoutAttendanceCellId = randomUUID();
+  const memberId = randomUUID();
+  const meetingId = randomUUID();
+  const password = "dashboard-forming-e2e-password-123";
+
+  let leaderAuth: string;
+  let supervisorAuth: string;
+
+  beforeAll(async () => {
+    Object.assign(process.env, {
+      NODE_ENV: "test", DATABASE_URL: databaseUrl, AUTH_CHURCH_ID: churchId,
+      JWT_ACCESS_SECRET: "dashboard-forming-e2e-jwt-secret-at-least-32",
+      REFRESH_TOKEN_PEPPER: "dashboard-forming-e2e-refresh-pepper-long",
+      AUTH_COOKIE_SECURE: "false", CORS_ORIGINS: "http://localhost:3000"
+    });
+    await database.church.create({ data: { id: churchId, name: "Dashboard Forming E2E", slug: `dashboard-forming-${churchId}`, timezone } });
+    for (const roleName of ["ADMIN", "SUPERVISOR", "LEADER"]) {
+      await database.role.create({ data: { id: randomUUID(), churchId, name: roleName } });
+    }
+    for (const [userId, roleName] of [[leaderId, "LEADER"], [supervisorId, "SUPERVISOR"]] as const) {
+      const role = await database.role.findFirst({ where: { churchId, name: roleName }, select: { id: true } });
+      await database.user.create({ data: { id: userId, churchId, firstName: "User", lastName: roleName, email: `${userId}@example.test`, passwordHash: await hash(password), status: "ACTIVE" } });
+      if (role) await database.userRole.create({ data: { churchId, userId, roleId: role.id } });
+    }
+
+    await database.cell.createMany({ data: [
+      { id: withAttendanceCellId, churchId, code: "FORM-ATD", name: "Em Formação Com Frequência", status: "FORMING", meetingDay: "MONDAY", meetingTime: new Date("1970-01-01T19:00:00Z"), address: "Test" },
+      { id: withoutAttendanceCellId, churchId, code: "FORM-XXX", name: "Em Formação Sem Frequência", status: "FORMING", meetingDay: "MONDAY", meetingTime: new Date("1970-01-01T19:00:00Z"), address: "Test" }
+    ] });
+    await database.person.createMany({ data: [
+      { id: memberId, churchId, fullName: "Membro Formação" },
+      { id: randomUUID(), churchId, fullName: "Membro Sem Frequência" }
+    ] });
+    await database.cellMembership.create({ data: { churchId, personId: memberId, cellId: withAttendanceCellId, status: "ACTIVE", joinedAt: new Date("2026-08-01T06:00:00.000Z") } });
+    await database.meeting.createMany({ data: [
+      { id: meetingId, churchId, cellId: withAttendanceCellId, meetingDate: new Date("2026-08-25"), status: "COMPLETED" },
+      { id: randomUUID(), churchId, cellId: withoutAttendanceCellId, meetingDate: new Date("2026-08-25"), status: "COMPLETED" }
+    ] });
+    await database.meetingAttendance.create({ data: { churchId, meetingId, personId: memberId, attendanceStatus: "PRESENT" } });
+
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    app = moduleRef.createNestApplication(); app.use(cookieParser()); await app.init();
+    leaderAuth = await login(leaderId);
+    supervisorAuth = await login(supervisorId);
+  });
+
+  afterAll(async () => {
+    if (app) await app.close();
+    for (const table of ["idempotency_requests", "sessions", "audit_logs", "meeting_attendances", "meetings", "cell_memberships", "supervisor_assignments", "people", "cells", "user_roles", "roles", "users"]) {
+      await database.$executeRawUnsafe(`DELETE FROM "${table}" WHERE "church_id" IN ($1::uuid)`, churchId);
+    }
+    await database.$executeRaw`DELETE FROM "churches" WHERE "id" = ${churchId}::uuid`;
+    await database.$disconnect();
+  });
+
+  it("includes forming cells in the leader overview and cell summary", async () => {
+    const overview = await request(app.getHttpServer())
+      .get("/dashboard/overview?from=2026-08-01&to=2026-08-31")
+      .set("Authorization", leaderAuth).expect(200);
+    expect(overview.body.data.totals).toEqual({ people: 2, activeCells: 0, formingCells: 2, members: 1 });
+    expect(overview.body.data.meetings).toMatchObject({ total: 2, completed: 2 });
+
+    const summary = await request(app.getHttpServer())
+      .get("/dashboard/cells/summary?windowDays=30&status=FORMING")
+      .set("Authorization", leaderAuth).expect(200);
+    const ids = summary.body.data.cells.map((cell: { id: string }) => cell.id);
+    expect(ids).toContain(withAttendanceCellId);
+    expect(ids).toContain(withoutAttendanceCellId);
+  });
+
+  it("includes forming cells in the supervisor scope even without assignments", async () => {
+    const overview = await request(app.getHttpServer())
+      .get("/dashboard/overview?from=2026-08-01&to=2026-08-31")
+      .set("Authorization", supervisorAuth).expect(200);
+    expect(overview.body.data.totals).toMatchObject({ formingCells: 2, activeCells: 0, members: 1 });
+  });
+
+  async function login(userId: string): Promise<string> {
+    const response = await request(app.getHttpServer()).post("/auth/login").send({ email: `${userId}@example.test`, password }).expect(200);
+    return `Bearer ${response.body.data.accessToken}`;
+  }
+});
+
 function safeTestDatabaseUrl(): string {
   const value = process.env.TEST_DATABASE_URL;
   if (!value || !new URL(value).pathname.toLowerCase().includes("test")) throw new Error("TEST_DATABASE_URL must identify a test database");

@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { resolveCellScopeIds } from "@mission-atos/database";
 import type { RuntimeDatabaseClient } from "@mission-atos/database";
 import { DATABASE_CLIENT } from "../../identity/identity.tokens";
 import { civilDayBounds } from "../../dashboard-analytics/application/dashboard-analytics.time";
@@ -939,30 +940,12 @@ export class PrismaReportsRepository implements ReportsRepository {
     return cell;
   }
 
-  private async resolveScopeCellIds(
+  private resolveScopeCellIds(
     transaction: TransactionClient,
     churchId: string,
     scope: ReportsScope
   ): Promise<string[]> {
-    if (scope.kind === "church") {
-      const rows = await transaction.cell.findMany({ where: { churchId, deletedAt: null }, select: { id: true } });
-      return rows.map((row) => row.id);
-    }
-    if (scope.kind === "supervisor") {
-      const assignments = await transaction.supervisorAssignment.findMany({
-        where: { churchId, supervisorId: scope.userId, deletedAt: null },
-        select: { leaderId: true }
-      });
-      const leaderIds = assignments.map((assignment) => assignment.leaderId);
-      if (!leaderIds.length) return [];
-      const rows = await transaction.cell.findMany({ where: { churchId, deletedAt: null, leaderId: { in: leaderIds } }, select: { id: true } });
-      return rows.map((row) => row.id);
-    }
-    const rows = await transaction.cell.findMany({
-      where: { churchId, deletedAt: null, OR: [{ leaderId: scope.userId }, { traineeLeaderId: scope.userId }] },
-      select: { id: true }
-    });
-    return rows.map((row) => row.id);
+    return resolveCellScopeIds(transaction, churchId, scope);
   }
 
   private computeEligible(
