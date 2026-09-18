@@ -37,7 +37,7 @@ const serverEnvironmentSchema = z.object({
     .int()
     .min(3600)
     .max(2_592_000)
-    .default(2_592_000),
+    .default(259_200),
   AUTH_COOKIE_SECURE: z
     .enum(["true", "false"])
     .default("false")

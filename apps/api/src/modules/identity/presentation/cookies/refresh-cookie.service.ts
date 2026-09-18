@@ -28,7 +28,9 @@ export class RefreshCookieService {
   }
 
   clear(response: Response): void {
-    response.clearCookie(this.cookieName, this.options());
+    const options = this.options();
+    delete options.maxAge;
+    response.clearCookie(this.cookieName, options);
   }
 
   assertAllowedOrigin(request: Request): void {

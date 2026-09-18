@@ -104,7 +104,7 @@ describe("ApiClient", () => {
     api.clearAccessToken();
   });
 
-  it("ends the session when a 401 refresh request throws", async () => {
+  it("preserves the session when a 401 refresh request has a network failure", async () => {
     fetchMock.mockResolvedValue(
       response(401, {
         error: { code: "AUTH_UNAUTHENTICATED", message: "x", details: {} }
@@ -122,7 +122,7 @@ describe("ApiClient", () => {
     await expect(
       api.request({ method: "GET", path: "/users", bearer: true, schema: idEnvelopeSchema })
     ).rejects.toMatchObject({ code: "AUTH_UNAUTHENTICATED" });
-    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).not.toHaveBeenCalled();
     api.clearAccessToken();
   });
 

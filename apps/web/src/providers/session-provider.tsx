@@ -106,12 +106,14 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
-      let auth: AuthResponse | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const restore = async () => {
+      let auth: AuthResponse | null;
       try {
         auth = await postRefresh(baseUrl);
       } catch {
-        auth = null;
+        if (!cancelled) retryTimer = setTimeout(() => void restore(), 15_000);
+        return;
       }
       if (cancelled) return;
       if (auth) {
@@ -119,15 +121,18 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
       } else {
         setStatus("anonymous");
       }
-    })();
+    };
+    void restore();
     return () => {
       cancelled = true;
+      clearTimeout(retryTimer);
     };
   }, [baseUrl, installAuth]);
 
   useEffect(() => {
     if (status !== "authenticated") return undefined;
     const recover = () => {
+      if (document.visibilityState !== "visible") return;
       const pending = api.refreshIfWithinMargin();
       if (pending) void pending;
     };
@@ -136,9 +141,11 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("focus", recover);
+    window.addEventListener("online", recover);
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("focus", recover);
+      window.removeEventListener("online", recover);
     };
   }, [status, api]);
 

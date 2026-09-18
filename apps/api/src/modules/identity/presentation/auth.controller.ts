@@ -31,6 +31,7 @@ import {
   AUTHENTICATION_ENVIRONMENT,
   type AuthEnvironment
 } from "../identity.tokens";
+import { AuthError } from "../domain/auth-error";
 import { RefreshCookieService } from "./cookies/refresh-cookie.service";
 import { LoginRateLimiter } from "./login-rate-limiter";
 import { toAuthResponse } from "./mappers/auth-response.mapper";
@@ -102,19 +103,19 @@ export class AuthController {
   ): Promise<AuthResponse> {
     this.cookies.assertAllowedOrigin(request);
     const token = this.cookies.read(request);
-    if (!token) {
+    try {
       const result = await this.refreshUseCase.execute({
-        refreshToken: "",
+        refreshToken: token ?? "",
         refreshTtlSeconds: this.environment.REFRESH_TOKEN_TTL_SECONDS
       });
+      this.cookies.write(response, result.refreshToken);
       return toAuthResponse(result);
+    } catch (error) {
+      if (error instanceof AuthError && error.code === "AUTH_REFRESH_INVALID") {
+        this.cookies.clear(response);
+      }
+      throw error;
     }
-    const result = await this.refreshUseCase.execute({
-      refreshToken: token,
-      refreshTtlSeconds: this.environment.REFRESH_TOKEN_TTL_SECONDS
-    });
-    this.cookies.write(response, result.refreshToken);
-    return toAuthResponse(result);
   }
 
   @Public()

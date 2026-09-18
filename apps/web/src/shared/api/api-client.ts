@@ -77,9 +77,9 @@ export class ApiClient {
     if (!this.coordinator) {
       this.coordinator = new RefreshCoordinator({
         refresh: () => this.runRefresh(),
+        canRefresh: () => document.visibilityState === "visible",
         onRefreshed: (result) => {
           this.token = result.accessToken;
-          this.coordinator?.reschedule();
         },
         onExpired: () => {
           this.sessionEndedHandler();

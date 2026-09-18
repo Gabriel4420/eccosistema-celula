@@ -16,7 +16,7 @@ describe("environment configuration", () => {
       JWT_ACCESS_TTL_SECONDS: 600,
       AUTH_LOGIN_IP_LIMIT: 10,
       AUTH_LOGIN_ACCOUNT_LIMIT: 5,
-      REFRESH_TOKEN_TTL_SECONDS: 2_592_000,
+      REFRESH_TOKEN_TTL_SECONDS: 259_200,
       AUTH_COOKIE_SECURE: false,
       CORS_ORIGINS: "http://localhost:3000"
     });

@@ -24,6 +24,7 @@ describe("authentication HTTP flow", () => {
       REFRESH_TOKEN_PEPPER:
         "e2e-refresh-pepper-that-is-different-and-long",
       AUTH_COOKIE_SECURE: "false",
+      REFRESH_TOKEN_TTL_SECONDS: "259200",
       CORS_ORIGINS: "http://localhost:3000"
     });
     await database.church.create({
@@ -95,6 +96,7 @@ describe("authentication HTTP flow", () => {
     });
     const firstCookie = login.headers["set-cookie"]?.[0];
     expect(firstCookie).toContain("HttpOnly");
+    expect(firstCookie).toContain("Max-Age=259200");
     expect(firstCookie).toContain("SameSite=Lax");
     expect(firstCookie).toContain("Path=/auth");
 
@@ -114,6 +116,29 @@ describe("authentication HTTP flow", () => {
       .expect(204);
 
     await app.close();
+  });
+
+  it("rejects an expired session and removes its cookie", async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const app = moduleRef.createNestApplication();
+    app.use(cookieParser());
+    await app.init();
+    try {
+      const login = await request(app.getHttpServer()).post("/auth/login").send({ email, password }).expect(200);
+      await database.session.updateMany({
+        where: { churchId, userId, revokedAt: null },
+        data: { expiresAt: new Date(Date.now() - 1) }
+      });
+      const refresh = await request(app.getHttpServer())
+        .post("/auth/refresh")
+        .set("Cookie", login.headers["set-cookie"]?.[0] ?? "")
+        .set("Origin", "http://localhost:3000")
+        .expect(401);
+      expect(refresh.headers["set-cookie"]?.[0]).toContain("mission_atos_refresh=;");
+      expect(refresh.headers["set-cookie"]?.[0]).toContain("Expires=Thu, 01 Jan 1970");
+    } finally {
+      await app.close();
+    }
   });
 
   it("keeps health public and rejects a protected route without JWT", async () => {

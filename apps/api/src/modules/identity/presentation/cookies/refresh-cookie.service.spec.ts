@@ -15,9 +15,17 @@ describe("RefreshCookieService", () => {
         secure: true,
         sameSite: "lax",
         partitioned: true,
-        path: "/api/auth"
+        path: "/api/auth",
+        maxAge: 259200000
       })
     );
+  });
+
+  it("clears the cookie without preserving its lifetime", () => {
+    const response = { clearCookie: jest.fn() } as unknown as Response;
+    new RefreshCookieService(environment(true)).clear(response);
+    expect(response.clearCookie).toHaveBeenCalledWith("__Secure-mission_atos_refresh", expect.objectContaining({ path: "/api/auth", httpOnly: true, secure: true }));
+    expect(response.clearCookie).toHaveBeenCalledWith(expect.any(String), expect.not.objectContaining({ maxAge: expect.any(Number) }));
   });
 
   it("keeps the plain cookie and direct auth path for local development", () => {
@@ -31,7 +39,8 @@ describe("RefreshCookieService", () => {
         secure: false,
         sameSite: "lax",
         partitioned: false,
-        path: "/auth"
+        path: "/auth",
+        maxAge: 259200000
       })
     );
   });
@@ -50,7 +59,7 @@ function environment(secure: boolean): AuthEnvironment {
     AUTH_LOGIN_IP_LIMIT: 10,
     AUTH_LOGIN_ACCOUNT_LIMIT: 5,
     REFRESH_TOKEN_PEPPER: "b".repeat(32),
-    REFRESH_TOKEN_TTL_SECONDS: 3600,
+    REFRESH_TOKEN_TTL_SECONDS: 259200,
     AUTH_COOKIE_SECURE: secure,
     CORS_ORIGINS: "https://eccosistema-celula.vercel.app"
   };

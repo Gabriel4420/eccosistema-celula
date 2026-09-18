@@ -38,6 +38,29 @@ describe("RefreshSessionUseCase", () => {
     );
   });
 
+  it("extends the session for three days from the returning user's access", async () => {
+    const sessions = sessionRepository(session);
+    const useCase = new RefreshSessionUseCase(userRepository(), sessions, accessTokens(), refreshTokens(), clock());
+    await useCase.execute({ refreshToken: "old-token", refreshTtlSeconds: 259200 });
+    expect(sessions.rotate).toHaveBeenCalledWith(expect.objectContaining({
+      expiresAt: new Date("2026-07-27T12:00:00.000Z")
+    }));
+  });
+
+  it.each(["2026-07-27T11:59:59.999Z", "2026-07-27T12:00:00.000Z", "2026-07-27T12:00:00.001Z"])(
+    "enforces the three-day boundary at %s", async (currentTime) => {
+      const sessions = sessionRepository({ ...session, expiresAt: new Date("2026-07-27T12:00:00.000Z") });
+      const useCase = new RefreshSessionUseCase(userRepository(), sessions, accessTokens(), refreshTokens(), { now: () => new Date(currentTime) });
+      const result = useCase.execute({ refreshToken: "old-token", refreshTtlSeconds: 259200 });
+      if (currentTime < "2026-07-27T12:00:00.000Z") {
+        await expect(result).resolves.toHaveProperty("refreshToken", "new-token");
+      } else {
+        await expect(result).rejects.toMatchObject({ code: "AUTH_REFRESH_INVALID" });
+        expect(sessions.rotate).not.toHaveBeenCalled();
+      }
+    }
+  );
+
   it("revokes the family when a rotated token is reused", async () => {
     const sessions = sessionRepository({
       ...session,

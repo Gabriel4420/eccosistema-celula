@@ -17,6 +17,7 @@ interface RefreshCoordinatorOptions {
   readonly refresh: () => Promise<RefreshResult | null>;
   readonly onRefreshed: (result: RefreshResult) => void;
   readonly onExpired: () => void;
+  readonly canRefresh?: () => boolean;
 }
 
 /**
@@ -29,10 +30,12 @@ export class RefreshCoordinator {
   private inflight: Promise<boolean> | null = null;
   private expiresAtMs: number | null = null;
   private expiresInSeconds: number | null = null;
+  private disposed = false;
 
   constructor(private readonly options: RefreshCoordinatorOptions) {}
 
   install(expiresAtMs: number, expiresInSeconds: number): void {
+    this.disposed = false;
     this.expiresAtMs = expiresAtMs;
     this.expiresInSeconds = expiresInSeconds;
     this.reschedule();
@@ -56,17 +59,14 @@ export class RefreshCoordinator {
     this.clearTimer();
     if (this.expiresAtMs === null || this.expiresInSeconds === null) return;
     const ttl = this.expiresAtMs - Date.now();
-    if (ttl <= 0) {
-      this.options.onExpired();
-      return;
-    }
     const delay = Math.max(0, ttl - marginSeconds(this.expiresInSeconds) * 1000);
     this.timer = setTimeout(() => {
-      void this.refresh();
+      if (this.options.canRefresh?.() !== false) void this.refresh();
     }, delay);
   }
 
   dispose(): void {
+    this.disposed = true;
     this.clearTimer();
     this.inflight = null;
     this.expiresAtMs = null;
@@ -76,14 +76,23 @@ export class RefreshCoordinator {
   private async run(): Promise<boolean> {
     try {
       const result = await this.options.refresh();
+      if (this.disposed) return false;
       if (!result) {
         this.options.onExpired();
         return false;
       }
+      this.expiresAtMs = result.expiresAtMs;
       this.options.onRefreshed(result);
+      this.reschedule();
       return true;
     } catch {
-      this.options.onExpired();
+      // A timeout, offline browser or unavailable API does not revoke a session.
+      if (!this.disposed) {
+        this.clearTimer();
+        this.timer = setTimeout(() => {
+          if (this.options.canRefresh?.() !== false) void this.refresh();
+        }, 30_000);
+      }
       return false;
     } finally {
       this.inflight = null;
