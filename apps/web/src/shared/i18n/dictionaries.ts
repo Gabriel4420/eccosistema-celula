@@ -313,6 +313,15 @@ export type TranslationKey =
   | "cells.filter.status"
   | "cells.filter.all"
   | "cells.filter.allStatuses"
+  | "cells.filter.leader"
+  | "cells.filter.supervisor"
+  | "cells.filter.meetingDay"
+  | "cells.filter.minMembers"
+  | "cells.filter.maxMembers"
+  | "cells.filter.allLeaders"
+  | "cells.filter.allSupervisors"
+  | "cells.filter.allDays"
+  | "cells.filter.filtersAria"
   | "cells.empty"
   | "cells.emptyState"
   | "cells.error"
@@ -572,6 +581,7 @@ export type TranslationKey =
   | "reports.export.csv"
   | "reports.export.exporting"
   | "reports.export.aria"
+  | "reports.export.language"
   | "reports.period.default"
   | "reports.period.last30"
   | "reports.period.last60"
@@ -679,6 +689,13 @@ export type TranslationKey =
   | "people.action.clearFilters"
   | "people.action.reactivate"
   | "people.action.viewDetails"
+  | "people.sort.label"
+  | "people.sort.nameAsc"
+  | "people.sort.nameDesc"
+  | "people.sort.birthDateDesc"
+  | "people.sort.birthDateAsc"
+  | "people.sort.createdAtDesc"
+  | "people.sort.createdAtAsc"
   | "people.emptyState.desc"
   | "people.error.retry"
   | "people.alert.success"
@@ -694,6 +711,7 @@ export type TranslationKey =
   | "people.toast.noChange.desc"
   | "people.detail.saved.desc"
   | "people.detail.error.save"
+  | "people.detail.error.invalidDate"
   | "people.toast.inactivated"
   | "people.toast.inactivated.desc"
   | "people.detail.error.inactivate"
@@ -722,6 +740,7 @@ export type TranslationKey =
   | "people.new.submitting"
   | "people.new.error.duplicate"
   | "people.new.error.generic"
+  | "people.new.error.invalidDate"
   // ----- cells (additional) -----
   | "cells.page.subtitle"
   | "cells.action.clearFilters"
@@ -1529,6 +1548,15 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.filter.status": "Status",
     "cells.filter.all": "Todas",
     "cells.filter.allStatuses": "Todos",
+    "cells.filter.leader": "Líder",
+    "cells.filter.supervisor": "Supervisor",
+    "cells.filter.meetingDay": "Dia da reunião",
+    "cells.filter.minMembers": "Mín. de membros",
+    "cells.filter.maxMembers": "Máx. de membros",
+    "cells.filter.allLeaders": "Todos os líderes",
+    "cells.filter.allSupervisors": "Todos os supervisores",
+    "cells.filter.allDays": "Todos os dias",
+    "cells.filter.filtersAria": "Filtros adicionais",
     "cells.empty": "Nenhuma célula encontrada",
     "cells.emptyState": "Você ainda não tem células cadastradas.",
     "cells.error": "Não foi possível carregar as células",
@@ -1783,6 +1811,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "reports.export.csv": "Exportar CSV",
     "reports.export.exporting": "Exportando…",
     "reports.export.aria": "Exportar relatório",
+    "reports.export.language": "Idioma do relatório",
     "reports.period.default": "Padrão (30 dias)",
     "reports.period.last30": "Últimos 30 dias",
     "reports.period.last60": "Últimos 60 dias",
@@ -1885,6 +1914,13 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.gender.other": "Outro",
     "people.field.gender": "Gênero",
     "people.search.hint": "Nome, e-mail ou telefone",
+    "people.sort.label": "Ordenar por",
+    "people.sort.nameAsc": "Nome (A–Z)",
+    "people.sort.nameDesc": "Nome (Z–A)",
+    "people.sort.birthDateDesc": "Nascimento (mais recente)",
+    "people.sort.birthDateAsc": "Nascimento (mais antigo)",
+    "people.sort.createdAtDesc": "Cadastros mais recentes",
+    "people.sort.createdAtAsc": "Cadastros mais antigos",
     "people.action.clearFilters": "Limpar filtros",
     "people.action.reactivate": "Reativar",
     "people.action.viewDetails": "Ver detalhes",
@@ -1903,6 +1939,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.toast.noChange.desc": "Não havia dados novos para salvar.",
     "people.detail.saved.desc": "Os dados foram salvos.",
     "people.detail.error.save": "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
+    "people.detail.error.invalidDate": "Informe uma data válida no formato DD/MM/AAAA.",
     "people.toast.inactivated": "Pessoa inativada",
     "people.toast.inactivated.desc": "Ela será listada somente para administradores.",
     "people.detail.error.inactivate": "Não foi possível inativar a pessoa. Tente novamente.",
@@ -1931,6 +1968,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.new.submitting": "Cadastrando…",
     "people.new.error.duplicate": "Já existe uma pessoa ativa com dados semelhantes. Verifique o cadastro antes de continuar.",
     "people.new.error.generic": "Não foi possível cadastrar a pessoa. Verifique os dados e tente novamente.",
+    "people.new.error.invalidDate": "Informe uma data de nascimento válida no formato DD/MM/AAAA.",
     "cells.page.subtitle": "Consulte, cadastre e acompanhe as células da sua igreja.",
     "cells.action.clearFilters": "Limpar filtros",
     "cells.error.retry": "Tente novamente em instantes.",
@@ -2721,6 +2759,15 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.filter.status": "Status",
     "cells.filter.all": "All",
     "cells.filter.allStatuses": "All",
+    "cells.filter.leader": "Leader",
+    "cells.filter.supervisor": "Supervisor",
+    "cells.filter.meetingDay": "Meeting day",
+    "cells.filter.minMembers": "Min members",
+    "cells.filter.maxMembers": "Max members",
+    "cells.filter.allLeaders": "All leaders",
+    "cells.filter.allSupervisors": "All supervisors",
+    "cells.filter.allDays": "All days",
+    "cells.filter.filtersAria": "Additional filters",
     "cells.empty": "No cells found",
     "cells.emptyState": "You don't have cells registered yet.",
     "cells.error": "Could not load the cells",
@@ -2975,6 +3022,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "reports.export.csv": "Export CSV",
     "reports.export.exporting": "Exporting…",
     "reports.export.aria": "Export report",
+    "reports.export.language": "Report language",
     "reports.period.default": "Default (30 days)",
     "reports.period.last30": "Last 30 days",
     "reports.period.last60": "Last 60 days",
@@ -3077,6 +3125,13 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.gender.other": "Other",
     "people.field.gender": "Gender",
     "people.search.hint": "Name, email or phone",
+    "people.sort.label": "Sort by",
+    "people.sort.nameAsc": "Name (A–Z)",
+    "people.sort.nameDesc": "Name (Z–A)",
+    "people.sort.birthDateDesc": "Birth date (most recent)",
+    "people.sort.birthDateAsc": "Birth date (oldest)",
+    "people.sort.createdAtDesc": "Recently registered",
+    "people.sort.createdAtAsc": "Oldest registrations",
     "people.action.clearFilters": "Clear filters",
     "people.action.reactivate": "Reactivate",
     "people.action.viewDetails": "View details",
@@ -3095,6 +3150,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.toast.noChange.desc": "There was no new data to save.",
     "people.detail.saved.desc": "The data was saved.",
     "people.detail.error.save": "Could not save the changes. Check the data and try again.",
+    "people.detail.error.invalidDate": "Enter a valid date in DD/MM/YYYY format.",
     "people.toast.inactivated": "Person inactivated",
     "people.toast.inactivated.desc": "She will only be listed for administrators.",
     "people.detail.error.inactivate": "Could not inactivate the person. Try again.",
@@ -3123,6 +3179,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.new.submitting": "Registering…",
     "people.new.error.duplicate": "There is already an active person with similar data. Check the registration before continuing.",
     "people.new.error.generic": "Could not register the person. Check the data and try again.",
+    "people.new.error.invalidDate": "Enter a valid birth date in DD/MM/YYYY format.",
     "cells.page.subtitle": "View, register and track your church's cells.",
     "cells.action.clearFilters": "Clear filters",
     "cells.error.retry": "Try again shortly.",
@@ -3913,6 +3970,15 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "cells.filter.status": "Estado",
     "cells.filter.all": "Todas",
     "cells.filter.allStatuses": "Todos",
+    "cells.filter.leader": "Líder",
+    "cells.filter.supervisor": "Supervisor",
+    "cells.filter.meetingDay": "Día del encuentro",
+    "cells.filter.minMembers": "Mín. de miembros",
+    "cells.filter.maxMembers": "Máx. de miembros",
+    "cells.filter.allLeaders": "Todos los líderes",
+    "cells.filter.allSupervisors": "Todos los supervisores",
+    "cells.filter.allDays": "Todos los días",
+    "cells.filter.filtersAria": "Filtros adicionales",
     "cells.empty": "No se encontraron células",
     "cells.emptyState": "Aún no tienes células registradas.",
     "cells.error": "No se pudieron cargar las células",
@@ -4167,6 +4233,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "reports.export.csv": "Exportar CSV",
     "reports.export.exporting": "Exportando…",
     "reports.export.aria": "Exportar informe",
+    "reports.export.language": "Idioma del informe",
     "reports.period.default": "Predeterminado (30 días)",
     "reports.period.last30": "Últimos 30 días",
     "reports.period.last60": "Últimos 60 días",
@@ -4269,6 +4336,13 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.gender.other": "Otro",
     "people.field.gender": "Género",
     "people.search.hint": "Nombre, correo o teléfono",
+    "people.sort.label": "Ordenar por",
+    "people.sort.nameAsc": "Nombre (A–Z)",
+    "people.sort.nameDesc": "Nombre (Z–A)",
+    "people.sort.birthDateDesc": "Nacimiento (más reciente)",
+    "people.sort.birthDateAsc": "Nacimiento (más antiguo)",
+    "people.sort.createdAtDesc": "Registros más recientes",
+    "people.sort.createdAtAsc": "Registros más antiguos",
     "people.action.clearFilters": "Limpiar filtros",
     "people.action.reactivate": "Reactivar",
     "people.action.viewDetails": "Ver detalles",
@@ -4287,6 +4361,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.toast.noChange.desc": "No había datos nuevos para guardar.",
     "people.detail.saved.desc": "Los datos fueron guardados.",
     "people.detail.error.save": "No fue posible guardar los cambios. Revisa los datos e inténtalo de nuevo.",
+    "people.detail.error.invalidDate": "Ingresa una fecha válida en formato DD/MM/AAAA.",
     "people.toast.inactivated": "Persona inactivada",
     "people.toast.inactivated.desc": "Solo aparecerá en la lista para los administradores.",
     "people.detail.error.inactivate": "No fue posible inactivar a la persona. Inténtalo de nuevo.",
@@ -4315,6 +4390,7 @@ export const dictionaries: Record<AppLocale, Dictionary> = {
     "people.new.submitting": "Registrando…",
     "people.new.error.duplicate": "Ya existe una persona activa con datos similares. Revisa el registro antes de continuar.",
     "people.new.error.generic": "No fue posible registrar la persona. Revisa los datos e inténtalo de nuevo.",
+    "people.new.error.invalidDate": "Ingresa una fecha de nacimiento válida en formato DD/MM/AAAA.",
     "cells.page.subtitle": "Consulta, registra y acompaña las células de tu iglesia.",
     "cells.action.clearFilters": "Limpiar filtros",
     "cells.error.retry": "Inténtalo en unos instantes.",
