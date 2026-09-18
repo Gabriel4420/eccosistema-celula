@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { resolveCellScopeIds } from "@mission-atos/database";
 import type { RuntimeDatabaseClient } from "@mission-atos/database";
 import { DATABASE_CLIENT } from "../../identity/identity.tokens";
 import { CellsManagementError } from "../application/cells-management.error";
@@ -75,28 +76,27 @@ export class PrismaCellsManagementRepository
   ): Promise<CellPage> {
     const startedAt = Date.now();
     const terms = input.search?.split(/\s+/).filter(Boolean) ?? [];
-    let leaderIds: string[] | null = null;
-    if (scope.kind === "supervisor") {
-      const assignments = await this.database.supervisorAssignment.findMany({
-        where: { churchId, supervisorId: scope.userId, deletedAt: null },
-        select: { leaderId: true }
-      });
-      leaderIds = assignments.map((assignment) => assignment.leaderId);
-      if (!leaderIds.length) {
-        this.logger.log(JSON.stringify({ operation: "cells.list", result: "success", durationMs: Date.now() - startedAt, itemCount: 0 }));
-        return { items: [], totalItems: 0 };
-      }
+    const cellIds = await this.resolveScopeCellIds(churchId, scope);
+    if (!cellIds.length) {
+      this.logger.log(JSON.stringify({ operation: "cells.list", result: "success", durationMs: Date.now() - startedAt, itemCount: 0 }));
+      return { items: [], totalItems: 0 };
     }
-    const where = {
+    let where = {
       churchId,
       deletedAt: null,
+      id: { in: cellIds },
       ...(input.status ? { status: input.status } : {}),
       ...(input.leaderId ? { leaderId: input.leaderId } : {}),
-      ...(input.meetingDay ? { meetingDay: input.meetingDay } : {}),
-      ...(scope.kind === "supervisor" && leaderIds ? { leaderId: { in: leaderIds } } : {}),
-      ...(scope.kind === "leader"
-        ? { OR: [{ leaderId: scope.userId }, { traineeLeaderId: scope.userId }] }
+      ...(input.supervisorId
+        ? {
+            leader: {
+              leaderAssignments: {
+                some: { supervisorId: input.supervisorId, churchId, deletedAt: null }
+              }
+            }
+          }
         : {}),
+      ...(input.meetingDay ? { meetingDay: input.meetingDay } : {}),
       ...(terms.length
         ? {
             AND: terms.map((term) => ({
@@ -108,6 +108,19 @@ export class PrismaCellsManagementRepository
           }
         : {})
     };
+    const memberFilteredIds = await this.filterCellIdsByMemberWindow(
+      churchId,
+      cellIds,
+      input.minMembers,
+      input.maxMembers
+    );
+    if (memberFilteredIds !== null) {
+      if (memberFilteredIds.length === 0) {
+        this.logger.log(JSON.stringify({ operation: "cells.list", result: "success", durationMs: Date.now() - startedAt, itemCount: 0 }));
+        return { items: [], totalItems: 0 };
+      }
+      where = { ...where, id: { in: memberFilteredIds } };
+    }
     const orderBy = (sortableFields[input.sortBy] ?? "name") as "name" | "code" | "meetingDay" | "createdAt";
     const [items, totalItems] = await this.database.$transaction([
       this.database.cell.findMany({
@@ -122,6 +135,35 @@ export class PrismaCellsManagementRepository
     const cells = await this.hydrateCells(items);
     this.logger.log(JSON.stringify({ operation: "cells.list", result: "success", durationMs: Date.now() - startedAt, itemCount: cells.length }));
     return { items: cells, totalItems };
+  }
+
+  private resolveScopeCellIds(churchId: string, scope: CellListScope): Promise<string[]> {
+    return resolveCellScopeIds(this.database, churchId, scope);
+  }
+
+  private async filterCellIdsByMemberWindow(
+    churchId: string,
+    cellIds: readonly string[],
+    min?: number,
+    max?: number
+  ): Promise<string[] | null> {
+    if (min === undefined && max === undefined) return null;
+    const groups = await this.database.cellMembership.groupBy({
+      by: ["cellId"],
+      where: {
+        churchId,
+        cellId: { in: [...cellIds] },
+        status: "ACTIVE",
+        deletedAt: null
+      },
+      _count: { _all: true }
+    });
+    return groups
+      .filter((group) => {
+        const count = group._count._all;
+        return (min === undefined || count >= min) && (max === undefined || count <= max);
+      })
+      .map((group) => group.cellId);
   }
 
   async find(churchId: string, cellId: string): Promise<ManagedCell | null> {

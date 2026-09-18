@@ -32,7 +32,10 @@ export interface ListCellsInput {
   search?: string;
   status?: CellStatus;
   leaderId?: string;
+  supervisorId?: string;
   meetingDay?: DayOfWeek;
+  minMembers?: number;
+  maxMembers?: number;
   sortBy: CellSortField;
   sortOrder: SortOrder;
 }

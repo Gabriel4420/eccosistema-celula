@@ -179,7 +179,7 @@ describe("cells contracts", () => {
     expect(createCellMemberRequestSchema.parse({ personId: uuid(), reason: "   " })).toEqual({
       personId: expect.any(String)
     });
-    expect(createCellMemberRequestSchema.parse({ personId: "not-a-uuid" })).toThrow();
+    expect(() => createCellMemberRequestSchema.parse({ personId: "not-a-uuid" })).toThrow();
     expect(() => createCellMemberRequestSchema.parse({ personId: uuid(), cellId: uuid() })).toThrow();
     expect(() => createCellMemberRequestSchema.parse({ personId: uuid(), reason: "x".repeat(501) })).toThrow();
     expect(removeCellMemberRequestSchema.parse({ reason: "Mudou de igreja" })).toEqual({

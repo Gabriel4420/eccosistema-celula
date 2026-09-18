@@ -118,6 +118,31 @@ describe("cell management HTTP flow", () => {
       otherChurchId,
     );
     await database.$executeRawUnsafe(
+      'DELETE FROM "meeting_visitors" WHERE "church_id" IN ($1::uuid, $2::uuid)',
+      churchId,
+      otherChurchId,
+    );
+    await database.$executeRawUnsafe(
+      'DELETE FROM "meeting_attendances" WHERE "church_id" IN ($1::uuid, $2::uuid)',
+      churchId,
+      otherChurchId,
+    );
+    await database.$executeRawUnsafe(
+      'DELETE FROM "meetings" WHERE "church_id" IN ($1::uuid, $2::uuid)',
+      churchId,
+      otherChurchId,
+    );
+    await database.$executeRawUnsafe(
+      'DELETE FROM "cell_memberships" WHERE "church_id" IN ($1::uuid, $2::uuid)',
+      churchId,
+      otherChurchId,
+    );
+    await database.$executeRawUnsafe(
+      'DELETE FROM "people" WHERE "church_id" IN ($1::uuid, $2::uuid)',
+      churchId,
+      otherChurchId,
+    );
+    await database.$executeRawUnsafe(
       'DELETE FROM "cells" WHERE "church_id" IN ($1::uuid, $2::uuid)',
       churchId,
       otherChurchId,
@@ -305,7 +330,7 @@ describe("cell management HTTP flow", () => {
       .expect(200);
     const supervisorIds = supervisorList.body.data.map((cell: { id: string }) => cell.id);
     expect(supervisorIds).toContain(supervised.body.data.id);
-    expect(supervisorIds).not.toContain(forming.body.data.id);
+    expect(supervisorIds).toContain(forming.body.data.id);
     expect(supervisorIds).not.toContain(own.body.data.id);
 
     const leaderList = await request(app.getHttpServer())
@@ -313,7 +338,9 @@ describe("cell management HTTP flow", () => {
       .set("Authorization", leaderOneAuthorization)
       .expect(200);
     const leaderIds = leaderList.body.data.map((cell: { id: string }) => cell.id);
-    expect(leaderIds).toEqual([own.body.data.id]);
+    expect(leaderIds).toContain(own.body.data.id);
+    expect(leaderIds).toContain(forming.body.data.id);
+    expect(leaderIds).not.toContain(supervised.body.data.id);
 
     await request(app.getHttpServer())
       .get(`/cells/${supervised.body.data.id}`)
@@ -327,6 +354,126 @@ describe("cell management HTTP flow", () => {
       .get(`/cells/${foreignCellId}`)
       .set("Authorization", authorization)
       .expect(404);
+  });
+
+  it("filters cells by leader, supervisor, meeting day and member count", async () => {
+    const createCell = (code: string, name: string, leaderId: string | null, supervisorId: string | null, meetingDay: string) =>
+      request(app.getHttpServer())
+        .post("/cells")
+        .set("Authorization", authorization)
+        .set("Idempotency-Key", randomUUID())
+        .send({
+          code,
+          name,
+          status: leaderId ? "ACTIVE" : "FORMING",
+          leaderId,
+          ...(supervisorId ? { supervisorId } : {}),
+          meetingDay,
+          meetingTime: "20:00",
+          address: "Endereço do Filtro",
+        });
+
+    const underLeader = await createCell("CEL-701", "Sob Líder Um", leaderOneId, supervisorTwoId, "FRIDAY").expect(201);
+    const underSupervisor = await createCell("CEL-702", "Sob Super Um", leaderTwoId, supervisorOneId, "SATURDAY").expect(201);
+    const noLeader = await createCell("CEL-703", "Sem Responsável", null, null, "SUNDAY").expect(201);
+
+    const byLeader = await request(app.getHttpServer())
+      .get(`/cells?leaderId=${leaderOneId}`)
+      .set("Authorization", authorization)
+      .expect(200);
+    const leaderIds = byLeader.body.data.map((cell: { id: string }) => cell.id);
+    expect(leaderIds).toContain(underLeader.body.data.id);
+    expect(leaderIds).not.toContain(underSupervisor.body.data.id);
+    expect(leaderIds).not.toContain(noLeader.body.data.id);
+
+    const bySupervisor = await request(app.getHttpServer())
+      .get(`/cells?supervisorId=${supervisorOneId}`)
+      .set("Authorization", authorization)
+      .expect(200);
+    const supervisorIds = bySupervisor.body.data.map((cell: { id: string }) => cell.id);
+    expect(supervisorIds).toContain(underSupervisor.body.data.id);
+    expect(supervisorIds).not.toContain(underLeader.body.data.id);
+    expect(supervisorIds).not.toContain(noLeader.body.data.id);
+
+    const byDay = await request(app.getHttpServer())
+      .get("/cells?meetingDay=SATURDAY")
+      .set("Authorization", authorization)
+      .expect(200);
+    const dayIds = byDay.body.data.map((cell: { id: string }) => cell.id);
+    expect(dayIds).toContain(underSupervisor.body.data.id);
+    expect(dayIds).not.toContain(underLeader.body.data.id);
+    expect(dayIds).not.toContain(noLeader.body.data.id);
+
+    const memberOneId = randomUUID();
+    const memberTwoId = randomUUID();
+    const otherMemberId = randomUUID();
+    await database.person.createMany({
+      data: [
+        { id: memberOneId, churchId, fullName: "Membro Um do Filtro" },
+        { id: memberTwoId, churchId, fullName: "Membro Dois do Filtro" },
+        { id: otherMemberId, churchId, fullName: "Membro Extra do Filtro" },
+      ],
+    });
+    await database.cellMembership.createMany({
+      data: [
+        { cellId: underLeader.body.data.id, churchId, personId: memberOneId, status: "ACTIVE", joinedAt: new Date() },
+        { cellId: underLeader.body.data.id, churchId, personId: memberTwoId, status: "ACTIVE", joinedAt: new Date() },
+        { cellId: underSupervisor.body.data.id, churchId, personId: otherMemberId, status: "ACTIVE", joinedAt: new Date() },
+      ],
+    });
+
+    const byCount = await request(app.getHttpServer())
+      .get("/cells?minMembers=2&maxMembers=3")
+      .set("Authorization", authorization)
+      .expect(200);
+    const countIds = byCount.body.data.map((cell: { id: string }) => cell.id);
+    expect(countIds).toContain(underLeader.body.data.id);
+    expect(countIds).not.toContain(underSupervisor.body.data.id);
+    expect(countIds).not.toContain(noLeader.body.data.id);
+
+    const byMinCount = await request(app.getHttpServer())
+      .get("/cells?minMembers=1")
+      .set("Authorization", authorization)
+      .expect(200);
+    const minIds = byMinCount.body.data.map((cell: { id: string }) => cell.id);
+    expect(minIds).toContain(underLeader.body.data.id);
+    expect(minIds).toContain(underSupervisor.body.data.id);
+    expect(minIds).not.toContain(noLeader.body.data.id);
+  });
+
+  it("includes forming cells with recorded attendance in leadership listings", async () => {
+    const forming = await request(app.getHttpServer())
+      .post("/cells")
+      .set("Authorization", authorization)
+      .set("Idempotency-Key", randomUUID())
+      .send({
+        code: "CEL-601",
+        name: "Formação Com Frequência",
+        status: "FORMING",
+        meetingDay: "FRIDAY",
+        meetingTime: "19:00",
+        address: "Rua Formação",
+      })
+      .expect(201);
+    const memberId = randomUUID();
+    await database.person.create({ data: { id: memberId, churchId, fullName: "Membro Formação" } });
+    await database.cellMembership.create({ data: { churchId, personId: memberId, cellId: forming.body.data.id, status: "ACTIVE", joinedAt: new Date("2026-01-01T00:00:00Z") } });
+    const meeting = await database.meeting.create({ data: { churchId, cellId: forming.body.data.id, meetingDate: new Date("2026-09-01"), status: "SCHEDULED" } });
+    await database.meetingAttendance.create({ data: { churchId, meetingId: meeting.id, personId: memberId, attendanceStatus: "PRESENT" } });
+
+    const leaderList = await request(app.getHttpServer())
+      .get("/cells")
+      .set("Authorization", leaderOneAuthorization)
+      .expect(200);
+    const leaderIds = leaderList.body.data.map((cell: { id: string }) => cell.id);
+    expect(leaderIds).toContain(forming.body.data.id);
+
+    const supervisorList = await request(app.getHttpServer())
+      .get("/cells")
+      .set("Authorization", supervisorOneAuthorization)
+      .expect(200);
+    const supervisorIds = supervisorList.body.data.map((cell: { id: string }) => cell.id);
+    expect(supervisorIds).toContain(forming.body.data.id);
   });
 
   it("allows meeting-level edits only within the actor scope", async () => {

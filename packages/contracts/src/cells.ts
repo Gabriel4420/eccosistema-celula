@@ -143,7 +143,10 @@ export const listCellsQuerySchema = z
     search: z.string().trim().max(160).optional(),
     status: z.enum(cellStatuses).optional(),
     leaderId: z.uuid().optional(),
+    supervisorId: z.uuid().optional(),
     meetingDay: z.enum(daysOfWeek).optional(),
+    minMembers: z.coerce.number().int().min(0).max(1_000_000).optional(),
+    maxMembers: z.coerce.number().int().min(0).max(1_000_000).optional(),
     sortBy: z.enum(sortableCellFields).default("name"),
     sortOrder: z.enum(sortOrders).default("asc")
   })

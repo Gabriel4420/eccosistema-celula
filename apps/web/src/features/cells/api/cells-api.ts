@@ -46,7 +46,10 @@ export interface CellListParams {
   readonly search?: string;
   readonly status?: CellStatus;
   readonly leaderId?: string;
+  readonly supervisorId?: string;
   readonly meetingDay?: CellMeetingDay;
+  readonly minMembers?: number;
+  readonly maxMembers?: number;
   readonly sortBy?: "name" | "code" | "meetingDay" | "createdAt";
   readonly sortOrder?: "asc" | "desc";
 }
@@ -65,7 +68,10 @@ export async function listCells(
       search: query.search ?? "",
       status: query.status ?? "",
       leaderId: query.leaderId ?? "",
+      supervisorId: query.supervisorId ?? "",
       meetingDay: query.meetingDay ?? "",
+      minMembers: query.minMembers,
+      maxMembers: query.maxMembers,
       sortBy: query.sortBy,
       sortOrder: query.sortOrder
     },
