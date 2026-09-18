@@ -20,6 +20,8 @@ export interface PeopleListParams {
   readonly search?: string;
   readonly status?: "ACTIVE" | "INACTIVE";
   readonly gender?: string;
+  readonly sortBy?: "fullName" | "birthDate" | "createdAt";
+  readonly sortOrder?: "asc" | "desc";
 }
 
 export async function listPeople(
@@ -35,7 +37,9 @@ export async function listPeople(
       pageSize: query.pageSize,
       search: query.search ?? "",
       status: query.status ?? "ACTIVE",
-      gender: query.gender ?? ""
+      gender: query.gender ?? "",
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder
     },
     bearer: true,
     allowRetry: true,

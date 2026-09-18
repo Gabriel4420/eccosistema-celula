@@ -113,13 +113,13 @@ describe("people queries", () => {
 
   it("derives tenant from the principal and returns active people", async () => {
     const queries = new PeopleManagementQueries(repository, authorization());
-    await queries.list(principal, { page: 1, pageSize: 20, status: "ACTIVE" });
-    expect(repository.list).toHaveBeenCalledWith("church", expect.objectContaining({ status: "ACTIVE" }));
+    await queries.list(principal, { page: 1, pageSize: 20, status: "ACTIVE", sortBy: "fullName", sortOrder: "asc" });
+    expect(repository.list).toHaveBeenCalledWith("church", expect.objectContaining({ status: "ACTIVE", sortBy: "fullName", sortOrder: "asc" }));
   });
 
   it("denies inactive listing to non-admin and makes foreign resources opaque", async () => {
     const queries = new PeopleManagementQueries(repository, authorization());
-    expect(() => queries.list({ ...principal, roles: ["LEADER"] }, { page: 1, pageSize: 20, status: "INACTIVE" })).toThrow("Access is not allowed");
+    expect(() => queries.list({ ...principal, roles: ["LEADER"] }, { page: 1, pageSize: 20, status: "INACTIVE", sortBy: "fullName", sortOrder: "asc" })).toThrow("Access is not allowed");
     repository.find.mockResolvedValueOnce(null);
     await expect(queries.get(principal, "foreign")).rejects.toMatchObject({ code: "PERSON_NOT_FOUND" });
   });

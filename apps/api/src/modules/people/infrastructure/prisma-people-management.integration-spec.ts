@@ -41,7 +41,7 @@ describe("PrismaPeopleManagementRepository", () => {
       return person.id;
     });
     await expect(repository.find(churchId, id)).resolves.toMatchObject({ id, churchId });
-    const page = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search: "Integração" });
+    const page = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search: "Integração", sortBy: "fullName", sortOrder: "asc" });
     expect(page.items).toHaveLength(1);
     expect(await database.auditLog.count({ where: { churchId, entityId: id } })).toBe(1);
   });
@@ -52,13 +52,74 @@ describe("PrismaPeopleManagementRepository", () => {
     const second = await database.person.create({ data: { churchId, fullName: "Zoe Ordenada", gender: "F", deletedAt: new Date() } });
 
     await expect(repository.find(churchId, other.id)).resolves.toBeNull();
-    const active = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", gender: "f", search: "Ordenada" });
+    const active = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", gender: "f", search: "Ordenada", sortBy: "fullName", sortOrder: "asc" });
     expect(active.items.map(({ id }) => id)).toContain(first.id);
     expect(active.items.map(({ id }) => id)).not.toContain(second.id);
     expect(active.items.map(({ id }) => id)).not.toContain(other.id);
-    const inactive = await repository.list(churchId, { page: 1, pageSize: 1, status: "INACTIVE" });
+    const inactive = await repository.list(churchId, { page: 1, pageSize: 1, status: "INACTIVE", sortBy: "fullName", sortOrder: "asc" });
     expect(inactive.items).toHaveLength(1);
     expect(inactive.items[0]?.id).toBe(second.id);
+  });
+
+  it("filters gender by partial case-insensitive match", async () => {
+    const token = randomUUID().slice(0, 8);
+    const female = await database.person.create({ data: { churchId, fullName: `Gênero ${token} A`, gender: "Feminino" } });
+    const male = await database.person.create({ data: { churchId, fullName: `Gênero ${token} B`, gender: "Masculino" } });
+    const other = await database.person.create({ data: { churchId, fullName: `Gênero ${token} C`, gender: "Não-binário" } });
+
+    const lower = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", gender: "femi", search: `Gênero ${token}`, sortBy: "fullName", sortOrder: "asc" });
+    expect(lower.items.map(({ id }) => id)).toEqual([female.id]);
+    expect(lower.totalItems).toBe(1);
+
+    const upper = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", gender: "FEMININO", search: `Gênero ${token}`, sortBy: "fullName", sortOrder: "asc" });
+    expect(upper.items.map(({ id }) => id)).toEqual([female.id]);
+
+    const nonexistent = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", gender: "zzz", search: `Gênero ${token}`, sortBy: "fullName", sortOrder: "asc" });
+    expect(nonexistent.items).toHaveLength(0);
+    expect(nonexistent.totalItems).toBe(0);
+
+    const all = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search: `Gênero ${token}`, sortBy: "fullName", sortOrder: "asc" });
+    expect(all.items.map(({ id }) => id)).toEqual([female.id, male.id, other.id]);
+    expect(all.totalItems).toBe(3);
+  });
+
+  it("sorts by name case-insensitively, birth date and registration", async () => {
+    const token = randomUUID().slice(0, 8);
+    const search = `Ordenada ${token}`;
+    const carla = await database.person.create({ data: {
+      churchId, fullName: `carla Ordenada ${token} C`, birthDate: new Date("1980-01-01"), createdAt: new Date("2023-01-01T00:00:00.000Z")
+    } });
+    const betty = await database.person.create({ data: {
+      churchId, fullName: `Betty Ordenada ${token} B`, birthDate: null, createdAt: new Date("2024-01-01T00:00:00.000Z")
+    } });
+    const anaLower = await database.person.create({ data: {
+      churchId, fullName: `ana Ordenada ${token} A`, birthDate: new Date("1999-12-31"), createdAt: new Date("2025-06-01T00:00:00.000Z")
+    } });
+    const ana = await database.person.create({ data: {
+      churchId, fullName: `Ana Ordenada ${token} A`, birthDate: new Date("1990-06-15"), createdAt: new Date("2026-01-01T00:00:00.000Z")
+    } });
+
+    const byNameAsc = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search, sortBy: "fullName", sortOrder: "asc" });
+    expect(byNameAsc.items.map(({ fullName }) => fullName.toLowerCase())).toEqual([
+      `ana ordenada ${token} a`, `ana ordenada ${token} a`, `betty ordenada ${token} b`, `carla ordenada ${token} c`
+    ]);
+
+    const byNameDesc = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search, sortBy: "fullName", sortOrder: "desc" });
+    expect(byNameDesc.items.map(({ fullName }) => fullName.toLowerCase())).toEqual([
+      `carla ordenada ${token} c`, `betty ordenada ${token} b`, `ana ordenada ${token} a`, `ana ordenada ${token} a`
+    ]);
+
+    const byBirthAsc = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search, sortBy: "birthDate", sortOrder: "asc" });
+    expect(byBirthAsc.items.map(({ id }) => id)).toEqual([carla.id, ana.id, anaLower.id, betty.id]);
+
+    const byBirthDesc = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search, sortBy: "birthDate", sortOrder: "desc" });
+    expect(byBirthDesc.items.map(({ id }) => id)).toEqual([anaLower.id, ana.id, carla.id, betty.id]);
+
+    const byCreatedAsc = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search, sortBy: "createdAt", sortOrder: "asc" });
+    expect(byCreatedAsc.items.map(({ id }) => id)).toEqual([carla.id, betty.id, anaLower.id, ana.id]);
+
+    const byCreatedDesc = await repository.list(churchId, { page: 1, pageSize: 20, status: "ACTIVE", search, sortBy: "createdAt", sortOrder: "desc" });
+    expect(byCreatedDesc.items.map(({ id }) => id)).toEqual([ana.id, anaLower.id, betty.id, carla.id]);
   });
 
   it("rolls back person persistence when audit fails", async () => {

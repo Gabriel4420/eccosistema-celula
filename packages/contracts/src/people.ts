@@ -21,6 +21,9 @@ const cellCodeSchema = z
   .transform(normalizeCellCode)
   .pipe(z.string().min(1).max(50).regex(cellCodePattern));
 
+const sortablePersonFields = ["fullName", "birthDate", "createdAt"] as const;
+const sortDirections = ["asc", "desc"] as const;
+
 export const personIdParamsSchema = z.object({ id: z.uuid() }).strict();
 
 export const listPeopleQuerySchema = z.object({
@@ -28,7 +31,9 @@ export const listPeopleQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().trim().max(320).optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-  gender: z.string().trim().max(50).optional()
+  gender: z.string().trim().max(50).optional(),
+  sortBy: z.enum(sortablePersonFields).default("fullName"),
+  sortOrder: z.enum(sortDirections).default("asc")
 }).strict();
 
 export const createPersonRequestSchema = z.object({

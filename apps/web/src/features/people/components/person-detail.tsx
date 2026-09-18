@@ -28,6 +28,11 @@ import {
   updatePerson,
   updatePersonStatus,
 } from "@/src/features/people/api/people-api";
+import {
+  formatDateBR,
+  isValidDateBR,
+  parseDateBR,
+} from "@/src/features/people/lib/date";
 
 const PEOPLE_CACHE = "people";
 
@@ -89,12 +94,25 @@ export function PersonDetail() {
     const fields: ReadonlyArray<[string, string | null]> = [
       ["fullName", person.fullName],
       ["email", person.email],
-      ["birthDate", person.birthDate],
       ["gender", person.gender],
     ];
     for (const [key, original] of fields) {
       const value = String(formData.get(key) ?? "").trim();
       if (value !== (original ?? "")) payload[key] = value;
+    }
+    const birthDateRaw = String(formData.get("birthDate") ?? "").trim();
+    if (birthDateRaw !== formatDateBR(person.birthDate)) {
+      if (birthDateRaw === "") {
+        payload.birthDate = "";
+      } else if (!isValidDateBR(birthDateRaw)) {
+        setFeedback({
+          kind: "error",
+          message: t("people.detail.error.invalidDate"),
+        });
+        return;
+      } else {
+        payload.birthDate = parseDateBR(birthDateRaw);
+      }
     }
     const phone = normalizeChurchPhone(String(formData.get("phone") ?? ""));
     if (phone !== (person.phone ?? "")) payload.phone = phone;
@@ -231,7 +249,9 @@ export function PersonDetail() {
           <span className="detail-list__label">
             {t("people.column.birthDate")}
           </span>
-          <span className="detail-list__value">{person.birthDate ?? "—"}</span>
+          <span className="detail-list__value">
+            {formatDateBR(person.birthDate) || "—"}
+          </span>
         </div>
         <div className="detail-list__item">
           <span className="detail-list__label">
@@ -256,12 +276,15 @@ export function PersonDetail() {
         <form className="fieldset" onSubmit={(event) => void handleSave(event)}>
           <fieldset className="fieldset">
             <legend className="fieldset__legend">{t("people.detail.edit")}</legend>
-            <TextField
-              label={t("people.detail.field.fullName")}
-              name="fullName"
-              defaultValue={person.fullName}
-              required
-            />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="sm:col-span-2">
+              <TextField
+                label={t("people.detail.field.fullName")}
+                name="fullName"
+                defaultValue={person.fullName}
+                required
+              />
+            </div>
             <TextField
               label={t("people.detail.label.gender")}
               name="gender"
@@ -269,9 +292,12 @@ export function PersonDetail() {
             />
             <TextField
               label={t("people.detail.field.birthDate")}
-              type="date"
               name="birthDate"
-              defaultValue={person.birthDate ?? ""}
+              mask="date"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="DD/MM/AAAA"
+              defaultValue={formatDateBR(person.birthDate)}
             />
             <TextField
               label={t("people.column.email")}
@@ -286,14 +312,17 @@ export function PersonDetail() {
               mask="phone"
               defaultValue={person.phone ?? ""}
             />
-            <Can capability="viewPersonObservations">
-              <TextareaField
-                label={t("people.detail.field.observations")}
-                name="observations"
-                rows={4}
-                defaultValue={person.observations ?? ""}
-              />
-            </Can>
+            <div className="col-span-full">
+              <Can capability="viewPersonObservations">
+                <TextareaField
+                  label={t("people.detail.field.observations")}
+                  name="observations"
+                  rows={4}
+                  defaultValue={person.observations ?? ""}
+                />
+              </Can>
+            </div>
+          </div>
             <Button
               type="submit"
               icon={Save}

@@ -1,4 +1,6 @@
 export type PersonStatus = "ACTIVE" | "INACTIVE";
+export type PersonSortField = "fullName" | "birthDate" | "createdAt";
+export type PersonSortOrder = "asc" | "desc";
 
 export interface PersonCellLink {
   id: string;
@@ -27,6 +29,8 @@ export interface ListPeopleInput {
   search?: string;
   status: PersonStatus;
   gender?: string;
+  sortBy: PersonSortField;
+  sortOrder: PersonSortOrder;
 }
 
 export interface PersonPage {

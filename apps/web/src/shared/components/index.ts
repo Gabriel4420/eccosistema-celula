@@ -1,7 +1,7 @@
 export { Alert, FieldError } from "./alert";
 export { Button } from "./button";
 export { Dialog } from "./dialog";
-export { FieldShell, SelectField, TextareaField, TextField, maskEmail, maskPhoneBR } from "./field";
+export { FieldShell, SelectField, TextareaField, TextField, maskDateBR, maskEmail, maskPhoneBR } from "./field";
 export type { TextFieldMask } from "./field";
 export { LiveRegion } from "./live-region";
 export { Pagination } from "./pagination";

@@ -13,6 +13,8 @@ import type {
   ManagedPerson,
   PersonPage,
   PersonPatchInput,
+  PersonSortField,
+  PersonSortOrder,
   PersonWriteInput
 } from "../application/people-management.types";
 
@@ -50,7 +52,7 @@ export class PrismaPeopleManagementRepository
     const where = {
       churchId,
       deletedAt: input.status === "ACTIVE" ? null : { not: null },
-      ...(input.gender ? { gender: { equals: input.gender, mode: "insensitive" as const } } : {}),
+      ...(input.gender ? { gender: { contains: normalizeGenderFilterTerm(input.gender), mode: "insensitive" as const } } : {}),
       ...(terms.length ? {
         AND: terms.map((term) => ({
           OR: [
@@ -65,7 +67,7 @@ export class PrismaPeopleManagementRepository
       this.database.person.findMany({
         where,
         select: personSelect,
-        orderBy: [{ fullName: "asc" }, { id: "asc" }],
+        orderBy: buildPersonOrderBy(input.sortBy, input.sortOrder),
         skip: (input.page - 1) * input.pageSize,
         take: input.pageSize
       }),
@@ -265,6 +267,27 @@ function toPersistence(input: PersonWriteInput) {
 
 function parseDate(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
+}
+
+function normalizeGenderFilterTerm(value: string): string {
+  return value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+type PeopleOrderRule =
+  | { readonly fullName: PersonSortOrder }
+  | { readonly birthDate: { readonly sort: PersonSortOrder; readonly nulls: "last" } }
+  | { readonly createdAt: PersonSortOrder }
+  | { readonly id: "asc" };
+
+function buildPersonOrderBy(
+  sortBy: PersonSortField,
+  sortOrder: PersonSortOrder
+): PeopleOrderRule[] {
+  const primary: PeopleOrderRule =
+    sortBy === "birthDate"
+      ? { birthDate: { sort: sortOrder, nulls: "last" } }
+      : ({ [sortBy]: sortOrder } as PeopleOrderRule);
+  return [primary, { id: "asc" }];
 }
 
 function mapPerson(person: {

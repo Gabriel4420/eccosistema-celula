@@ -11,6 +11,10 @@ import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
 import { useI18n } from "@/src/shared/i18n/language-provider";
 import { createPerson } from "@/src/features/people/api/people-api";
+import {
+  isValidDateBR,
+  parseDateBR,
+} from "@/src/features/people/lib/date";
 
 const PEOPLE_CACHE = "people";
 
@@ -28,13 +32,18 @@ export function CreatePersonForm() {
     event.preventDefault();
     setFeedback(null);
     const formData = new FormData(event.currentTarget);
+    const birthDateValue = String(formData.get("birthDate") ?? "").trim();
+    if (birthDateValue && !isValidDateBR(birthDateValue)) {
+      setFeedback({ kind: "error", message: t("people.new.error.invalidDate") });
+      return;
+    }
     setBusy(true);
     try {
       const person = await createPerson(api, {
         fullName: String(formData.get("fullName") ?? "").trim(),
         phone: String(formData.get("phone") ?? "").trim() || undefined,
         email: String(formData.get("email") ?? "").trim() || undefined,
-        birthDate: String(formData.get("birthDate") ?? "").trim() || undefined,
+        birthDate: birthDateValue ? parseDateBR(birthDateValue) : undefined,
         gender: String(formData.get("gender") ?? "").trim() || undefined,
         observations:
           String(formData.get("observations") ?? "").trim() || undefined,
@@ -97,8 +106,11 @@ export function CreatePersonForm() {
           />
           <TextField
             label={t("people.detail.field.birthDate")}
-            type="date"
             name="birthDate"
+            mask="date"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="DD/MM/AAAA"
           />
         </fieldset>
 

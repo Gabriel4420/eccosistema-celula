@@ -121,10 +121,20 @@ describe("people HTTP flow", () => {
     const created = await request(app.getHttpServer()).post("/people").set("Authorization", adminAuthorization)
       .send({ fullName: "Pessoa Reativar", gender: "Teste" }).expect(201);
     const id = created.body.data.id as string;
-    const page = await request(app.getHttpServer()).get("/people?page=1&pageSize=1&search=Reativar&gender=teste")
+    const page = await request(app.getHttpServer()).get("/people?page=1&pageSize=1&search=Reativar&gender=test")
       .set("Authorization", supervisorAuthorization).expect(200);
     expect(page.body.meta).toMatchObject({ page: 1, pageSize: 1, totalItems: 1, totalPages: 1 });
     expect(page.body.data[0].id).toBe(id);
+
+    const casing = await request(app.getHttpServer()).get("/people?page=1&pageSize=1&search=Reativar&gender=TESTE")
+      .set("Authorization", supervisorAuthorization).expect(200);
+    expect(casing.body.meta.totalItems).toBe(1);
+    expect(casing.body.data[0].id).toBe(id);
+
+    const noMatch = await request(app.getHttpServer()).get("/people?page=1&pageSize=20&search=Reativar&gender=naoexiste")
+      .set("Authorization", supervisorAuthorization).expect(200);
+    expect(noMatch.body.meta).toMatchObject({ page: 1, pageSize: 20, totalItems: 0, totalPages: 0 });
+    expect(noMatch.body.data).toEqual([]);
 
     await request(app.getHttpServer()).patch(`/people/${id}/status`).set("Authorization", adminAuthorization).send({ status: "INACTIVE" }).expect(200);
     const auditCount = await database.auditLog.count({ where: { churchId, entityId: id } });
@@ -133,6 +143,65 @@ describe("people HTTP flow", () => {
     await expectError(request(app.getHttpServer()).get(`/people/${id}`).set("Authorization", adminAuthorization), 404, "PERSON_NOT_FOUND");
     await request(app.getHttpServer()).patch(`/people/${id}/status`).set("Authorization", adminAuthorization).send({ status: "ACTIVE" }).expect(200);
     await request(app.getHttpServer()).get(`/people/${id}`).set("Authorization", adminAuthorization).expect(200);
+  });
+
+  it("sorts people by name, birth date and registration with consistent paging", async () => {
+    const token = randomUUID().slice(0, 8);
+    const search = encodeURIComponent(`Sortável ${token}`);
+    const seeds = [
+      { fullName: `Zoe Sortável ${token}`, birthDate: "1990-06-15", createdAt: "2026-01-01T00:00:00.000Z" },
+      { fullName: `ana Sortável ${token}`, birthDate: "1999-12-31", createdAt: "2025-06-01T00:00:00.000Z" },
+      { fullName: `Betty Sortável ${token}`, birthDate: null, createdAt: "2024-01-01T00:00:00.000Z" },
+      { fullName: `carla Sortável ${token}`, birthDate: "1980-01-01", createdAt: "2023-01-01T00:00:00.000Z" }
+    ] as const;
+    const ids: string[] = [];
+    for (const seed of seeds) {
+      const created = await request(app.getHttpServer()).post("/people").set("Authorization", adminAuthorization)
+        .send({ fullName: seed.fullName, ...(seed.birthDate ? { birthDate: seed.birthDate } : {}) }).expect(201);
+      const id = created.body.data.id as string;
+      ids.push(id);
+      await database.person.update({ where: { id_churchId: { id, churchId } }, data: { createdAt: new Date(seed.createdAt) } });
+    }
+
+    const byNameAsc = await request(app.getHttpServer()).get(`/people?page=1&pageSize=20&search=${search}&sortBy=fullName&sortOrder=asc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    expect(byNameAsc.body.data.map(({ fullName }: { fullName: string }) => fullName.toLowerCase())).toEqual([
+      `ana sortável ${token}`, `betty sortável ${token}`, `carla sortável ${token}`, `zoe sortável ${token}`
+    ]);
+
+    const byNameDesc = await request(app.getHttpServer()).get(`/people?page=1&pageSize=20&search=${search}&sortBy=fullName&sortOrder=desc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    expect(byNameDesc.body.data.map(({ fullName }: { fullName: string }) => fullName.toLowerCase())).toEqual([
+      `zoe sortável ${token}`, `carla sortável ${token}`, `betty sortável ${token}`, `ana sortável ${token}`
+    ]);
+
+    const byBirthAsc = await request(app.getHttpServer()).get(`/people?page=1&pageSize=20&search=${search}&sortBy=birthDate&sortOrder=asc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    expect(byBirthAsc.body.data.map(({ id }: { id: string }) => id)).toEqual([ids[3], ids[0], ids[1], ids[2]]);
+
+    const byBirthDesc = await request(app.getHttpServer()).get(`/people?page=1&pageSize=20&search=${search}&sortBy=birthDate&sortOrder=desc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    expect(byBirthDesc.body.data.map(({ id }: { id: string }) => id)).toEqual([ids[1], ids[0], ids[3], ids[2]]);
+
+    const byCreatedAsc = await request(app.getHttpServer()).get(`/people?page=1&pageSize=20&search=${search}&sortBy=createdAt&sortOrder=asc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    expect(byCreatedAsc.body.data.map(({ id }: { id: string }) => id)).toEqual([ids[3], ids[2], ids[1], ids[0]]);
+
+    const byCreatedDesc = await request(app.getHttpServer()).get(`/people?page=1&pageSize=20&search=${search}&sortBy=createdAt&sortOrder=desc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    expect(byCreatedDesc.body.data.map(({ id }: { id: string }) => id)).toEqual([ids[0], ids[1], ids[2], ids[3]]);
+
+    const pageOne = await request(app.getHttpServer()).get(`/people?page=1&pageSize=2&search=${search}&sortBy=fullName&sortOrder=asc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    const pageTwo = await request(app.getHttpServer()).get(`/people?page=2&pageSize=2&search=${search}&sortBy=fullName&sortOrder=asc`)
+      .set("Authorization", adminAuthorization).expect(200);
+    expect(pageOne.body.meta).toMatchObject({ page: 1, pageSize: 2, totalItems: 4, totalPages: 2 });
+    expect(pageTwo.body.meta).toMatchObject({ page: 2, pageSize: 2, totalItems: 4, totalPages: 2 });
+    const pageOneIds = pageOne.body.data.map(({ id }: { id: string }) => id) as string[];
+    const pageTwoIds = pageTwo.body.data.map(({ id }: { id: string }) => id) as string[];
+    expect(pageOneIds).toHaveLength(2);
+    expect(pageTwoIds).toHaveLength(2);
+    expect(new Set([...pageOneIds, ...pageTwoIds])).toEqual(new Set(ids));
   });
 
   async function login(userId: string): Promise<string> {

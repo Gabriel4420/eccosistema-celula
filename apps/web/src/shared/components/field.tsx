@@ -10,7 +10,7 @@ import type {
 import { FieldError } from "./alert";
 import { useI18n } from "@/src/shared/i18n/language-provider";
 
-export type TextFieldMask = "phone" | "email";
+export type TextFieldMask = "phone" | "email" | "date";
 
 const NON_DIGIT = /\D/g;
 const WHITESPACE = /\s+/g;
@@ -42,6 +42,14 @@ export function maskPhoneBR(value: string): string {
     }
   }
   return output;
+}
+
+export function maskDateBR(value: string): string {
+  const digits = value.replace(NON_DIGIT, "").slice(0, 8);
+  if (digits.length === 0) return "";
+  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
+    .filter((part) => part.length > 0)
+    .join("/");
 }
 
 function EyeIcon() {
@@ -161,7 +169,9 @@ export function TextField({
       ? maskPhoneBR
       : mask === "email"
         ? maskEmail
-        : (input: string) => input;
+        : mask === "date"
+          ? maskDateBR
+          : (input: string) => input;
   const displayValue =
     mask !== undefined && value !== undefined
       ? applyMask(String(value))

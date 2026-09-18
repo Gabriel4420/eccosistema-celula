@@ -21,8 +21,22 @@ describe("people contracts", () => {
 
   it("applies pagination defaults", () => {
     expect(listPeopleQuerySchema.parse({})).toEqual({
-      page: 1, pageSize: 20, status: "ACTIVE"
+      page: 1, pageSize: 20, status: "ACTIVE", sortBy: "fullName", sortOrder: "asc"
     });
+  });
+
+  it.each([
+    [{ sortBy: "birthDate", sortOrder: "desc" }, { sortBy: "birthDate", sortOrder: "desc" }],
+    [{ sortBy: "createdAt", sortOrder: "asc" }, { sortBy: "createdAt", sortOrder: "asc" }],
+    [{ sortOrder: "desc" }, { sortOrder: "desc" }],
+    [{ sortBy: "fullName", sortOrder: "desc" }, { sortBy: "fullName", sortOrder: "desc" }]
+  ])("parses valid sort criteria %j into %j", (input, expected) => {
+    expect(listPeopleQuerySchema.parse(input)).toMatchObject(expected);
+  });
+
+  it("rejects unknown sort fields and directions", () => {
+    expect(() => listPeopleQuerySchema.parse({ sortBy: "gender" })).toThrow();
+    expect(() => listPeopleQuerySchema.parse({ sortOrder: "up" })).toThrow();
   });
 
   it("rejects empty patches and unknown fields", () => {

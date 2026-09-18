@@ -24,6 +24,8 @@ export class PeopleController {
   @ApiQuery({ name: "search", required: false, type: String })
   @ApiQuery({ name: "status", required: false, enum: ["ACTIVE", "INACTIVE"] })
   @ApiQuery({ name: "gender", required: false, type: String })
+  @ApiQuery({ name: "sortBy", required: false, enum: ["fullName", "birthDate", "createdAt"] })
+  @ApiQuery({ name: "sortOrder", required: false, enum: ["asc", "desc"] })
   @ApiResponse({ status: 200, description: "Paginated people; observations are restricted to ADMIN and PASTOR", schema: peoplePageEnvelopeSchema() })
   @ApiResponse({ status: 400, description: "Invalid filters", schema: errorEnvelopeSchema() })
   @ApiResponse({ status: 401, description: "Authentication required", schema: errorEnvelopeSchema() })
