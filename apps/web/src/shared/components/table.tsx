@@ -21,7 +21,7 @@ export function Table<T>({ columns, rows, rowKey, className, ...props }: TablePr
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.key} scope="col">
+              <th key={column.key} scope="col" className={column.className}>
                 {column.header}
               </th>
             ))}
@@ -31,7 +31,7 @@ export function Table<T>({ columns, rows, rowKey, className, ...props }: TablePr
           {rows.map((row) => (
             <tr key={rowKey(row)}>
               {columns.map((column) => (
-                <td key={column.key} data-label={column.mobileLabel ?? column.header}>
+                <td key={column.key} className={column.className} data-label={column.mobileLabel ?? column.header}>
                   {column.render(row)}
                 </td>
               ))}

@@ -3654,3 +3654,509 @@ html[data-accessibility-focus="enhanced"] :focus-visible {
     visibility: visible;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Pessoas — página de listagem
+   Identidade visual: "cultivo" (moss & ember).
+   Paleta base (6 cores): moss, ink, muted, ember, success, inactive.
+   Assinatura visual: o núcleo-célula ao lado do título.
+   Escopado sob .people-page para não afetar outras páginas.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@layer legacy {
+
+  .people-page {
+    /* ── Tokens de paleta (hex) ── */
+    --pp-moss: #2e6b51;
+    --pp-moss-hover: #245c45;
+    --pp-moss-active: #1e4f3a;
+    --pp-moss-tint: #eaf2ec;
+    --pp-ink: #1b221d;
+    --pp-muted: #5a665d;
+    --pp-ember: #b85c1a;
+    --pp-border: #d9e2da;
+    --pp-border-strong: #bdcbbf;
+    --pp-surface-raised: #f5f8f4;
+    --pp-focus-ring: rgb(46 107 81 / 22%);
+
+    /* Active badge */
+    --pp-active-ink: #245c45;
+    --pp-active-tint: #e7f2e9;
+    --pp-active-ring: #c5e0cd;
+    --pp-active-dot: #2f7d57;
+
+    /* Inactive badge */
+    --pp-inactive-ink: #5a635a;
+    --pp-inactive-tint: #eff1ee;
+    --pp-inactive-ring: #d9ddd6;
+    --pp-inactive-dot: #8b938a;
+
+    /* Sobrescrita dos tokens globais de componente (botões, links, foco) */
+    --color-primary: var(--pp-moss);
+    --color-primary-hover: var(--pp-moss-hover);
+    --color-primary-active: var(--pp-moss-active);
+    --color-primary-muted: var(--pp-moss-tint);
+    --color-primary-contrast: #ffffff;
+    --color-focus: var(--pp-moss);
+    --color-focus-ring: var(--pp-focus-ring);
+  }
+
+  :root[data-theme="dark"] .people-page {
+    --pp-moss: #8ccbad;
+    --pp-moss-hover: #a3dabe;
+    --pp-moss-active: #76bd9b;
+    --pp-moss-tint: #1b2a22;
+    --pp-ink: #eaf1ea;
+    --pp-muted: #a3b2a5;
+    --pp-ember: #e8934e;
+    --pp-border: #283329;
+    --pp-border-strong: #3a483d;
+    --pp-surface-raised: #1a231b;
+    --pp-focus-ring: rgb(140 203 173 / 24%);
+
+    --pp-active-ink: #8bd6ab;
+    --pp-active-tint: #16301f;
+    --pp-active-ring: #2b553a;
+    --pp-active-dot: #6dd79c;
+
+    --pp-inactive-ink: #aab3aa;
+    --pp-inactive-tint: #202720;
+    --pp-inactive-ring: #394139;
+    --pp-inactive-dot: #5f6b61;
+
+    --color-primary: var(--pp-moss);
+    --color-primary-hover: var(--pp-moss-hover);
+    --color-primary-active: var(--pp-moss-active);
+    --color-primary-muted: var(--pp-moss-tint);
+    --color-primary-contrast: #0c130f;
+    --color-focus: var(--pp-moss);
+    --color-focus-ring: var(--pp-focus-ring);
+  }
+
+  /* ── Page header ── */
+  .people-page .page-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0;
+    font-size: clamp(2.125rem, 4.5vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: var(--line-height-snug);
+    color: var(--pp-ink);
+  }
+
+  .people-page__seed {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1.5px solid var(--pp-ember);
+    border-radius: 999px;
+  }
+  .people-page__seed::after {
+    content: "";
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 999px;
+    background: var(--pp-ember);
+  }
+
+  .people-page .page-description {
+    max-width: 58ch;
+    margin-top: var(--space-2);
+    color: var(--pp-muted);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+  }
+
+  /* ── Filter strip ── */
+  .people-page .people-filters {
+    align-items: flex-end;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--pp-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .people-page .people-filters__search {
+    flex: 2 2 16rem;
+    min-width: 0;
+  }
+  .people-page .people-filters__search .field {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .people-page .people-filters__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    flex: 3 3 21rem;
+  }
+  .people-page .people-filters__options .field {
+    flex: 1 1 11rem;
+    min-width: 10.5rem;
+  }
+
+  .people-page .people-filters__clear {
+    flex: 0 0 auto;
+    align-self: flex-end;
+  }
+
+  @media (max-width: 48rem) {
+    .people-page .people-filters {
+      padding: var(--space-4);
+      gap: var(--space-3);
+    }
+    .people-page .people-filters__search,
+    .people-page .people-filters__options {
+      flex-basis: 100%;
+    }
+    .people-page .people-filters__options .field {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+    .people-page .people-filters__clear {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* ── Table ── */
+  .people-page .table-container {
+    border-color: var(--pp-border);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .people-page .table thead th {
+    background: var(--pp-surface-raised);
+    color: var(--pp-muted);
+    font-weight: 700;
+    font-size: 0.6875rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .people-page .table td {
+    color: var(--pp-ink);
+  }
+
+  .people-page .table tbody tr {
+    transition: background var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .people-page .table tbody tr:hover {
+      background: var(--pp-moss-tint);
+    }
+  }
+
+  .people-page .table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* Name cell */
+  .people-page .people-name-link {
+    display: inline;
+    color: var(--pp-moss);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  @media (hover: hover) {
+    .people-page .people-name-link:hover {
+      color: var(--pp-moss-hover);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+  }
+
+  .people-page .people-name-ink {
+    color: var(--pp-muted);
+    font-weight: 500;
+  }
+
+  /* Actions column */
+  .people-page .people-table__cell-actions {
+    text-align: right;
+  }
+  .people-page .button--icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ── Status badges ── */
+  .people-page .status-badge::before {
+    animation: none;
+  }
+  .people-page .status-badge--active {
+    background: var(--pp-active-tint);
+    color: var(--pp-active-ink);
+    box-shadow: inset 0 0 0 1px var(--pp-active-ring);
+  }
+  .people-page .status-badge--active::before {
+    background: var(--pp-active-dot);
+  }
+  .people-page .status-badge--inactive {
+    background: var(--pp-inactive-tint);
+    color: var(--pp-inactive-ink);
+    box-shadow: inset 0 0 0 1px var(--pp-inactive-ring);
+  }
+  .people-page .status-badge--inactive::before {
+    background: var(--pp-inactive-dot);
+  }
+
+  /* ── Pagination ── */
+  .people-page .pagination {
+    margin-top: var(--space-5);
+  }
+  .people-page .pagination__info {
+    color: var(--pp-muted);
+  }
+
+  /* ── Mobile (≤ 48rem) ── */
+  @media (max-width: 48rem) {
+    .people-page .table td {
+      grid-template-columns: 6.5rem 1fr;
+    }
+    .people-page .table td[data-label=""] {
+      grid-template-columns: 1fr;
+    }
+    .people-page .table td[data-label=""]::before {
+      content: none;
+    }
+    .people-page .table td::before {
+      color: var(--pp-muted);
+      font-weight: 700;
+      font-size: 0.6875rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .people-page .people-table__cell-actions {
+      text-align: left;
+    }
+    .people-page .people-table__cell-actions .table__actions {
+      justify-content: flex-start;
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     Células — página de listagem
+     Identidade visual: "núcleo" (cobalto & dourado), afinada com a marca.
+     Escopado sob .cells-page para não afetar outras páginas.
+     ──────────────────────────────────────────────────────────────────────────── */
+
+  .cells-page {
+    --cc-navy: #1f3a5f;
+    --cc-navy-hover: #152c4a;
+    --cc-gold: #b8935a;
+    --cc-ink: #1a2130;
+    --cc-muted: #5f6b7d;
+    --cc-border: #d5dce8;
+    --cc-surface-raised: #f4f7fb;
+    --cc-tint: #e9eff9;
+    --cc-chip-bg: #eef3fb;
+    --cc-chip-bg-hover: #dde7f7;
+    --cc-chip-ring: #cdd9ec;
+    --cc-chip-ink: #1f3a5f;
+    --cc-avatar-bg: #e7eefb;
+    --cc-avatar-ring: #c7d5ee;
+    --cc-count-bg: #eef3fb;
+    --cc-count-ring: #d4ddef;
+    --cc-count-ink: #1f3a5f;
+  }
+
+  :root[data-theme="dark"] .cells-page {
+    --cc-navy: #b8c7ff;
+    --cc-navy-hover: #d3ddff;
+    --cc-gold: #d6b26a;
+    --cc-ink: #eef2fb;
+    --cc-muted: #9aa7bd;
+    --cc-border: #273147;
+    --cc-surface-raised: #1a2234;
+    --cc-tint: #1b2440;
+    --cc-chip-bg: #1d2640;
+    --cc-chip-bg-hover: #26324f;
+    --cc-chip-ring: #36425c;
+    --cc-chip-ink: #c3d0ef;
+    --cc-avatar-bg: #22304f;
+    --cc-avatar-ring: #36425c;
+    --cc-count-bg: #1d2640;
+    --cc-count-ring: #36425c;
+    --cc-count-ink: #c3d0ef;
+  }
+
+  .cells-page .table-container {
+    border-color: var(--cc-border);
+    overflow: hidden;
+  }
+
+  .cells-page .table thead th {
+    background: var(--cc-surface-raised);
+    color: var(--cc-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-size: 0.6875rem;
+  }
+
+  .cells-page .table td {
+    color: var(--cc-ink);
+  }
+
+  .cells-page .table tbody tr {
+    border-left: 2px solid transparent;
+    transition:
+      background var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .cells-page .table tbody tr:hover {
+      background: var(--cc-tint);
+      border-left-color: var(--cc-gold);
+    }
+  }
+
+  .cells-page .cells-table__cell-code,
+  .cells-page .cells-table__cell-members {
+    white-space: nowrap;
+  }
+
+  /* Código */
+  .cells-page .cell-code {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-sm);
+    background: var(--cc-chip-bg);
+    color: var(--cc-chip-ink);
+    font-family: var(--font-family-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    box-shadow: inset 0 0 0 1px var(--cc-chip-ring);
+    transition: background var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .cells-page .cell-code:hover {
+      background: var(--cc-chip-bg-hover);
+    }
+  }
+
+  /* Nome */
+  .cells-page .cell-name {
+    color: var(--cc-navy);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .cells-page .cell-name:hover {
+      color: var(--cc-navy-hover);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+  }
+
+  /* Líder / supervisor com avatar */
+  .cells-page .cell-person {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .cells-page .cell-person__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: var(--cc-avatar-bg);
+    color: var(--cc-chip-ink);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    box-shadow: inset 0 0 0 1px var(--cc-avatar-ring);
+  }
+
+  .cells-page .cell-person__name {
+    color: var(--cc-ink);
+    font-weight: 500;
+  }
+
+  .cells-page .cell-person--empty {
+    color: var(--cc-muted);
+  }
+
+  /* Contagem de membros */
+  .cells-page .cell-members-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--cc-count-bg);
+    color: var(--cc-count-ink);
+    font-weight: 700;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    box-shadow: inset 0 0 0 1px var(--cc-count-ring);
+  }
+
+  /* Dia/horário da reunião */
+  .cells-page .cell-meeting {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    white-space: nowrap;
+  }
+
+  .cells-page .cell-meeting__day {
+    color: var(--cc-ink);
+    font-weight: 600;
+  }
+
+  .cells-page .cell-meeting__time {
+    color: var(--cc-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cells-page .cells-table__cell-actions {
+    text-align: right;
+  }
+
+  @media (max-width: 48rem) {
+    .cells-page .cells-table__cell-actions {
+      text-align: left;
+    }
+    .cells-page .cells-table__cell-actions .table__actions {
+      justify-content: flex-start;
+    }
+    .cells-page .cell-person__avatar {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+}
