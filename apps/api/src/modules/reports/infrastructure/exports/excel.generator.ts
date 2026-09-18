@@ -1,25 +1,22 @@
 import ExcelJS from "exceljs";
 import type { ExportRow } from "../../application/reports.types";
+import type { ExportColumn } from "./export.i18n";
 
-export async function generateExcel(rows: ExportRow[], columns: string[], sheetName: string): Promise<Buffer> {
+export async function generateExcel(rows: ExportRow[], columns: ExportColumn[], sheetName: string): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Missão Atos";
   workbook.created = new Date();
 
   const sheet = workbook.addWorksheet(sheetName);
 
-  sheet.columns = columns.map((col) => ({
-    header: col,
-    key: col,
-    width: Math.max(col.length + 2, 14)
+  sheet.columns = columns.map((column) => ({
+    header: column.caption,
+    key: column.key,
+    width: Math.max(column.caption.length + 2, 14)
   }));
 
   for (const row of rows) {
-    const values = columns.map((col) => {
-      const value = row[col];
-      return value === null || value === undefined ? "" : value;
-    });
-    sheet.addRow(values);
+    sheet.addRow(columns.map((column) => column.render(row)));
   }
 
   const headerRow = sheet.getRow(1);

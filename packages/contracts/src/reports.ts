@@ -28,6 +28,8 @@ const cellStatuses = ["FORMING", "ACTIVE", "SUSPENDED", "CLOSED"] as const;
 const meetingStatuses = ["SCHEDULED", "COMPLETED", "CANCELED"] as const;
 const reportStatuses = ["NOT_STARTED", "DRAFT", "SUBMITTED", "RETURNED"] as const;
 const exportFormats = ["csv", "xlsx", "pdf"] as const;
+export const exportLocales = ["pt-BR", "en", "es"] as const;
+export type ExportLocale = (typeof exportLocales)[number];
 const exportReportTypes = ["cells", "people", "attendance", "meetings"] as const;
 const healthBands = ["healthy", "attention", "critical"] as const;
 
@@ -243,12 +245,13 @@ export const meetingsReportEnvelopeSchema = z
 // ── Export queries ──
 
 export const exportCellsQuerySchema = z
-  .object({ format: z.enum(exportFormats) })
+  .object({ format: z.enum(exportFormats), locale: z.enum(exportLocales).default("pt-BR") })
   .strict();
 
 export const exportPeopleQuerySchema = z
   .object({
     format: z.enum(exportFormats),
+    locale: z.enum(exportLocales).default("pt-BR"),
     status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE")
   })
   .strict();
@@ -256,6 +259,7 @@ export const exportPeopleQuerySchema = z
 export const exportAttendanceQuerySchema = z
   .object({
     format: z.enum(exportFormats),
+    locale: z.enum(exportLocales).default("pt-BR"),
     from: civilDateSchema.optional(),
     to: civilDateSchema.optional(),
     cellId: z.uuid().optional()
@@ -275,6 +279,7 @@ export const exportAttendanceQuerySchema = z
 export const exportMeetingsQuerySchema = z
   .object({
     format: z.enum(exportFormats),
+    locale: z.enum(exportLocales).default("pt-BR"),
     from: civilDateSchema.optional(),
     to: civilDateSchema.optional(),
     cellId: z.uuid().optional()

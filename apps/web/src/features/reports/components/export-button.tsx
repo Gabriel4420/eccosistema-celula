@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useSession } from "@/src/providers/session-provider";
 import { useI18n } from "@/src/shared/i18n/language-provider";
-import { Button } from "@/src/shared/components";
+import { APP_LOCALES, type AppLocale } from "@/src/shared/i18n/dictionaries";
+import { Button, SelectField } from "@/src/shared/components";
 import { exportReport, type ExportFormat } from "../api/reports-api";
 
 const FORMAT_OPTIONS: ReadonlyArray<{ readonly value: ExportFormat; readonly label: string }> = [
@@ -14,13 +15,14 @@ const FORMAT_OPTIONS: ReadonlyArray<{ readonly value: ExportFormat; readonly lab
 
 export function ExportButton({ reportType, params }: { readonly reportType: string; readonly params?: Record<string, string> }) {
   const { api } = useSession();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [exporting, setExporting] = useState(false);
+  const [exportLocale, setExportLocale] = useState<AppLocale>(locale);
 
   const handleExport = async (format: ExportFormat) => {
     setExporting(true);
     try {
-      const blob = await exportReport(api, reportType, format, params);
+      const blob = await exportReport(api, reportType, format, { ...params, locale: exportLocale });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -37,7 +39,14 @@ export function ExportButton({ reportType, params }: { readonly reportType: stri
   };
 
   return (
-    <div style={{ display: "flex", gap: "0.5rem" }}>
+    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+      <SelectField
+        label={t("reports.export.language")}
+        name="export-language"
+        value={exportLocale}
+        onChange={(event) => setExportLocale(event.target.value as AppLocale)}
+        options={APP_LOCALES.map((value) => ({ value, label: t(`settings.locale.${value}`) }))}
+      />
       {FORMAT_OPTIONS.map((opt) => (
         <Button
           key={opt.value}

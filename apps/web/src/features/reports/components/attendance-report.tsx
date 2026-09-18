@@ -121,7 +121,7 @@ export function AttendanceReport() {
             navigate({ from, to, page: 1 });
           }}
           options={[
-            { value: "", label: t("reports.period.last30") },
+            { value: "", label: t("reports.period.default") },
             { value: `${d(daysAgo(30))}..${d(today())}`, label: t("reports.period.last30") },
             { value: `${d(daysAgo(60))}..${d(today())}`, label: t("reports.period.last60") },
             { value: `${d(monthStart())}..${d(today())}`, label: t("reports.period.thisMonth") },

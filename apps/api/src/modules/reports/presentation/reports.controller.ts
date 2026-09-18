@@ -1,11 +1,13 @@
 import { Controller, Get, Inject, Query, Res } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
+import type { ExportLocale } from "@mission-atos/contracts";
 import {
   attendanceDetailQuerySchema,
   attendanceSummaryQuerySchema,
   exportAttendanceQuerySchema,
   exportCellsQuerySchema,
+  exportLocales,
   exportMeetingsQuerySchema,
   exportPeopleQuerySchema,
   meetingsReportQuerySchema,
@@ -21,6 +23,7 @@ import { ReportsError } from "../application/reports.error";
 import { csvBuffer } from "../infrastructure/exports/csv.generator";
 import { generateExcel } from "../infrastructure/exports/excel.generator";
 import { generatePdf } from "../infrastructure/exports/pdf.generator";
+import { exportColumns, exportFilenameBase, exportTitle, type ExportColumn, type ExportReportType } from "../infrastructure/exports/export.i18n";
 import { presentAttendanceDetail, presentAttendanceSummary, presentMeetingsReport, presentPendingReports, presentVisitors } from "./reports.presenter";
 
 const MAX_EXPORT_ROWS = 10_000;
@@ -95,6 +98,7 @@ export class ReportsController {
   @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER") @Get("export/cells")
   @ApiOperation({ summary: "Export cells as CSV, Excel or PDF" })
   @ApiQuery({ name: "format", enum: ["csv", "xlsx", "pdf"] })
+  @ApiQuery({ name: "locale", enum: exportLocales, required: false })
   @ApiResponse({ status: 200, description: "File download" })
   @ApiResponse({ status: 400, description: "Invalid format" })
   @ApiResponse({ status: 401, description: "Authentication required" })
@@ -102,14 +106,15 @@ export class ReportsController {
   async exportCells(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Query() query: unknown, @Res() res: Response) {
     const input = exportCellsQuerySchema.parse(query);
     const rows = (await this.queries.exportCells(principal)).slice(0, MAX_EXPORT_ROWS);
-    const columns = ["code", "name", "status", "leaderName", "supervisorName", "traineeLeaderName", "meetingDay", "meetingTime", "address", "memberCount", "createdAt"];
+    const columns = exportColumns("cells", input.locale);
     await this.queries.recordExport({ churchId: principal.churchId, exportedBy: principal.userId, reportType: "cells", format: input.format, scope: {}, rowCount: rows.length });
-    this.sendFile(res, rows, columns, "celulas", input.format, "Células", principal.churchId);
+    this.sendFile(res, rows, columns, "cells", input.format, input.locale, principal.churchId);
   }
 
   @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER") @Get("export/people")
   @ApiOperation({ summary: "Export people as CSV, Excel or PDF" })
   @ApiQuery({ name: "format", enum: ["csv", "xlsx", "pdf"] })
+  @ApiQuery({ name: "locale", enum: exportLocales, required: false })
   @ApiQuery({ name: "status", enum: ["ACTIVE", "INACTIVE"], required: false })
   @ApiResponse({ status: 200, description: "File download" })
   @ApiResponse({ status: 400, description: "Invalid format" })
@@ -118,14 +123,15 @@ export class ReportsController {
   async exportPeople(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Query() query: unknown, @Res() res: Response) {
     const input = exportPeopleQuerySchema.parse(query);
     const rows = (await this.queries.exportPeople(principal, input.status)).slice(0, MAX_EXPORT_ROWS);
-    const columns = ["fullName", "phone", "email", "birthDate", "gender", "personStatus", "cellName", "membershipStatus", "createdAt"];
+    const columns = exportColumns("people", input.locale);
     await this.queries.recordExport({ churchId: principal.churchId, exportedBy: principal.userId, reportType: "people", format: input.format, scope: { status: input.status }, rowCount: rows.length });
-    this.sendFile(res, rows, columns, "pessoas", input.format, "Pessoas", principal.churchId);
+    this.sendFile(res, rows, columns, "people", input.format, input.locale, principal.churchId);
   }
 
   @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER") @Get("export/attendance")
   @ApiOperation({ summary: "Export attendance as CSV, Excel or PDF" })
   @ApiQuery({ name: "format", enum: ["csv", "xlsx", "pdf"] })
+  @ApiQuery({ name: "locale", enum: exportLocales, required: false })
   @ApiQuery({ name: "from", required: false, type: String })
   @ApiQuery({ name: "to", required: false, type: String })
   @ApiQuery({ name: "cellId", required: false, type: String })
@@ -136,14 +142,15 @@ export class ReportsController {
   async exportAttendance(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Query() query: unknown, @Res() res: Response) {
     const input = exportAttendanceQuerySchema.parse(query);
     const rows = (await this.queries.exportAttendance(principal, input)).slice(0, MAX_EXPORT_ROWS);
-    const columns = ["cellName", "cellCode", "meetingDate", "personName", "attendanceStatus", "isVisitor"];
+    const columns = exportColumns("attendance", input.locale);
     await this.queries.recordExport({ churchId: principal.churchId, exportedBy: principal.userId, reportType: "attendance", format: input.format, scope: { from: input.from, to: input.to, cellId: input.cellId }, rowCount: rows.length });
-    this.sendFile(res, rows, columns, "frequencia", input.format, "Frequência", principal.churchId);
+    this.sendFile(res, rows, columns, "attendance", input.format, input.locale, principal.churchId);
   }
 
   @Roles("ADMIN", "PASTOR", "SUPERVISOR", "LEADER") @Get("export/meetings")
   @ApiOperation({ summary: "Export meetings as CSV, Excel or PDF" })
   @ApiQuery({ name: "format", enum: ["csv", "xlsx", "pdf"] })
+  @ApiQuery({ name: "locale", enum: exportLocales, required: false })
   @ApiQuery({ name: "from", required: false, type: String })
   @ApiQuery({ name: "to", required: false, type: String })
   @ApiQuery({ name: "cellId", required: false, type: String })
@@ -154,14 +161,14 @@ export class ReportsController {
   async exportMeetings(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Query() query: unknown, @Res() res: Response) {
     const input = exportMeetingsQuerySchema.parse(query);
     const rows = (await this.queries.exportMeetings(principal, input)).slice(0, MAX_EXPORT_ROWS);
-    const columns = ["cellName", "cellCode", "meetingDate", "status", "cancellationReason", "presentCount", "absentCount", "visitorCount", "attendanceRate", "reportStatus"];
+    const columns = exportColumns("meetings", input.locale);
     await this.queries.recordExport({ churchId: principal.churchId, exportedBy: principal.userId, reportType: "meetings", format: input.format, scope: { from: input.from, to: input.to, cellId: input.cellId }, rowCount: rows.length });
-    this.sendFile(res, rows, columns, "encontros", input.format, "Encontros", principal.churchId);
+    this.sendFile(res, rows, columns, "meetings", input.format, input.locale, principal.churchId);
   }
 
-  private async sendFile(res: Response, rows: ExportRow[], columns: string[], filenameBase: string, format: string, title: string, churchId?: string) {
-    const date = new Date().toISOString().slice(0, 10);
-    const filename = `${filenameBase}_${date}`;
+  private async sendFile(res: Response, rows: ExportRow[], columns: ExportColumn[], reportType: ExportReportType, format: string, locale: ExportLocale, churchId?: string) {
+    const title = exportTitle(reportType, locale);
+    const filename = `${exportFilenameBase(reportType)}_${new Date().toISOString().slice(0, 10)}`;
     try {
       if (format === "csv") {
         const buffer = csvBuffer(rows, columns);
@@ -175,7 +182,7 @@ export class ReportsController {
         res.send(buffer);
       } else {
         const churchName = churchId ? await this.queries.getChurchName(churchId) : "Igreja";
-        const buffer = await generatePdf(rows, columns, title, churchName);
+        const buffer = await generatePdf(rows, columns, title, churchName, locale);
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", `attachment; filename="${filename}.pdf"`);
         res.send(buffer);
