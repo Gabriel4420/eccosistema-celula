@@ -33,8 +33,14 @@ export function AuthProvider({
   const [state, setState] = useState<AuthState>({ status: "loading" });
 
   useEffect(() => {
+    console.log("[auth] effect start");
+    const watchdog = setTimeout(() => {
+      console.log("[auth] loadSession STILL PENDING after 5s");
+    }, 5000);
     loadSession()
       .then((session) => {
+        console.log("[auth] loadSession resolved", session ? "session" : "null");
+        clearTimeout(watchdog);
         if (session) {
           setState({
             status: "signedIn",
@@ -45,7 +51,9 @@ export function AuthProvider({
           setState({ status: "signedOut" });
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("[auth] loadSession rejected", error);
+        clearTimeout(watchdog);
         setState({ status: "signedOut" });
       });
   }, []);

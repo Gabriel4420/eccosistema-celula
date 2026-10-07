@@ -25,10 +25,13 @@ export async function loadSession(): Promise<{
   accessToken: string;
   user: StoredUser;
 } | null> {
-  const [token, userJson] = await Promise.all([
+  console.log("[session] loadSession start");
+  const items = await Promise.all([
     SecureStore.getItemAsync(ACCESS_TOKEN_KEY),
     SecureStore.getItemAsync(USER_KEY)
   ]);
+  console.log("[session] loadSession settled", items);
+  const [token, userJson] = items;
 
   if (!token || !userJson) return null;
 
