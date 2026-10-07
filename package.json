@@ -29,6 +29,8 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "dev:mobile": "npm run dev --workspace @mission-atos/mobile",
+    "dev:api": "npm run dev --workspace @mission-atos/api",
     "db:format": "npm run db:format --workspace @mission-atos/database",
     "db:generate": "npm run db:generate --workspace @mission-atos/database",
     "db:migrate:deploy": "npm run db:migrate:deploy --workspace @mission-atos/database",
@@ -38,6 +40,7 @@
     "deploy:render": "node --env-file-if-exists=.env scripts/deploy-render.mjs",
     "deploy:vercel": "npx --yes vercel@latest --cwd apps/web deploy --prod",
     "dev": "turbo run dev",
+    "postinstall": "node scripts/fix-debugger-frontend.mjs",
     "lint": "turbo run lint",
     "render:build": "npm ci --include=dev --prefer-offline --no-audit --no-fund && npx turbo run build --filter=@mission-atos/api...",
     "render:bootstrap": "npm run render:migrate && npm run db:bootstrap:production --workspace @mission-atos/database",
