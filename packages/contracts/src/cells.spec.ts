@@ -10,6 +10,7 @@ import {
   listCellMembersQuerySchema,
   listCellsQuerySchema,
   normalizeCellCode,
+  removeCellMemberRequestSchema,
   updateCellLeaderRequestSchema,
   updateCellRequestSchema,
   updateCellStatusRequestSchema,

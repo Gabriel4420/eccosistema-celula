@@ -107,16 +107,16 @@ describe("reports contracts", () => {
   });
 
   describe("export schemas", () => {
-    it("exportCellsQuerySchema accepts csv", () => {
-      expect(exportCellsQuerySchema.parse({ format: "csv" })).toEqual({ format: "csv" });
+    it("exportCellsQuerySchema accepts csv and defaults locale", () => {
+      expect(exportCellsQuerySchema.parse({ format: "csv" })).toEqual({ format: "csv", locale: "pt-BR" });
     });
 
     it("exportCellsQuerySchema accepts xlsx", () => {
-      expect(exportCellsQuerySchema.parse({ format: "xlsx" })).toEqual({ format: "xlsx" });
+      expect(exportCellsQuerySchema.parse({ format: "xlsx" })).toEqual({ format: "xlsx", locale: "pt-BR" });
     });
 
     it("exportCellsQuerySchema accepts pdf", () => {
-      expect(exportCellsQuerySchema.parse({ format: "pdf" })).toEqual({ format: "pdf" });
+      expect(exportCellsQuerySchema.parse({ format: "pdf" })).toEqual({ format: "pdf", locale: "pt-BR" });
     });
 
     it("exportCellsQuerySchema rejects invalid format", () => {
