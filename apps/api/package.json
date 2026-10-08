@@ -31,7 +31,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-express": "^11.2.6",
     "@nestjs/swagger": "^11.0.0",
-    "@nestjs/throttler": "^6.0.0",
+    "@nestjs/throttler": "^6.7.1",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
     "csv-parse": "^7.0.2",
