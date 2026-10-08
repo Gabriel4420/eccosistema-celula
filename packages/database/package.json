@@ -32,15 +32,15 @@
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "argon2": "^0.44.0",
-    "pg": "^8.0.0",
+    "pg": "^8.23.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@mission-atos/eslint-config": "*",
     "@mission-atos/typescript-config": "*",
     "@types/pg": "^8.0.0",
-    "dotenv": "^17.0.0",
+    "dotenv": "^18.0.5",
     "prisma": "^7.10.0",
-    "tsx": "^4.0.0"
+    "tsx": "^4.23.15"
   }
 }

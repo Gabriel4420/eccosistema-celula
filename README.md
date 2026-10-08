@@ -1,3 +1,5 @@
+[![Dependabot Auto-Merge](https://github.com/Gabriel4420/eccosistema-celula/actions/workflows/dependabot-auto-merge.yml/badge.svg)](https://github.com/Gabriel4420/eccosistema-celula/actions/workflows/dependabot-auto-merge.yml)
+
 # Ecossistema de Células
 
 Ecossistema de gestão de células e pequenos grupos. O monorepo contém o painel administrativo web, API NestJS, persistência PostgreSQL/Prisma, autenticação, gestão de igreja, usuários, pessoas, células, encontros, presença, relatórios, importação em lote e configurações gerais.
