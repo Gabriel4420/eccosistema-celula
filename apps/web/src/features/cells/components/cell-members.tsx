@@ -309,7 +309,7 @@ export function CellMembers({ cellId }: CellMembersProps) {
                         <div className="min-w-0">
                           <Link
                             href={`/people/${member.personId}`}
-                            className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+                            className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
                           >
                             {member.fullName}
                           </Link>

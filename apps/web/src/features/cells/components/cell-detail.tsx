@@ -294,7 +294,7 @@ export function CellDetail() {
     <section aria-labelledby="cell-title" className="space-y-6">
       <Link
         href="/cells"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t("cells.detail.back")}
