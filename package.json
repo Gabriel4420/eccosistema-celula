@@ -59,7 +59,7 @@
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "@playwright/test": "^1.50.0",
+    "@playwright/test": "^1.63.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^24.0.0",
     "eslint": "^9.0.0",
