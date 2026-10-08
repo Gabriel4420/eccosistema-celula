@@ -27,11 +27,11 @@
     "@mission-atos/database": "*",
     "@mission-atos/domain": "*",
     "@nestjs/common": "^11.0.0",
-    "@nestjs/core": "^11.0.0",
+    "@nestjs/core": "^12.1.2",
     "@nestjs/jwt": "^11.0.0",
-    "@nestjs/platform-express": "^11.2.6",
+    "@nestjs/platform-express": "^12.1.2",
     "@nestjs/swagger": "^11.0.0",
-    "@nestjs/throttler": "^6.0.0",
+    "@nestjs/throttler": "^6.7.1",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
     "csv-parse": "^7.0.2",
@@ -44,12 +44,12 @@
   "devDependencies": {
     "@mission-atos/eslint-config": "*",
     "@mission-atos/typescript-config": "*",
-    "@nestjs/cli": "^11.0.0",
+    "@nestjs/cli": "^12.0.8",
     "@nestjs/testing": "^11.0.0",
     "@types/cookie-parser": "^1.4.9",
-    "@types/multer": "^2.2.0",
+    "@types/multer": "^2.3.0",
     "@types/pdfkit": "^0.17.6",
-    "@types/supertest": "^6.0.3",
-    "supertest": "^7.1.4"
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.3.1"
   }
 }
