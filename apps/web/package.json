@@ -33,7 +33,7 @@
     "lucide-react": "^0.454.0",
     "next": "^16.3.8",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react-dom": "^19.3.0",
     "react-hook-form": "^7.88.0",
     "tailwind-merge": "^2.5.5"
   },
@@ -48,7 +48,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest-axe": "^3.5.9",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react-dom": "^19.3.0",
     "argon2": "^0.44.0",
     "axe-core": "^4.13.0",
     "jest-axe": "^11.0.0",
