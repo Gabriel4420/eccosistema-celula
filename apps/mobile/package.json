@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~58.0.13",
     "@expo/vector-icons": "^15.0.3",
     "@mission-atos/contracts": "*",
     "@react-native-community/netinfo": "12.0.1",
@@ -20,6 +21,7 @@
     "expo-crypto": "~57.0.3",
     "expo-document-picker": "~57.0.3",
     "expo-file-system": "~57.0.7",
+    "expo-glass-effect": "~58.0.3",
     "expo-image": "~57.0.5",
     "expo-image-picker": "~57.0.20",
     "expo-intent-launcher": "~57.0.1",
@@ -30,14 +32,14 @@
     "expo-sqlite": "~58.0.9",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
-    "react-native": "0.87.1",
+    "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.28.0"
   },
   "devDependencies": {
     "@mission-atos/eslint-config": "*",
     "@mission-atos/typescript-config": "*",
-    "@types/react": "~19.2.2",
+    "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "jest-expo": "~57.0.5",
     "typescript": "^5.9.0"

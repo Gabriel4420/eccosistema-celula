@@ -111,7 +111,7 @@ describe("cells management authorization", () => {
       kind: "supervisor",
       userId: "user-1"
     });
-    expect(() => authorization().resolveListScope(principal([]))).toThrowError(
+    expect(() => authorization().resolveListScope(principal([]))).toThrow(
       new CellsManagementError("CELL_ACCESS_DENIED", "Access is not allowed")
     );
   });

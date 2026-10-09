@@ -9,6 +9,11 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmitOnError": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "types": [
+      "jest",
+      "node",
+      "multer"
+    ]
   }
 }
