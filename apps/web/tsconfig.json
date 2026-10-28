@@ -16,6 +16,11 @@
     "node_modules",
     "playwright-report",
     "test-results",
-    "tests/e2e"
+    "tests/e2e",
+    "tests/unit",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }
