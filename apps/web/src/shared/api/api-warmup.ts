@@ -14,6 +14,7 @@ function tryWarm(url: string, timeoutMs: number): Promise<void> {
     mode: "cors",
     signal: controller.signal
   })
+    .then(() => undefined)
     .catch(() => undefined)
     .finally(() => clearTimeout(timeout));
 }
