@@ -13,6 +13,7 @@ import { consumePendingDestination } from "@/src/shared/navigation/pending-desti
 import { useSession } from "@/src/providers/session-provider";
 import { toast } from "@/src/shared/toast/toast-store";
 import { useI18n } from "@/src/shared/i18n/language-provider";
+import { warmApi } from "@/src/shared/api/api-warmup";
 
 export default function LoginPage() {
   const { status, login } = useSession();
@@ -27,6 +28,18 @@ export default function LoginPage() {
   const [destination] = useState(
     () => consumePendingDestination() ?? "/dashboard"
   );
+
+  useEffect(() => {
+    try {
+      if (process.env.NODE_ENV === "production") {
+        warmApi("/api");
+      } else {
+        warmApi(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001");
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     if (status === "authenticated") router.replace(destination);

@@ -23,6 +23,7 @@ import { postLogin, postLogout, postRefresh } from "@/src/features/auth/api/auth
 import { useI18n } from "@/src/shared/i18n/language-provider";
 import type { TranslationKey } from "@/src/shared/i18n/dictionaries";
 import type { TranslationParams } from "@/src/shared/i18n/dictionaries";
+import { warmApi } from "@/src/shared/api/api-warmup";
 
 interface SessionContextValue {
   readonly status: SessionStatus;
@@ -56,6 +57,10 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
   const handleApiError = useCallback((error: ApiError) => {
     notifyApiError(error, t);
   }, [t]);
+
+  useEffect(() => {
+    warmApi(baseUrl);
+  }, [baseUrl]);
 
   const [api] = useState(
     () =>
@@ -112,7 +117,10 @@ export function SessionProvider({ children }: { readonly children: ReactNode }) 
       try {
         auth = await postRefresh(baseUrl);
       } catch {
-        if (!cancelled) retryTimer = setTimeout(() => void restore(), 15_000);
+        if (!cancelled) {
+          setStatus((current) => (current === "bootstrapping" ? "anonymous" : current));
+          retryTimer = setTimeout(() => void restore(), 15_000);
+        }
         return;
       }
       if (cancelled) return;
