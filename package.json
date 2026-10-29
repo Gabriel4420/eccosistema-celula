@@ -107,5 +107,8 @@
     "uuid": "^11.1.1",
     "zod": "^4.6.6",
     "lightningcss": "^1.30.2"
+  },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "1.30.2"
   }
 }
